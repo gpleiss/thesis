@@ -12,17 +12,20 @@ In these settings, neural networks are an essential component of larger decision
 %Specifically, a network should provide a \emph{calibrated confidence} measure in addition to its prediction.
 %In other words, the probability associated with the predicted class label should reflect its ground truth correctness likelihood.
 
-%\begin{figure}[t!]
-	%\centering
-	%\includegraphics[width=0.8\columnwidth]{chapters/nn-calibration/figures/confidence.pdf}
-	%\includegraphics[width=0.8\columnwidth]{chapters/nn-calibration/figures/comparison_with_caruana.pdf}
-	%\caption{Confidence histograms (top) and reliability diagrams (bottom) for a 5-layer LeNet (left) and a 110-layer ResNet (right) on CIFAR-100. Refer to the text below for detailed illustration.}
-	%\label{figure.complenet}
-	%\vspace{8pt}
-%\end{figure}
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.8\columnwidth]{figures/confidence.pdf}
+  \includegraphics[width=0.8\columnwidth]{figures/comparison_with_caruana.pdf}
+  \caption{Confidence histograms (top) and reliability diagrams (bottom) for a 5-layer LeNet (left) and a 110-layer ResNet (right) on CIFAR-100. Refer to the text below for detailed illustration.}
+  \label{figure.complenet}
+  \vspace{8pt}
+\end{figure}
 
-%Calibrated confidence estimates are also important for model interpretability. Humans have a natural cognitive intuition for probabilities \cite{cosmides1996humans}. Good confidence estimates provide a valuable extra bit of information to establish trustworthiness with the user -- especially for neural networks, whose classification decisions are often difficult to interpret.
-%Further, good probability estimates can be used to incorporate neural networks into other probabilistic models. For example, one can improve performance by combining network outputs with a language model in speech recognition \cite{hannun2014deep,xiong2016achieving}, or with camera information for object detection \citep{kendall2015modelling}.
+%Calibrated confidence estimates are also important for model interpretability.
+%Humans have a natural cognitive intuition for probabilities \cite{cosmides1996humans}.
+%Good confidence estimates provide a valuable extra bit of information to establish trustworthiness with the user -- especially for neural networks, whose classification decisions are often difficult to interpret.
+Further, good probability estimates can be used to incorporate neural networks into other probabilistic models.
+For example, one can improve performance by combining network outputs with a language model in speech recognition \cite{hannun2014deep,xiong2016achieving}, or with camera information for object detection \citep{kendall2015modelling}.
 
 In 2005, \citet{niculescu2005predicting} showed that neural networks typically produce well-calibrated probabilities on binary classification tasks. While neural networks today are undoubtedly more accurate than they were a decade ago,
 we discover with great surprise that \emph{modern neural networks are no longer well-calibrated}.
