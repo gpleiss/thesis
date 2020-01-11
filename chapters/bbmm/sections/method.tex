@@ -1,0 +1,191 @@
+%!TEX root=main.tex
+%\newpage
+\section{Gaussian process inference through blackbox matrix multiplication}
+
+\label{sec:method}
+The goal of our paper is to replace existing inference strategies with a unified framework that utilizes modern hardware efficiently.
+We additionally desire that complex GP models can be used in a blackbox manner without additional inference rules. To this end,
+our method reduces the bulk of GP inference to one of the most efficiently-parallelized computations: \emph{matrix-matrix multiplication}.
+We call our method \mmfullname{} inference (\mmacro) because it only requires a user to specify a matrix multiply routine for the kernel $\trainK M$ and its derivative $\frac{d\trainK}{d\theta}M$.
+
+\paragraph{Required operations.}
+An \emph{inference engine} is a scheme for computing all the equations discussed above: the predictive distribution~\eqref{eq:pred_mean_covar}, the loss, and its derivative~\eqref{eq:log_lik_and_deriv}.
+These equations have three operations in common that dominate its time complexity:
+1) the linear solve $\trainK^{-1}\y$,
+2) the log determinant $\log \vert \trainK \vert$,
+and 3) a trace term $\tr{\trainK^{-1}\frac{d\trainK}{d\theta}}$.
+In many implementations, these three quantities are computed using the Cholesky decomposition of $\trainK$,
+which is computationally expensive, requiring $\bigo{n^3}$ operations, and does not effectively utilize parallel hardware.
+
+Recently, there is a growing line of research that computes these operations with iterative routines based on matrix-vector multiplications (MVMs).
+$\trainK^{-1}\y$ can be computed using \emph{conjugate gradients} (CG) \cite{cunningham2008fast,cutajar2016preconditioning,saatcci2012scalable,wilson2015kernel},
+and the other two quantities can be computed using calls to the iterative Lanczos tridiagonalization algorithm \cite{ubaru2017fast,dong2017scalable}.
+MVM-based methods are asymptotically faster and more space efficient than Cholesky based methods \cite{wilson2015kernel,dong2017scalable}.
+Additionally, these methods are able to exploit algebraic structure in the data for further efficiencies \cite{cunningham2008fast,saatcci2012scalable,wilson2015kernel}.
+However, they also have disadvantages.
+The quantities are computed via several independent calls to the CG and stochastic Lanczos quadrature subroutines, which are inherently sequential and therefore do not fully utilize parallel hardware. Additionally, the Lanczos tridiagonalization algorithm requires $\bigo{np}$ space for $p$ iterations and suffers from numerical stability issues due to loss of orthogonality \cite{golub2012matrix}.
+
+\paragraph{Modified CG.}
+Our goal is to capitalize on the advantages of MVM-based methods (space-efficiency, ability to exploit structure, etc.) but with efficient routines that are optimized for modern parallel compute hardware.
+For this purpose, our method makes use of a \emph{modified Batched Conjugate Gradients Algorithm} (\mcgacro{}) algorithm.
+Standard conjugate gradients takes as input a vector $\y$ and a routine for computing a matrix vector product $\trainK\y$, and, after $p$ iterations, outputs an approximate solve $\bu_{p} \approx \trainK^{-1}\y$ (with exact equality when $p = n$).
+We modify conjugate gradients to (1) perform linear solves with multiple right hand sides simultaneously, and (2) return tridiagonal matrices corresponding to partial Lanczos tridiagonalizations of $\trainK$ with respect to each right hand side.\footnote{
+  mBCG differes from Block CG algorithms \cite{o1980block} in that mBCG returns Lanczos tridiagonalization terms.
+} Specifically, \mcgacro{} takes as input a matrix $\left[\begin{array}{cccc}\by & \bz_{1} & \cdots & \bz_{t}\end{array}\right]$, and outputs:
+\begin{equation}
+  \label{eq:mod_cg_call}
+  \left[\begin{array}{cccc}\bu_{0} & \bu_{1} & \cdots & \bu_{t}\end{array}\right] = \trainK^{-1}\left[\begin{array}{cccc}\by & \bz_{1} & \cdots & \bz_{t}\end{array}\right]\;\;\;\;\textrm{and}\;\;\;\; \tilde{T}_{1},...,\tilde{T}_{t}
+\end{equation}
+where $\tilde{\T}_{1},\ldots,\tilde{\T}_{t}$ are partial Lanczos tridiagonalizations of $\trainK$ with respect to the vectors $\bz_{1},\ldots,\bz_{t}$, which we describe shortly.
+In what follows, we show how to use a single call to \mcgacro{} to compute the three GP inference terms: $\trainK^{-1} \by$, $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \theta} }$, and $\log \vert \trainK \vert$.
+%
+$\trainK^{-1}\y$ is equal to $\bu_{0}$ in~\eqref{eq:mod_cg_call}, directly returned from \mcgacro{}. We describe the other two terms below.
+
+\paragraph{Estimating $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \theta} }$}
+from CG relies on \emph{stochastic trace estimation} \cite{avron2011randomized,fitzsimons2016improved,hutchinson1990stochastic}, which allows us to treat this term as a sum of linear solves.
+Given i.i.d. random variables $\bz_1, \ldots, \bz_t$ so that $\Ev{\bz_i}=0$ and $\Ev{\bz_i \bz_i^{\top}}=I,
+$ (e.g., $\bz_{i} \sim \mathcal{N}(0, I)$)
+the matrix trace $\tr{\A}$ can be written as
+$
+  \tr{\A} = \Ev{\bz_i^\top \A\bz_i}
+$
+, such that
+%
+\begin{equation}
+  \label{eq:trace_deriv_estimate}
+  \tr{\trainK^{-1}\frac{d\trainK}{d\theta}}  = \Ev{\bz_i^\top  \trainK^{-1}\frac{d\trainK}{d\theta} \bz_i} \approx \frac{1}{t}\sum_{i=1}^{t}\left(\bz_{i}^\top \trainK^{-1}\right)\left(\frac{d\trainK}{d\theta}\bz_{i} \right)
+\end{equation}
+%
+is an unbiased estimator of the derivative. This computation motivates the $\bz_1, \ldots, \bz_t$ terms in \eqref{eq:mod_cg_call}:
+the \mcgacro{} call returns the solves $\trainK^{-1}[\bz_1 \ldots \bz_t]$, which yields $\mathbf{u}_i=\bz_{i}^\top \trainK^{-1}$ . A single matrix multiply with the derivative $\frac{d\trainK}{d\theta}[\bz_1 \ldots \bz_t]$ yields the remaining terms on the RHS. The full trace can then be estimated by elementwise multiplying these terms together and summing, as in
+\eqref{eq:trace_deriv_estimate}.
+
+\paragraph{Estimating $\log \vert \trainK \vert$}
+can be accomplished using the $\T_{1},...,\T_{t}$ matrices from \mcgacro{}. If $\trainK=\Q\T\Q^{\top}$, with $\Q$ orthonormal, then because $\trainK$ and $\T$ have the same eigenvalues:
+\begin{equation}
+  \log \vert \trainK \vert = \tr{\log \T}  = \Ev{\bz_i^\top (\log \T)\bz_i} \approx \sum_{i=1}^{t}\bz_{i}^\top \left( \log \T \right) \bz_{i}\label{eq:logdetKQ}
+\end{equation}
+where $\log \T$ here denotes the matrix logarithm, and the approximation comes from the same stochastic trace estimation technique used for \eqref{eq:trace_deriv_estimate}. One approach to obtain a decomposition $\trainK=\Q\T\Q^{\top}$ is to use the \emph{Lanczos tridiagonalization algorithm}. This algorithm takes the matrix $\trainK$ and a probe vector $\bz$ and outputs the decomposition $\Q\T\Q^{\top}$ (where $\bz$ is the first column of $\Q$). However, rather than running the full algorithm, we can instead run $p$ iterations of the algorithm $t$ times, each with a vector $\bz_{1},...,\bz_{t}$ to obtain $t$ decompositions  $\tilde{\Q}_{1}\tilde{\T}_{1}\tilde{\Q}_{1}^{\top},...,\tilde{\Q}_{t}\tilde{\T}_{t}\tilde{\Q}_{t}^{\top}$ with $\tilde{\Q}_{i} \in \reals^{n \times p}$ and $\tilde{\T}_{i} \in \reals^{p \times p}$. We can use these partial decompositions to estimate~\eqref{eq:logdetKQ}:
+\begin{equation}
+  \Ev{\bz_i^\top (\log \T)\bz_i} = \Ev{\bz_i^\top  \tilde{\Q}_{i}(\log \tilde{\T}_{i}) \tilde{\Q}_{i}^{\top}\bz_{i}} \approx \frac{1}{t} \sum_{i=1}^{t} \bz_i^{\top} \tilde{\Q}_{i}(\log \tilde{\T}_{i})\tilde{\Q}_{i}^{\top}\bz_{i} = \frac{1}{t} \sum_{i=1}^{t}e_{1}^{\top}(\log \tilde{\T}_{i})e_{1},
+  \label{eq:slq}
+\end{equation}
+where $e_{1}$ is the first row of the identity matrix. Running Lanczos with a starting vector $\bz_{i}$ ensures that all columns of $\tilde{\Q}_{i}$ are orthogonal to $\bz_{i}$ except the first, so $\tilde{\Q}_{i}\bz_{i} = e_{1}$ \cite{dong2017scalable,ubaru2017fast,golub2009matrices}.
+
+In \mcgacro{}, we adapt a technique from \citet{saad2003iterative} which allows us to compute $\tilde{\T}_{1},\ldots,\tilde{\T}_{t}$ corresponding to the input vectors $\bz_{1},\ldots,\bz_{t}$  to \mcgacro{} from the coefficients of CG in $\bigo{1}$ additional work per iteration.
+This approach allows us to compute a log determinant estimate identical to \eqref{eq:slq} \emph{without running the Lanczos algorithm}.
+Thus we avoid the extra computation, storage, and numerical instability associated with Lanczos iterations.
+We describe the details of this adaptation in \autoref{app:mod_cg}.
+
+\paragraph{Runtime and space.}
+As shown above, we are able to approximate all inference terms from a single call to \mcgacro{}.
+These approximations improve with the number of \mcgacro{} iterations.
+Each iteration requires one matrix-matrix multiply with $\trainK$, and the subsequent work to derive these inference terms takes negligible additional time (\autoref{app:method_runtime}).
+Therefore, $p$ iterations of \mcgacro{} requires $\bigo{nt}$ space (see \autoref{app:method_runtime}) and $\bigo{p \: \mmm{\trainK}}$ time,
+where $\mmm{\trainK}$ is the time to multiply $\trainK$ by a $n \times t$ matrix.
+This multiplication takes $\bigo{n^2 t}$ time with a standard matrix.
+It is worth noting that this is a lower asymptotic complexity that standard Cholesky-based inference, which is $\bigo{n^3}$.
+Therefore, \mmacro{} offers a computational speedup for exact GP inference.
+As we will show in \autoref{sec:advantages}, this time complexity can be further reduced with structured data or sparse GP approximations.
+%
+\subsection{Preconditioning}
+\label{sec:preconditioning}
+While each iteration of \mcgacro{} performs large parallel matrix-matrix operations that utilize hardware efficiently, the iterations themselves are sequential.
+A natural goal for better utilizing hardware is to trade off fewer sequential steps for slightly more effort per step.
+We accomplish this goal using \emph{preconditioning} \cite{golub2012matrix,saad2003iterative,demmel1997applied,van2003iterative}, which introduces a matrix $\P$ to solve the related linear system
+\begin{equation*}
+  \P^{-1} \trainK \bu = \P^{-1}\y
+\end{equation*}
+instead of $\trainK^{-1} \y$.
+Both systems are guaranteed to have the same solution, but the preconditioned system's convergence depends on the conditioning of $\P^{-1}\trainK$ rather than that of $\trainK$.
+
+We observe two requirements of a preconditioner to be used in general for GP inference. First, in order to ensure that preconditioning operations do not dominate running time when using scalable GP methods, the preconditioner should afford roughly linear time solves and space. Second, we should be able to efficiently compute the log determinant of the preconditioner matrix, $\log \vert P \vert$. This is because the \mcgacro{} algorithm applied to the preconditioned system estimates $\log \vert \P^{-1}\trainK \vert$ rather than $\log \vert \trainK \vert$. We must therefore compute
+$
+  \label{eq:logdet_adjusted}
+  \log \vert \trainK \vert = \log \vert \P^{-1}\trainK \vert + \log \vert P \vert.
+$
+
+\paragraph{The Pivoted Cholesky Decomposition.}
+For one possible preconditioner, we turn to the \emph{pivoted Cholesky} decomposition.
+The pivoted Cholesky algorithm allows us to compute a low-rank approximation of a positive definite matrix, $\K_{\X\X} \approx L_{k}L_{k}^{\top}$ \cite{harbrecht2012low}.
+We precondition mBCG with $(L_k L_k^\top + \sigma^2 \I)^{-1}$, where $\sigma^2$ is the Gaussian likelihood's noise term.
+Intuitively, if $\P_{k}=\L_{k}\L_{k}^{\top}$ is a good approximation of $\K_{\X\X}$, then $(\P_{k} + \sigma^{2}\I)^{-1}\trainK \approx \I$.
+
+While we review the pivoted Cholesky algorithm fully in \autoref{app:pivoted_cholesky}, we would like to emphasize three key properties. First, it can be computed in $\bigo{\row{\K_{\X\X}}k^{2}}$ time, where $\row{\K_{\X\X}}$ is the time to access a row (nominally this is $\bigo{n}$).
+Second, linear solves with $\trainP = \L_{k}\L_{k}^{\top} + \sigma^{2}\I$ can be performed in $\bigo{nk^{2}}$ time. Finally, the log determinant of $\trainP$ can be computed in $\bigo{nk^{2}}$ time.
+In \autoref{sec:results} we empirically show that this preconditioner dramatically accelerates CG convergence.
+Further, in \autoref{app:theory}, we prove the following lemma and theorem for univariate RBF kernels:
+
+\begin{lemma}
+  \label{thm:condition_number}
+  Let $\K_{\X\X} \in \reals^{n \times n}$ be a univariate RBF kernel matrix.
+  Let $\L_{k} \L_k^\top$ be the rank $k$ pivoted Cholesky decomposition of $\K_{\X\X}$, and let $\trainP_{k} = \L_k \L_k^\top + \sigma^{2}\I$.
+  Then there exists a constant $b>0$ so that the condition number $\kappa(\trainP^{-1}\trainK)$ satisfies the following inequality:
+  \begin{equation}
+    \kappa \left( \trainP_{k}^{-1}\trainK \right)
+    \triangleq \left\Vert \trainP_{k}^{-1}\trainK \right\Vert_{2} \left\Vert \trainK^{-1}\trainP_{k} \right\Vert_{2}
+    \leq \left( 1 + \bigo{n\exp(-bk)} \right)^2.
+  \end{equation}
+\end{lemma}
+\begin{theorem}[Convergence of pivoted Cholesky-preconditioned CG]
+  \label{thm:cg_convergence_rbf}
+  Let $\K_{\X\X} \in \reals^{n \times n}$ be a $n \times n$ univariate RBF kernel, and let $\L_k \L_k^\top$ be its rank $k$ pivoted Cholesky decomposition.
+  Assume we are using preconditioned CG to solve the system $\trainK^{-1} \y = (\K_{\X\X} + \sigma^2 \I)^{-1} \y$ with preconditioner $\trainP = (\L_k \L_k^\top + \sigma^2 \I)$.
+  Let $\bu_p$ be the $p^\textrm{th}$ solution of CG, and let $\bu^{*} = \trainK^{-1} \y$ be the exact solution.
+  Then there exists some $b > 0$ such that:
+  \begin{equation}
+    \Vert \bu^{*} - \bu_{p} \Vert_{\trainK}
+    \leq 2 \left(1/(1 + \bigo{\exp(kb)/n}\right)^{p} \left\Vert \bu^{*} - \bu_{0} \right\Vert_{\trainK}.
+  \end{equation}
+\end{theorem}
+%
+\autoref{thm:cg_convergence_rbf} implies that we should expect the convergence of conjugate gradients to improve \emph{exponentially} with the rank of the pivoted Cholesky decomposition used for RBF kernels. In our experiments we observe significantly improved convergence for other kernels as well (\autoref{sec:results}). Furthermore, we can leverage \autoref{thm:condition_number} and existing theory from \cite{ubaru2017fast} to argue that preconditioning improves our log determinant estimate. In particular, we restate Theorem 4.1 of \citet{ubaru2017fast} here:
+\begin{theorem}[Theorem 4.1 of \citet{ubaru2017fast}]
+  \label{thm:slq_convergence}
+  Let $\K_{\X\X} \in \reals^{n \times n}$, and let $\L_k \L_k^\top$ be its rank $k$ pivoted Cholesky decomposition. Suppose we run $p \geq \frac{1}{4} \sqrt{ \kappa \left( \trainP_{k}^{-1}\trainK \right) } \log \frac{D}{\epsilon}$ iterations of \mcgacro{}, where $D$ is a term involving this same condition number that vanishes as $k \to n$ (see \cite{ubaru2017fast}), and we use $t \geq \frac{24}{\epsilon^{2}}\log(2/\delta)$ vectors $\bz_{i}$ for the solves. Let $\Gamma$ be the log determinant estimate from \eqref{eq:slq}. Then:
+  \begin{equation}
+    \textrm{Pr}\left[\vert \log \vert \trainP^{-1}\trainK \vert - \Gamma \vert \leq \epsilon\vert \log \vert \trainP^{-1}\trainK \vert \vert \right] \geq 1 - \delta.
+  \end{equation}
+\end{theorem}
+Because \autoref{thm:condition_number} states that the condition number $\kappa \left( \trainP_{k}^{-1}\trainK \right)$ decays exponentially with the rank of $\L_{k}$, \autoref{thm:slq_convergence} implies that we should expect that the number of CG iterations required to accurately estimate $\log \vert \trainP^{-1}\trainK \vert$ decreases quickly as $k$ increases.
+In addition, in the limit as $k \rightarrow n$ we have that $\log \vert \trainK \vert = \log \vert \trainP \vert$.
+This is because $\log \vert \trainP^{-1}\trainK \vert \rightarrow 0$ (since $\trainP^{-1}\trainK$ converges to $\I$) and we have that $\log \vert \trainK \vert = \log \vert \trainP^{-1}\trainK \vert + \log \vert \trainP \vert$.
+Since our calculation of $\log \vert \trainP \vert$ is exact, our final estimate of $\log \vert \trainK \vert$ becomes more exact as $k$ increases.
+In future work we hope to derive a more general result that covers multivariate settings and other kernels.
+%
+\section{Programmability with \mmacro{}}
+\label{sec:advantages}
+We have discussed how the \mmacro{} framework is more hardware efficient than existing inference engines, and avoids numerical instabilities with Lanczos. Another key advantage of \mmacro{} is that it can easily be adapted to complex GP models or structured GP approximations.
+
+Indeed \mmacro{} is \emph{blackbox} by nature, only requiring a routine to perform matrix-multiplications with the kernel matrix and its derivative.
+Here we provide examples of how existing GP models and scalable approximations can be easily implemented in this framework.
+The matrix-multiplication routines for the models require at most \emph{50 lines of Python code}.
+All our software, including the following GP implementations with \mmacro{}, are available through our GPyTorch library: \\
+\url{https://gpytorch.ai}.
+%
+
+\paragraph{Bayesian linear regression} can be viewed as GP regression with the special kernel matrix $\trainK = \X\X^{\top} + \sigma^{2}I$.
+A matrix multiply with this kernel against an $n \times t$ matrix $\V$, $(\X\X^{\top} + \sigma^{2}I)\V$ requires $\bigo{tnd}$ time.
+Therefore, \mmacro{} requires $\bigo{ptnd}$ time, and is exact in $\bigo{tnd^2}$ time.
+This running time complexity matches existing efficient algorithms for Bayesian linear regression, \emph{with no additional derivation}.
+Multi-task Gaussian processes \cite{bonilla2008multi} can be adapted in the same fashion \cite{gardner2018product}.
+
+\paragraph{Sparse Gaussian Process Regression (SGPR)} \cite{titsias2009variational} and many other sparse GP techniques \cite{quinonero2005unifying,snelson2006sparse,hensman2013gaussian} use the subset of regressors (SoR) approximation for the kernel:
+$
+  \trainK \approx (K_{XU}K_{UU}^{-1}K_{UX} + \sigma^{2}I).
+$
+Performing a matrix-matrix multiply with this matrix requires $\bigo{tnm + tm^{3}}$ time by distributing the vector multiply and grouping terms correctly.
+This computation is \emph{asymptotically faster} than the $\bigo{nm^{2} + m^{3}}$ time required by Cholesky based inference. Augmenting the SoR approximation with a diagonal correction, e.g. as in FITC \cite{snelson2006sparse}, is similarly straightforward.
+
+\paragraph{Structured Kernel Interpolation (SKI)} \cite{wilson2015kernel}, also known as KISS-GP, is an inducing point method designed to provide fast matrix vector multiplies (MVMs) for use with Krylov subspace methods. SKI is thus a natural candidate for \mmacro{} and can benefit greatly from hardware acceleration.
+SKI is a generalization of SoR, which specifies $\K_{XU} \approx W\K_{UU}$, where $W$ is a sparse matrix. For example $W$ can correspond to the coefficients of sparse local cubic convolution interpolation.
+The SKI approximation applied to the training covariance matrix gives us
+$
+\trainK \approx (WK_{UU}W^{\top} \! + \! \sigma^{2}I).
+$
+Assuming no structure in $\K_{UU}$ a matrix multiply requires $\bigo{tn \! + \! tm^{2}}$ time. In KISS-GP \citep{wilson2015kernel,wilson2015thoughts}, the matrix $\K_{UU}$ is also chosen to have algebraic structure, such as Kronecker or Toeplitz structure, which further accelerates MVMs. For example, MVMs with a Toeplitz $\K_{UU}$ only require $\bigo{m \log m}$ time. Thus KISS-GP
+provides $\bigo{tn \! + \! tm \log m}$ matrix-matrix multiplies \cite{wilson2015kernel}.
+
+\paragraph{Compositions of kernels} can often be handled automatically.
+For example, given a \mmacro{} routine for $\K_{1},\K_{2},\K_{3}$, we can automatically perform $(\K_{1}\K_{2}+\K_{3})M = \K_{1}(\K_{2}M) + \K_{3}M$.
+SGPR and KISS-GP are implemented in this fashion. Given some pre-defined basic compositionality strategies, the kernel matrix multiplication $\K\M$ in SGPR reduces to defining how to perform $\K_{\U\U}^{-1}M$, and similarly for KISS-GP it reduces to performing multiplication with a Toeplitz matrix $\K_{\U\U}M$. For product kernels one can follow Gardner et al.~\cite{gardner2018product}.

@@ -1,3 +1,4 @@
+%!TEX root=./main.tex
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\expectedvalue}{\mathbb{E}}
@@ -6,6 +7,8 @@
 
 \newcommand{\bigo}[1]{\ensuremath{\mathchoice{\mathcal O \! \left( #1 \right)}}{\mathcal O ( #1 )}{}{}}
 \newcommand{\bigomega}[1]{\ensuremath{\mathchoice{\Omega \! \left( #1 \right)}}{\Omega ( #1 )}{}{}}
+%\DeclareMathOperator*{\argmax}{arg\,max}
+%\DeclareMathOperator*{\argmin}{arg\,min}
 \newcommand{\reals}{\ensuremath{\mathbb{R}}}
 \newcommand{\GP}[2]{\ensuremath{\mathcal{GP} \left( #1, #2 \right)}}
 \newcommand{\normaldist}[2]{\ensuremath{\mathcal{N} \left( #1, #2 \right)}}
@@ -18,7 +21,7 @@
 \newcommand{\Covover}[2]{\ensuremath{\covariance_{#1} \left[ #2 \right]}}
 
 \newif\ifboldmatrix
-\boldmatrixtrue
+\boldmatrixfalse
 \ifboldmatrix\newcommand{\boldmatrix}[1]{\mathbf{#1}}\else\newcommand{\boldmatrix}[1]{#1}\fi
 \newcommand{\p}{\ensuremath{\mathbf{p}}}
 \newcommand{\be}{\ensuremath{\mathbf{e}}}

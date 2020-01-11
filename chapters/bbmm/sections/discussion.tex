@@ -1,0 +1,22 @@
+%!TEX root=main_arxiv.tex
+\section{Discussion}
+In this paper, we discuss a novel framework for Gaussian process inference (\mmacro{}) based on blackbox matrix-matrix multiplication routines with kernel matrices.
+We have implemented this framework and several state-of-the-art GP models in our new publicly available {\href{https://gpytorch.ai}{GPyTorch}} package.
+
+\paragraph{Non-Gaussian likelihoods.}
+Although this paper primarily focuses on the regression setting, \mmacro{} is fully compatible with variational techniques such as \cite{hensman2015scalable,wilson2016stochastic}, which are also supported in GPyTorch.
+These approaches require computing the variational lower bound (or ELBO) rather than the GP marginal log likelihood \eqref{eq:log_lik_and_deriv}. We leave the exact details of the ELBO derivation to other papers (e.g. \cite{hensman2015scalable}).
+However, we note that a single call to \mcgacro{} can be used to compute the KL divergence between two multivariate Gaussians, which is the most computationally intensive term of the ELBO.
+
+\paragraph{Avoiding the Cholesky decomposition.}
+A surprising and important take-away of this paper is that it is beneficial to avoid the Cholesky decomposition for GP inference, even in the exact GP setting.
+The basic algorithm for the Cholesky decomposition (described in \autoref{app:pivoted_cholesky}) involves a divide-and conquer approach that can prove ill-suited for parallel hardware.
+Additionally, the Cholesky decomposition performs a large amount of computation to get a linear solve when fast approximate methods suffice.
+Ultimately, the Cholesky decomposition of a full matrix takes $\bigo{n^3}$ time while CG takes $\bigo{n^2}$ time.
+Indeed, as shown in \autoref{fig:cg_error}, CG may even provide \emph{better} linear solves than the Cholesky decomposition.
+%We liken this difference to the practical speed differences observed between second order methods like Newton's method and SGD in other settings.
+While we use a pivoted version of this algorithm for preconditioning, we only compute the first five rows of this decomposition.
+By terminating the algorithm very early, we avoid the computational bottleneck and many of the numerical instabilities.
+
+It is our hope that this work dramatically reduces the complexity of implementing new Gaussian process models,
+while allowing for inference to be performed as efficiently as possible.

@@ -1,0 +1,31 @@
+%!TEX root=main.tex
+\section{Background}
+
+\paragraph{Notation.}
+$\X$ will denote a set of $n$ training examples in $d$ dimensions, or equivalently an $n \times d$ matrix where the $i^{\text{th}}$ row (denoted $\x_{i}$) is the $i^\text{th}$ training example.
+$\y$ denotes the training labels.
+$k(\x, \x')$ denotes a \emph{kernel function}, and $\K_{\X\X}$ denotes the matrix containing all pairs of kernel entries, i.e. $[\K_{\X\X}]_{ij} = k(\x_{i}, \x_{j})$.
+$\bk_{\X\x^{*}}$ denotes kernel values between training examples and a test point $\x^{*}$, e.g. $[\bk_{\X\x^{*}}]_{i} = k(\x_{i}, \x^{*})$.
+A hat denotes an added diagonal: $\trainK = \K_{\X\X} + \sigma^{2}I$.
+
+\paragraph{A Gaussian process} (GP) is a kernel method that defines a full distribution over the function being modeled, $f(\bx) \sim \mathcal{GP} \left( \mu(\bx), k(\bx,\bx^{\prime}) \right)$.
+Popular kernels include the RBF kernel, $k(\bx, \bx^{\prime}) = s\exp\left(-(\Vert \bx - \bx^{\prime} \Vert)/(2\ell^{2})\right)$ and the Mat\'ern family of kernels \cite{rasmussen2006gaussian}.
+
+\paragraph{Predictions with a Gaussian process.}
+Predictions with a GP are made utilizing the \emph{predictive posterior distribution}, $p(f(\bx^{*})\mid\X,\y)$. Given two test inputs $\x^{*}$ and $\x^{*\prime}$, the predictive mean for $\x^{*}$ and the predictive covariance between $\x^{*}$ and $\x^{*\prime}$ are given by:
+%
+\begin{align}
+  \mu_{f \mid \dset}(\x^*) = \mu(\x^*) + \bk_{\X \x^*}^\top \trainK^{-1} \y,
+  &&&&
+  k_{f\mid\dset}(\x^*, \x^{*\prime}) = k_{\x^{*} \x^{*\prime}} - \bk_{\X \x^{*}}^\top \trainK^{-1} \bk_{\X \x^{*\prime}},
+    \label{eq:pred_mean_covar}
+\end{align}
+%
+\paragraph{Training a Gaussian process.}
+Gaussian processes depend on a number of \emph{hyperparameters} $\theta$. Hyperparameters may include the likelihood noise, kernel lengthscale, inducing point locations \cite{titsias2009variational}, or neural network parameters for deep kernel learning \cite{wilson2016deep}. These parameters are commonly learned by minimization or sampling via the \emph{negative log marginal likelihood}, given (with derivative) by
+%
+\begin{equation}
+  L(\theta \! \mid \! \X, \y) \propto \log \left\vert \trainK \right\vert - \y^{\top}\trainK^{-1}\y,
+  \:\:\:
+  \frac{dL}{d\theta} = \y^{\top} \! \trainK^{-1}\frac{d\trainK}{d\theta}\trainK^{-1}\y + \tr{\trainK^{-1}\frac{d\trainK}{d\theta}} \label{eq:log_lik_and_deriv}.
+\end{equation}

@@ -16,6 +16,27 @@
 \usepackage{makecell}  % thead, other vertical alignment options
 \usepackage{hhline}  % double horizontal lines for tables
 
+%\usepackage[utf8]{inputenc} % allow utf-8 input
+%\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+%\usepackage{hyperref}       % hyperlinks
+%\usepackage{color}
+%\usepackage{url}            % simple URL typesetting
+%\usepackage{booktabs}       % professional-quality tables
+%\usepackage[algo2e,ruled]{algorithm2e}
+%\usepackage{amsmath,amsfonts,amsthm,amssymb}       % blackboard math symbols
+%\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+%\usepackage{microtype}      % microtypography
+%\usepackage[pdftex]{graphicx}
+%\usepackage{subcaption}
+%\usepackage{mwe}
+%\usepackage{times}
+%\usepackage{titlesec} % change font heading
+%\usepackage{multirow}
+%\usepackage{enumitem}
+%\usepackage{hhline}  % double horizontal lines for tables
+%\usepackage{aliascnt} % for using same numbering for theorems and lemmas
+
+
 %%%%%%%%%%%%%% Custom comments stuff
 \newif\ifcomments
 %\commentsfalse
@@ -37,6 +58,27 @@
 \tolerance=9999
 
 
+%%%%%%%%%%%%%% Theorems, observations, etc.
+\newtheorem{observation}{Observation}
+\newtheorem{theorem}{Theorem}
+%\newaliascnt{lemma}{theorem}
+\newtheorem{lemma}{Lemma}
+
+
+%%%%%%%%%%%%%% Autoref
+\renewcommand{\sectionautorefname}{Section}
+\renewcommand{\algorithmautorefname}{Algorithm}
+\newcommand{\definitionautorefname}{Definition}
+\newcommand{\thmautorefname}{Theorem}
+\newcommand{\lemmaautorefname}{Lemma}
+\newcommand{\observationautorefname}{Observation}
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+
+
+%%%%%%%%%%%%%% Macros
+\input{macros}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 \title{GPyTorch}
 \author{Geoff Pleiss}
@@ -50,6 +92,7 @@
 \begin{document}
 \maketitle
 \makecopyright
+
 
 \begin{abstract}
   \input{preface/abstract}
@@ -72,7 +115,6 @@
 \figurelistpage
 \normalspacing \setcounter{page}{1} \pagenumbering{arabic}
 \pagestyle{cornell} \addtolength{\parskip}{0.5\baselineskip}
-\input{macros}
 
 \input{chapters/introduction}
 \input{chapters/bbmm/main}
