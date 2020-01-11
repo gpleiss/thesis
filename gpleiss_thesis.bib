@@ -1,4 +1,4 @@
-%%  Datasets
+%% Datasets
 
 @misc{hyndman2005time,
   title={Time series data library.},
@@ -31,112 +31,79 @@
 	publisher={Citeseer}
 }
 
-@techreport{cubdataset,
-	Author = {P. Welinder and S. Branson and T. Mita and C. Wah and F. Schroff and S. Belongie and P. Perona},
-	Institution = {California Institute of Technology},
-	Number = {CNS-TR-2010-001},
-	Title = {{Caltech-UCSD Birds 200}},
-	Year = {2010}
+
+%% Deep learning: Bayesian
+
+@article{mackay1992practical,
+  title={A practical Bayesian framework for backpropagation networks},
+  author={MacKay, David JC},
+  journal={Neural computation},
+  volume={4},
+  number={3},
+  pages={448--472},
+  year={1992},
+  publisher={MIT Press}
 }
 
-@inproceedings{netzer2011reading,
-	title={Reading digits in natural images with unsupervised feature learning},
-	author={Netzer, Yuval and Wang, Tao and Coates, Adam and Bissacco, Alessandro and Wu, Bo and Ng, Andrew Y},
-	booktitle={Deep Learning and Unsupervised Feature Learning Workshop, NIPS},
-	year={2011},
-}
-
-@inproceedings{carsdataset,
-  title = {3D Object Representations for Fine-Grained Categorization},
-  booktitle = {IEEE Workshop on  3D Representation and Recognition (3dRR)},
-  year = {2013},
-  address = {Sydney, Australia},
-  author = {Jonathan Krause and Michael Stark and Jia Deng and Li Fei-Fei}
-}
-
-
-%% General references
-
-@article{jaynes1957information,
-	title={Information theory and statistical mechanics},
-	author={Jaynes, Edwin T},
-	journal={Physical review},
-	volume={106},
-	number={4},
-	pages={620},
-	year={1957},
-	publisher={APS}
-}
-
-@book{vapnik1998,
-  author = {Vapnik, Vladimir N.},
-  keywords = {imported},
-  publisher = {Wiley-Interscience},
-  title = {Statistical Learning Theory},
-  year = 1998
-}
-
-@book{friedman2001elements,
-	title={The elements of statistical learning},
-	author={Friedman, Jerome and Hastie, Trevor and Tibshirani, Robert},
-	volume={1},
-	year={2001},
-	publisher={Springer series in statistics Springer, Berlin}
-}
-
-@book{vapnik2013nature,
-	title={The nature of statistical learning theory},
-	author={Vapnik, Vladimir},
-	year={2013},
-	publisher={Springer Science \& Business Media}
-}
-
-@article{bengio2015deep,
-	title={Deep learning},
-	author={Bengio, Yoshua and Goodfellow, Ian J and Courville, Aaron},
-	journal={Nature},
-	volume={521},
-	pages={436--444},
-	year={2015},
-	publisher={Citeseer}
-}
-
-
-%% Deep learning applications
-
-@article{hannun2014deep,
-  title={Deep speech: Scaling up end-to-end speech recognition},
-  author={Hannun, Awni and Case, Carl and Casper, Jared and Catanzaro, Bryan and Diamos, Greg and Elsen, Erich and Prenger, Ryan and Satheesh, Sanjeev and Sengupta, Shubho and Coates, Adam and others},
-  journal={arXiv preprint arXiv:1412.5567},
-  year={2014}
-}
-
-@inproceedings{kendall2015modelling,
-	title={Modelling Uncertainty in Deep Learning for Camera Relocalization},
-	author={Kendall, Alex and Cipolla, Roberto},
-	journal={ICRA},
+@inproceedings{gal2015dropout,
+	title={Dropout as a Bayesian approximation: Representing model uncertainty in deep learning},
+	author={Gal, Yarin and Ghahramani, Zoubin},
+	booktitle={ICML},
 	year={2016}
 }
 
-@article{xiong2016achieving,
-  title={Achieving human parity in conversational speech recognition},
-  author={Xiong, Wayne and Droppo, Jasha and Huang, Xuedong and Seide, Frank and Seltzer, Mike and Stolcke, Andreas and Yu, Dong and Zweig, Geoffrey},
-  journal={arXiv preprint arXiv:1610.05256},
+@article{kendall2017uncertainties,
+  title={What Uncertainties Do We Need in Bayesian Deep Learning for Computer Vision?},
+  author={Kendall, Alex and Gal, Yarin},
+  journal={arXiv preprint arXiv:1703.04977},
+  year={2017}
+}
+
+
+%% Deep learning: Architectures
+
+@article{hochreiter1997long,
+	title={Long short-term memory},
+	author={Hochreiter, Sepp and Schmidhuber, J{\"u}rgen},
+	journal={Neural computation},
+	volume={9},
+	number={8},
+	pages={1735--1780},
+	year={1997},
+	publisher={MIT Press}
+}
+
+
+@article{lecun1998gradient,
+  title={Gradient-based learning applied to document recognition},
+  author={LeCun, Yann and Bottou, L{\'e}on and Bengio, Yoshua and Haffner, Patrick},
+  journal={Proceedings of the IEEE},
+  volume={86},
+  number={11},
+  pages={2278--2324},
+  year={1998}
+}
+
+@inproceedings{krizhevsky2012imagenet,
+  title={Imagenet classification with deep convolutional neural networks},
+  author={Krizhevsky, Alex and Sutskever, Ilya and Hinton, Geoffrey E},
+  booktitle={Advances in neural information processing systems},
+  pages={1097--1105},
+  year={2012}
+}
+
+@inproceedings{he2016deep,
+  title={Deep residual learning for image recognition},
+  author={He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  booktitle={CVPR},
   year={2016}
 }
 
-@article{bojarski2016end,
- title={End to End Learning for Self-Driving Cars},
- author={Bojarski, Mariusz and Del Testa, Davide and Dworakowski, Daniel and Firner, Bernhard and Flepp, Beat and Goyal, Prasoon and Jackel, Lawrence D and Monfort, Mathew and Muller, Urs and Zhang, Jiakai and others},
- journal={arXiv preprint arXiv:1604.07316},
- year={2016}
-}
-
-@inproceedings{caruana2015intelligible,
- title={Intelligible models for healthcare: Predicting pneumonia risk and hospital 30-day readmission},
- author={Caruana, Rich and Lou, Yin and Gehrke, Johannes and Koch, Paul and Sturm, Marc and Elhadad, Noemie},
- booktitle={KDD},
- year={2015},
+@inproceedings{zhang2016understanding,
+  title={Understanding deep learning requires rethinking generalization},
+  author={Zhang, Chiyuan and Bengio, Samy and Hardt, Moritz and Recht, Benjamin and Vinyals, Oriol},
+  booktitle={ICLR},
+  year={2017}
 }
 
 
@@ -184,298 +151,184 @@
   year={2017}
 }
 
-@article{paszke2017automatic,
-  title={Automatic differentiation in {P}y{T}orch},
-  author={Paszke, Adam and Gross, Sam and Chintala, Soumith and Chanan, Gregory and Yang, Edward and DeVito, Zachary and Lin, Zeming and Desmaison, Alban and Antiga, Luca and Lerer, Adam},
-  year={2017}
+@inproceedings{paszke2019pytorch,
+  title={PyTorch: An imperative style, high-performance deep learning library},
+  author={Paszke, Adam and Gross, Sam and Massa, Francisco and Lerer, Adam and Bradbury, James and Chanan, Gregory and Killeen, Trevor and Lin, Zeming and Gimelshein, Natalia and Antiga, Luca and others},
+  booktitle={NeurIPS},
+  pages={8024--8035},
+  year={2019}
 }
 
 
-%% Deep networks
+%% General references
 
-@article{hochreiter1997long,
-	title={Long short-term memory},
-	author={Hochreiter, Sepp and Schmidhuber, J{\"u}rgen},
-	journal={Neural computation},
-	volume={9},
-	number={8},
-	pages={1735--1780},
-	year={1997},
-	publisher={MIT Press}
+@book{vapnik1998,
+  author = {Vapnik, Vladimir N.},
+  keywords = {imported},
+  publisher = {Wiley-Interscience},
+  title = {Statistical Learning Theory},
+  year = 1998
+}
+
+@book{friedman2001elements,
+	title={The elements of statistical learning},
+	author={Friedman, Jerome and Hastie, Trevor and Tibshirani, Robert},
+	volume={1},
+	year={2001},
+	publisher={Springer series in statistics Springer, Berlin}
+}
+
+@book{vapnik2013nature,
+	title={The nature of statistical learning theory},
+	author={Vapnik, Vladimir},
+	year={2013},
+	publisher={Springer Science \& Business Media}
+}
+
+@article{bengio2015deep,
+	title={Deep learning},
+	author={Bengio, Yoshua and Goodfellow, Ian J and Courville, Aaron},
+	journal={Nature},
+	volume={521},
+	pages={436--444},
+	year={2015},
+	publisher={Citeseer}
 }
 
 
-@article{lecun1998gradient,
-  title={Gradient-based learning applied to document recognition},
-  author={LeCun, Yann and Bottou, L{\'e}on and Bengio, Yoshua and Haffner, Patrick},
-  journal={Proceedings of the IEEE},
-  volume={86},
-  number={11},
-  pages={2278--2324},
-  year={1998}
+%% GPs: DKL
+
+@inproceedings{wilson2016deep,
+  title={Deep kernel learning},
+  author={Wilson, Andrew Gordon and Hu, Zhiting and Salakhutdinov, Ruslan and Xing, Eric P},
+  booktitle={AISTATS},
+  year={2016}
 }
 
-@inproceedings{krizhevsky2012imagenet,
-  title={Imagenet classification with deep convolutional neural networks},
-  author={Krizhevsky, Alex and Sutskever, Ilya and Hinton, Geoffrey E},
-  booktitle={Advances in neural information processing systems},
-  pages={1097--1105},
-  year={2012}
+@inproceedings{wilson2016stochastic,
+  title={Stochastic variational deep kernel learning},
+  author={Wilson, Andrew G and Hu, Zhiting and Salakhutdinov, Ruslan R and Xing, Eric P},
+  booktitle={NIPS},
+  year={2016}
 }
 
-@InProceedings{socher2013recursive,
-  author    = {Socher, Richard  and  Perelygin, Alex  and  Wu, Jean  and  Chuang, Jason  and  Manning, Christopher D.  and  Ng, Andrew  and  Potts, Christopher},
-  title     = {Recursive Deep Models for Semantic Compositionality Over a Sentiment Treebank},
-  booktitle = {EMNLP},
-  year      = {2013},
-  pages     = {1631--1642},
+
+%% GPs: General
+
+@book{rasmussen2006gaussian,
+  title={{G}aussian processes for machine learning},
+  author={Rasmussen, Carl Edward and Williams, Christopher KI},
+  volume={1},
+  year={2006},
+  publisher={MIT press Cambridge}
 }
 
-@inproceedings{simonyan2014very,
-  title={Very deep convolutional networks for large-scale image recognition},
-  author={Simonyan, Karen and Zisserman, Andrew},
-  booktitle={ICLR},
+@inproceedings{bonilla2008multi,
+  title={Multi-task {G}aussian process prediction},
+  author={Bonilla, Edwin V and Chai, Kian M and Williams, Christopher},
+  booktitle={NIPS},
+  year={2008}
+}
+
+
+%% GPs: Fast
+
+@article{quinonero2005unifying,
+  title={A unifying view of sparse approximate {G}aussian process regression},
+  author={Qui{\~n}onero-Candela, Joaquin and Rasmussen, Carl Edward},
+  journal={Journal of Machine Learning Research},
+  volume={6},
+  number={Dec},
+  pages={1939--1959},
+  year={2005}
+}
+
+@inproceedings{snelson2006sparse,
+  title={Sparse {G}aussian processes using pseudo-inputs},
+  author={Snelson, Edward and Ghahramani, Zoubin},
+  booktitle={NIPS},
+  year={2006}
+}
+
+@inproceedings{cunningham2008fast,
+  title={Fast {G}aussian process methods for point process intensity estimation},
+  author={Cunningham, John P and Shenoy, Krishna V and Sahani, Maneesh},
+  booktitle={ICML},
+  year={2008}
+}
+
+@inproceedings{murray2009gaussian,
+  title={{G}aussian processes and fast matrix-vector multiplies},
+  author={Murray, Iain},
+  booktitle={ICML Workshop on Numerical Mathematics in Machine Learning},
+  year={2009}
+}
+
+@phdthesis{saatcci2012scalable,
+  title={Scalable inference for structured {G}aussian process models},
+  author={Saat{\c{c}}i, Yunus},
+  year={2012},
+  school={University of Cambridge}
+}
+
+@phdthesis{wilson2014thesis,
+  title={Covariance kernels for fast automatic pattern discovery and extrapolation with {G}aussian processes},
+  author={Andrew Gordon Wilson},
+  school={University of Cambridge},
+  year={2014}
+}
+
+@inproceedings{wilson2015kernel,
+  title={Kernel interpolation for scalable structured {G}aussian processes ({KISS-GP})},
+  author={Wilson, Andrew Gordon and Nickisch, Hannes},
+  booktitle={ICML},
   year={2015}
 }
 
-@inproceedings{girshick2015fast,
-	title={Fast r-cnn},
-	author={Girshick, Ross},
-	booktitle={ICCV},
-	pages={1440--1448},
-	year={2015}
+@article{wilson2015thoughts,
+  title={Thoughts on massively scalable {G}aussian processes},
+  author={Wilson, Andrew Gordon and Dann, Christoph and Nickisch, Hannes},
+  journal={arXiv preprint arXiv:1511.01870},
+  year={2015}
 }
 
-@inproceedings{iyyer2015deep,
-	Title = {Deep Unordered Composition Rivals Syntactic Methods for Text Classification},
-	Booktitle = {ACL},
-	Author = {Mohit Iyyer and Varun Manjunatha and Jordan Boyd-Graber and Hal {Daum\'{e} III}},
-	Year = {2015},
-	Location = {Beijing, China}
-}
-
-@article{srivastava2015highway,
-	title={Highway networks},
-	author={Srivastava, Rupesh Kumar and Greff, Klaus and Schmidhuber, J{\"u}rgen},
-	journal={arXiv preprint arXiv:1505.00387},
-	year={2015}
-}
-
-@inproceedings{tai2015improved,
-  author = {Tai, Kai Sheng and Socher, Richard and Manning, Christopher D},
-  journal = {ACL},
-  title = {Improved semantic representations from tree-structured long short-term memory networks},
-  year = {2015}
-}
-
-@inproceedings{huang2016deep,
-  title={Deep networks with stochastic depth},
-  author={Huang, Gao and Sun, Yu and Liu, Zhuang and Sedra, Daniel and Weinberger, Kilian Q},
-  booktitle={ECCV},
+@inproceedings{cutajar2016preconditioning,
+  title={Preconditioning kernel matrices},
+  author={Cutajar, Kurt and Osborne, Michael and Cunningham, John and Filippone, Maurizio},
+  booktitle={ICML},
   year={2016}
 }
 
-@inproceedings{he2016deep,
-  title={Deep residual learning for image recognition},
-  author={He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
-  booktitle={CVPR},
-  year={2016}
-}
-
-@inproceedings{zagoruyko2016wide,
-  title={Wide residual networks},
-  author={Zagoruyko, Sergey and Komodakis, Nikos},
-  booktitle={BMVC},
-  year={2016}
-}
-
-@inproceedings{huang2017densely,
-  title={Densely connected convolutional networks},
-  author={Huang, Gao and Liu, Zhuang and Weinberger, Kilian Q and van der Maaten, Laurens},
-  booktitle={CVPR},
-  year={2017}
-}
-
-
-%% Deep learning techniques
-
-@inproceedings{glorot2010understanding,
-  title={Understanding the difficulty of training deep feedforward neural networks.},
-  author={Glorot, Xavier and Bengio, Yoshua},
+@inproceedings{gardner2018product,
+  title={Product Kernel Interpolation for Scalable {G}aussian Processes},
+  author={Gardner, Jacob R. and Pleiss, Geoff and Wu, Ruihan and Weinberger, Kilian Q. and Wilson, Andrew Gordon},
   booktitle={AISTATS},
-  year={2010}
-}
-
-@article{srivastava2014dropout,
-  author  = {Nitish Srivastava and Geoffrey Hinton and Alex Krizhevsky and Ilya Sutskever and Ruslan Salakhutdinov},
-  title   = {Dropout: A Simple Way to Prevent Neural Networks from Overfitting},
-  journal = {Journal of Machine Learning Research},
-  year    = {2014},
-  volume  = {15},
-  pages   = {1929-1958},
-}
-
-@inproceedings{ioffe2015batch,
- author = {Ioffe, Sergey and Szegedy, Christian},
- title = {Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift},
- booktitle = {ICML},
- year = {2015},
-}
-
-@inproceedings{hinton2015distilling,
-	title={Distilling the knowledge in a neural network},
-	author={Hinton, Geoffrey and Vinyals, Oriol and Dean, Jeff},
-	journal={Deep Learning Workshop, NIPS},
-	year={2015}
-}
-
-@article{ba2016layer,
-  title={Layer normalization},
-  author={Ba, Jimmy Lei and Kiros, Jamie Ryan and Hinton, Geoffrey E},
-  journal={arXiv preprint arXiv:1607.06450},
-  year={2016}
-}
-
-@inproceedings{salimans2016weight,
-  title={Weight normalization: A simple reparameterization to accelerate training of deep neural networks},
-  author={Salimans, Tim and Kingma, Diederik P},
-  booktitle={NIPS},
-  pages={901--901},
-  year={2016}
-}
-
-@inproceedings{zhang2016understanding,
-  title={Understanding deep learning requires rethinking generalization},
-  author={Zhang, Chiyuan and Bengio, Samy and Hardt, Moritz and Recht, Benjamin and Vinyals, Oriol},
-  booktitle={ICLR},
-  year={2017}
+  year={2018}
 }
 
 
-%% Bayesian deep learning
+%% GPs: Variational
 
-@article{mackay1992practical,
-  title={A practical Bayesian framework for backpropagation networks},
-  author={MacKay, David JC},
-  journal={Neural computation},
-  volume={4},
-  number={3},
-  pages={448--472},
-  year={1992},
-  publisher={MIT Press}
+@inproceedings{titsias2009variational,
+  title={Variational learning of inducing variables in sparse {G}aussian processes},
+  author={Titsias, Michalis K},
+  booktitle={AISTATS},
+  pages={567--574},
+  year={2009}
 }
 
-@inproceedings{gal2015dropout,
-	title={Dropout as a Bayesian approximation: Representing model uncertainty in deep learning},
-	author={Gal, Yarin and Ghahramani, Zoubin},
-	booktitle={ICML},
-	year={2016}
+@inproceedings{hensman2013gaussian,
+  title={{G}aussian processes for big data},
+  author={Hensman, James and Fusi, Nicolo and Lawrence, Neil D},
+  booktitle={UAI},
+  year={2013}
 }
 
-@article{kendall2017uncertainties,
-  title={What Uncertainties Do We Need in Bayesian Deep Learning for Computer Vision?},
-  author={Kendall, Alex and Gal, Yarin},
-  journal={arXiv preprint arXiv:1703.04977},
-  year={2017}
-}
-
-
-%% Calibration
-
-@article{degroot1983comparison,
-  title={The comparison and evaluation of forecasters},
-  author={DeGroot, Morris H and Fienberg, Stephen E},
-  journal={The statistician},
-  pages={12--22},
-  year={1983},
-  publisher={JSTOR}
-}
-
-@inproceedings{denker1990transforming,
-  title={Transforming neural-net output levels to probability distributions},
-  author={Denker, John S and Lecun, Yann},
-  booktitle={NIPS},
-  pages={853--859},
-  year={1990}
-}
-
-@article{platt1999probabilistic,
-	title={Probabilistic outputs for support vector machines and comparisons to regularized likelihood methods},
-	author={Platt, John and others},
-	journal={Advances in large margin classifiers},
-	volume={10},
-	number={3},
-	pages={61--74},
-	year={1999},
-	publisher={Cambridge, MA}
-}
-
-@inproceedings{zadrozny2001obtaining,
- author = {Zadrozny, Bianca and Elkan, Charles},
- title = {Obtaining Calibrated Probability Estimates from Decision Trees and Naive Bayesian Classifiers},
- booktitle = {ICML},
- year = {2001},
- pages = {609--616}
-}
-
-@inproceedings{zadrozny2002transforming,
- author = {Zadrozny, Bianca and Elkan, Charles},
- title = {Transforming Classifier Scores into Accurate Multiclass Probability Estimates},
- booktitle = {KDD},
- year = {2002},
- pages = {694--699}
-} 
-
-@inproceedings{duan2005best,
-	title={Which is the best multiclass SVM method? An empirical study},
-	author={Duan, Kai-Bo and Keerthi, S Sathiya},
-	booktitle={International Workshop on Multiple Classifier Systems},
-	pages={278--285},
-	year={2005}
-}
-
-@inproceedings{niculescu2005predicting,
-	title={Predicting good probabilities with supervised learning},
-	author={Niculescu-Mizil, Alexandru and Caruana, Rich},
-	booktitle={ICML},
-	pages={625--632},
-	year={2005}
-}
-
-@article{jiang2012calibrating,
-	title={Calibrating predictive model estimates to support personalized medicine},
-	author={Jiang, Xiaoqian and Osl, Melanie and Kim, Jihoon and Ohno-Machado, Lucila},
-	journal={Journal of the American Medical Informatics Association},
-	volume={19},
-	number={2},
-	pages={263--274},
-	year={2012},
-	publisher={The Oxford University Press}
-}
-
-@inproceedings{kuleshov2015calibrated,
- author = {Kuleshov, Volodymyr and Liang, Percy},
- title = {Calibrated Structured Prediction},
- booktitle = {NIPS},
- year = {2015},
- pages = {3474--3482},
-}
-
-@inproceedings{naeini2015obtaining,
-	title={Obtaining well calibrated probabilities using bayesian binning},
-	author={Naeini, Mahdi Pakdaman and Cooper, Gregory F and Hauskrecht, Milos},
-	booktitle={AAAI},
-	pages={2901},
-	year={2015},
-}
-
-@article{begoli2019uncertainty,
-  author = {Edmon Begoli and Tanmoy Bhattacharya and Dimitri Kusnezov},
-  title = {The need for uncertainty quantification in machine-assisted medical decision making},
-  journal = {Nature Machine Intelligence},
-  volume = {1},
-  pages={20--23},
-  year = {2019},
+@inproceedings{hensman2015scalable,
+  title={Scalable variational {G}aussian process classification},
+  author={Hensman, James and Matthews, Alexander G de G and Ghahramani, Zoubin},
+  booktitle={ICML},
+  year={2015}
 }
 
 
@@ -520,168 +373,87 @@
   organization={Springer}
 }
 
-
-%% Deep learning confidence
-
-@article{lakshminarayanan2016simple,
-  title={Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles},
-  author={Lakshminarayanan, Balaji and Pritzel, Alexander and Blundell, Charles},
-  journal={arXiv preprint arXiv:1612.01474},
-  year={2016}
-}
-
-@article{pereyra2017regularizing,
-  title={Regularizing neural networks by penalizing confident output distributions},
-  author={Pereyra, Gabriel and Tucker, George and Chorowski, Jan and Kaiser, {\L}ukasz and Hinton, Geoffrey},
-  journal={arXiv preprint arXiv:1701.06548},
-  year={2017}
+@article{begoli2019uncertainty,
+  author = {Edmon Begoli and Tanmoy Bhattacharya and Dimitri Kusnezov},
+  title = {The need for uncertainty quantification in machine-assisted medical decision making},
+  journal = {Nature Machine Intelligence},
+  volume = {1},
+  pages={20--23},
+  year = {2019},
 }
 
 
-%% Deep learning OOD
+%% Numerical Linalg: General
 
-@inproceedings{hendrycks2016baseline,
-  title={A Baseline for Detecting Misclassified and Out-of-Distribution Examples in Neural Networks},
-  author={Hendrycks, Dan and Gimpel, Kevin},
-  booktitle={ICLR},
-  year={2017}
+@book{demmel1997applied,
+  title={Applied numerical linear algebra},
+  author={Demmel, James W},
+  volume={56},
+  year={1997},
+  publisher={Siam}
 }
 
-
-
-%% General GPs
-
-@book{rasmussen2006gaussian,
-  title={{G}aussian processes for machine learning},
-  author={Rasmussen, Carl Edward and Williams, Christopher KI},
-  volume={1},
-  year={2006},
-  publisher={MIT press Cambridge}
+@book{loan1999introduction,
+  title={Introduction to scientific computing: a matrix-vector approach using MATLAB},
+  author={Loan, Charles F Van},
+  year={1999},
+  publisher={Prentice Hall PTR}
 }
 
-@inproceedings{bonilla2008multi,
-  title={Multi-task {G}aussian process prediction},
-  author={Bonilla, Edwin V and Chai, Kian M and Williams, Christopher},
-  booktitle={NIPS},
-  year={2008}
+@article{schneider2001krylov,
+  title={Krylov subspace estimation},
+  author={Schneider, Michael K and Willsky, Alan S},
+  journal={SIAM Journal on Scientific Computing},
+  volume={22},
+  number={5},
+  pages={1840--1864},
+  year={2001},
+  publisher={SIAM}
 }
 
-
-%% Fast GPs
-
-@article{quinonero2005unifying,
-  title={A unifying view of sparse approximate {G}aussian process regression},
-  author={Qui{\~n}onero-Candela, Joaquin and Rasmussen, Carl Edward},
-  journal={Journal of Machine Learning Research},
-  volume={6},
-  number={Dec},
-  pages={1939--1959},
-  year={2005}
+@book{saad2003iterative,
+  title={Iterative methods for sparse linear systems},
+  author={Saad, Yousef},
+  volume={82},
+  year={2003},
+  publisher={siam}
 }
 
-@inproceedings{snelson2006sparse,
-  title={Sparse {G}aussian processes using pseudo-inputs},
-  author={Snelson, Edward and Ghahramani, Zoubin},
-  booktitle={NIPS},
-  year={2006}
+@book{van2003iterative,
+  title={Iterative Krylov methods for large linear systems},
+  author={Van der Vorst, Henk A},
+  volume={13},
+  year={2003},
+  publisher={Cambridge University Press}
 }
 
-@inproceedings{cunningham2008fast,
-  title={Fast {G}aussian process methods for point process intensity estimation},
-  author={Cunningham, John P and Shenoy, Krishna V and Sahani, Maneesh},
-  booktitle={ICML},
-  year={2008}
+@book{golub2009matrices,
+  title={Matrices, moments and quadrature with applications},
+  author={Golub, Gene H and Meurant, G{\'e}rard},
+  year={2009},
+  publisher={Princeton University Press}
 }
 
-@inproceedings{murray2009gaussian,
-  title={{G}aussian processes and fast matrix-vector multiplies},
-  author={Murray, Iain},
-  booktitle={ICML Workshop on Numerical Mathematics in Machine Learning},
-  year={2009}
+@book{datta2010numerical,
+  title={Numerical linear algebra and applications},
+  author={Datta, Biswa Nath},
+  volume={116},
+  year={2010},
+  publisher={Siam}
 }
 
-@inproceedings{titsias2009variational,
-  title={Variational learning of inducing variables in sparse {G}aussian processes},
-  author={Titsias, Michalis K},
-  booktitle={AISTATS},
-  pages={567--574},
-  year={2009}
-}
-
-@phdthesis{saatcci2012scalable,
-  title={Scalable inference for structured {G}aussian process models},
-  author={Saat{\c{c}}i, Yunus},
+@book{golub2012matrix,
+  title={Matrix computations},
+  author={Golub, Gene H and Van Loan, Charles F},
+  volume={3},
   year={2012},
-  school={University of Cambridge}
-}
-
-@inproceedings{hensman2013gaussian,
-  title={{G}aussian processes for big data},
-  author={Hensman, James and Fusi, Nicolo and Lawrence, Neil D},
-  booktitle={UAI},
-  year={2013}
-}
-
-@phdthesis{wilson2014thesis,
-  title={Covariance kernels for fast automatic pattern discovery and extrapolation with {G}aussian processes},
-  author={Andrew Gordon Wilson},
-  school={University of Cambridge},
-  year={2014}
-}
-
-@inproceedings{hensman2015scalable,
-  title={Scalable variational {G}aussian process classification},
-  author={Hensman, James and Matthews, Alexander G de G and Ghahramani, Zoubin},
-  booktitle={ICML},
-  year={2015}
-}
-
-@inproceedings{wilson2015kernel,
-  title={Kernel interpolation for scalable structured {G}aussian processes ({KISS-GP})},
-  author={Wilson, Andrew Gordon and Nickisch, Hannes},
-  booktitle={ICML},
-  year={2015}
-}
-
-@article{wilson2015thoughts,
-  title={Thoughts on massively scalable {G}aussian processes},
-  author={Wilson, Andrew Gordon and Dann, Christoph and Nickisch, Hannes},
-  journal={arXiv preprint arXiv:1511.01870},
-  year={2015}
-}
-
-@inproceedings{cutajar2016preconditioning,
-  title={Preconditioning kernel matrices},
-  author={Cutajar, Kurt and Osborne, Michael and Cunningham, John and Filippone, Maurizio},
-  booktitle={ICML},
-  year={2016}
-}
-
-%% Deep kernel learning
-
-@inproceedings{wilson2016deep,
-  title={Deep kernel learning},
-  author={Wilson, Andrew Gordon and Hu, Zhiting and Salakhutdinov, Ruslan and Xing, Eric P},
-  booktitle={AISTATS},
-  year={2016}
-}
-
-@inproceedings{wilson2016stochastic,
-  title={Stochastic variational deep kernel learning},
-  author={Wilson, Andrew G and Hu, Zhiting and Salakhutdinov, Ruslan R and Xing, Eric P},
-  booktitle={NIPS},
-  year={2016}
-}
-
-@inproceedings{gardner2018product,
-  title={Product Kernel Interpolation for Scalable {G}aussian Processes},
-  author={Gardner, Jacob R. and Pleiss, Geoff and Wu, Ruihan and Weinberger, Kilian Q. and Wilson, Andrew Gordon},
-  booktitle={AISTATS},
-  year={2018}
+  publisher={JHU Press}
 }
 
 
-%% Lanczos and CG
+
+
+%% Numerical Linalg: Lanczos and CG
 
 @book{lanczos1950iteration,
   title={An iteration method for the solution of the eigenvalue problem of linear differential and integral operators},
@@ -759,7 +531,7 @@
 }
 
 
-%% Kernel matrix theory
+%% Numerical linalg: Kernel matrix theory
 
 @inproceedings{bach2013sharp,
   title={Sharp analysis of low-rank kernel matrix approximations},
@@ -780,75 +552,21 @@
 }
 
 
-%% General numeric linear algebra
+%% Numerical Linalg: Pivoted Cholesky
 
-@book{demmel1997applied,
-  title={Applied numerical linear algebra},
-  author={Demmel, James W},
-  volume={56},
-  year={1997},
-  publisher={Siam}
-}
-
-@book{loan1999introduction,
-  title={Introduction to scientific computing: a matrix-vector approach using MATLAB},
-  author={Loan, Charles F Van},
-  year={1999},
-  publisher={Prentice Hall PTR}
-}
-
-@article{schneider2001krylov,
-  title={Krylov subspace estimation},
-  author={Schneider, Michael K and Willsky, Alan S},
-  journal={SIAM Journal on Scientific Computing},
-  volume={22},
-  number={5},
-  pages={1840--1864},
-  year={2001},
-  publisher={SIAM}
-}
-
-@book{saad2003iterative,
-  title={Iterative methods for sparse linear systems},
-  author={Saad, Yousef},
-  volume={82},
-  year={2003},
-  publisher={siam}
-}
-
-@book{van2003iterative,
-  title={Iterative Krylov methods for large linear systems},
-  author={Van der Vorst, Henk A},
-  volume={13},
-  year={2003},
-  publisher={Cambridge University Press}
-}
-
-@book{golub2009matrices,
-  title={Matrices, moments and quadrature with applications},
-  author={Golub, Gene H and Meurant, G{\'e}rard},
-  year={2009},
-  publisher={Princeton University Press}
-}
-
-@book{datta2010numerical,
-  title={Numerical linear algebra and applications},
-  author={Datta, Biswa Nath},
-  volume={116},
-  year={2010},
-  publisher={Siam}
-}
-
-@book{golub2012matrix,
-  title={Matrix computations},
-  author={Golub, Gene H and Van Loan, Charles F},
-  volume={3},
+@article{harbrecht2012low,
+  title={On the low-rank approximation by the pivoted Cholesky decomposition},
+  author={Harbrecht, Helmut and Peters, Michael and Schneider, Reinhold},
+  journal={Applied numerical mathematics},
+  volume={62},
+  number={4},
+  pages={428--440},
   year={2012},
-  publisher={JHU Press}
+  publisher={Elsevier}
 }
 
 
-%% Stochastic trace estimation
+%% Numerical Linalg: Stochastic trace estimation
 
 @article{hutchinson1990stochastic,
   title={A stochastic estimator of the trace of the influence matrix for laplacian smoothing splines},
@@ -877,18 +595,4 @@
   author={Fitzsimons, Jack K and Osborne, Michael A and Roberts, Stephen J and Fitzsimons, Joseph F},
   journal={arXiv preprint arXiv:1608.00117},
   year={2016}
-}
-
-
-%% Pivoted Cholesky
-
-@article{harbrecht2012low,
-  title={On the low-rank approximation by the pivoted Cholesky decomposition},
-  author={Harbrecht, Helmut and Peters, Michael and Schneider, Reinhold},
-  journal={Applied numerical mathematics},
-  volume={62},
-  number={4},
-  pages={428--440},
-  year={2012},
-  publisher={Elsevier}
 }

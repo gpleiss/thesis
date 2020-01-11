@@ -16,7 +16,6 @@
 \usepackage{makecell}  % thead, other vertical alignment options
 \usepackage{hhline}  % double horizontal lines for tables
 
-
 %%%%%%%%%%%%%% Custom comments stuff
 \newif\ifcomments
 %\commentsfalse
@@ -39,7 +38,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-\title{Uncertainty Estimations for Modern Machine Learning Algorithms}
+\title{GPyTorch}
 \author{Geoff Pleiss}
 \conferraldate{May}{2020}
 \degreefield{Ph.D.}
@@ -76,10 +75,9 @@
 \input{macros}
 
 \input{chapters/introduction}
-\input{chapters/nn-calibration/main}
-\input{chapters/nn-ood/main}
-\input{chapters/gp-bbmm/main}
-\input{chapters/gp-love/main}
+\input{chapters/bbmm/main}
+\input{chapters/love/main}
+\input{chapters/largeexact/main}
 \input{chapters/discussion}
 
 \appendix
