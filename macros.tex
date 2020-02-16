@@ -3,7 +3,9 @@
 \DeclareMathOperator*{\expectedvalue}{\mathbb{E}}
 \DeclareMathOperator*{\variance}{Var}
 \DeclareMathOperator*{\covariance}{Cov}
+\DeclareMathOperator*{\trace}{Tr}
 
+% Probability
 \newcommand{\bigo}[1]{\ensuremath{\mathchoice{\mathcal O \! \left( #1 \right)}}{\mathcal O ( #1 )}{}{}}
 \newcommand{\bigomega}[1]{\ensuremath{\mathchoice{\Omega \! \left( #1 \right)}}{\Omega ( #1 )}{}{}}
 \newcommand{\reals}{\ensuremath{\mathbb{R}}}
@@ -16,73 +18,65 @@
 \newcommand{\Varover}[2]{\ensuremath{\variance_{#1} \left[ #2 \right]}}
 \newcommand{\Cov}[1]{\ensuremath{\covariance \left[ #1 \right]}}
 \newcommand{\Covover}[2]{\ensuremath{\covariance_{#1} \left[ #2 \right]}}
+\newcommand{\given}{\mid}
 
+% Other matrix/math operators
+\newcommand{\tr}[1]{\ensuremath{\mathchoice{\trace \left( #1 \right)}{\trace ( #1 )}{}{}}}
+\newcommand{\inv}{^{-1}}
+\newcommand{\trans}{^{\top}}
+\newcommand{\intd}[1]{\,\mathrm{d}{#1}}
+
+% Matrices / vectors
 \newif\ifboldmatrix
 \boldmatrixtrue
 \ifboldmatrix\newcommand{\boldmatrix}[1]{\mathbf{#1}}\else\newcommand{\boldmatrix}[1]{#1}\fi
-\newcommand{\p}{\ensuremath{\mathbf{p}}}
-\newcommand{\be}{\ensuremath{\mathbf{e}}}
-\newcommand{\x}{\ensuremath{\mathbf{x}}}
-\newcommand{\bx}{\ensuremath{\mathbf{x}}}
 \newcommand{\ba}{\ensuremath{\mathbf{a}}}
 \newcommand{\bb}{\ensuremath{\mathbf{b}}}
 \newcommand{\bd}{\ensuremath{\mathbf{d}}}
-\newcommand{\by}{\ensuremath{\mathbf{y}}}
-\newcommand{\bv}{\ensuremath{\mathbf{v}}}
+\newcommand{\be}{\ensuremath{\mathbf{e}}}
+\newcommand{\bfn}{\ensuremath{\mathbf{f}}}
 \newcommand{\bk}{\ensuremath{\mathbf{k}}}
+\newcommand{\bm}{\ensuremath{\mathbf{m}}}
 \newcommand{\bp}{\ensuremath{\mathbf{p}}}
 \newcommand{\bq}{\ensuremath{\mathbf{q}}}
 \newcommand{\br}{\ensuremath{\mathbf{r}}}
 \newcommand{\bs}{\ensuremath{\mathbf{s}}}
-\newcommand{\bw}{\ensuremath{\mathbf{w}}}
 \newcommand{\bt}{\ensuremath{\mathbf{t}}}
-\newcommand{\bm}{\ensuremath{\mathbf{m}}}
 \newcommand{\bu}{\ensuremath{\mathbf{u}}}
-\newcommand{\xtest}{\ensuremath{x^*}}
-\newcommand{\X}{\ensuremath{\boldmatrix{X}}}
-\newcommand{\M}{\ensuremath{\boldmatrix{M}}}
-\newcommand{\W}{\ensuremath{\boldmatrix{W}}}
-\newcommand{\B}{\ensuremath{\boldmatrix{B}}}
-\newcommand{\A}{\ensuremath{\boldmatrix{A}}}
-\newcommand{\C}{\ensuremath{\boldmatrix{C}}}
-\newcommand{\D}{\ensuremath{\boldmatrix{D}}}
-\newcommand{\Q}{\ensuremath{\boldmatrix{Q}}}
-\newcommand{\T}{\ensuremath{\boldmatrix{T}}}
-\newcommand{\Y}{\ensuremath{\boldmatrix{Y}}}
-\newcommand{\Z}{\ensuremath{\boldmatrix{Z}}}
-\renewcommand{\L}{\ensuremath{\boldmatrix{L}}}
-\newcommand{\I}{\ensuremath{\boldmatrix{I}}}
-\renewcommand{\P}{\ensuremath{\boldmatrix{P}}}
-\newcommand{\U}{\ensuremath{\boldmatrix{U}}}
-\newcommand{\V}{\ensuremath{\boldmatrix{V}}}
-\newcommand{\K}{\ensuremath{\boldmatrix{K}}}
-\newcommand{\y}{\ensuremath{\mathbf{y}}}
+\newcommand{\bv}{\ensuremath{\mathbf{v}}}
+\newcommand{\bw}{\ensuremath{\mathbf{w}}}
+\newcommand{\bx}{\ensuremath{\mathbf{x}}}
+\newcommand{\by}{\ensuremath{\mathbf{y}}}
 \newcommand{\bz}{\ensuremath{\mathbf{z}}}
-\newcommand{\fn}{\ensuremath{\mathbf{f}}}
-\newcommand{\bfn}{\ensuremath{\mathbf{f}}}
-\newcommand{\ybar}{\bar{y}}
-\newcommand{\hb}{\textrm{h}}
-\newcommand{\ytest}{\ensuremath{y^*}}
+\newcommand{\bA}{\ensuremath{\boldmatrix{A}}}
+\newcommand{\bB}{\ensuremath{\boldmatrix{B}}}
+\newcommand{\bC}{\ensuremath{\boldmatrix{C}}}
+\newcommand{\bD}{\ensuremath{\boldmatrix{D}}}
+\newcommand{\bI}{\ensuremath{\boldmatrix{I}}}
+\newcommand{\bK}{\ensuremath{\boldmatrix{K}}}
+\newcommand{\bL}{\ensuremath{\boldmatrix{L}}}
+\newcommand{\bM}{\ensuremath{\boldmatrix{M}}}
+\newcommand{\bP}{\ensuremath{\boldmatrix{P}}}
+\newcommand{\bQ}{\ensuremath{\boldmatrix{Q}}}
+\newcommand{\bR}{\ensuremath{\boldmatrix{R}}}
+\newcommand{\bT}{\ensuremath{\boldmatrix{T}}}
+\newcommand{\bU}{\ensuremath{\boldmatrix{U}}}
+\newcommand{\bV}{\ensuremath{\boldmatrix{V}}}
+\newcommand{\bW}{\ensuremath{\boldmatrix{W}}}
+\newcommand{\bX}{\ensuremath{\boldmatrix{X}}}
+\newcommand{\bY}{\ensuremath{\boldmatrix{Y}}}
+\newcommand{\bZ}{\ensuremath{\boldmatrix{Z}}}
+
+% Data/dataset specific terms
+\newcommand{\bxtest}{\ensuremath{x^*}}
+\newcommand{\bytest}{\ensuremath{y^*}}
 \newcommand{\dset}{\ensuremath{\mathcal D}}
-\newcommand{\eye}{\ensuremath{\boldmatrix{I}}}
-\newcommand{\calM}{\ensuremath{\mathcal{M}}}
-\newcommand{\trainK}{\ensuremath{\widehat K_{\X \! \X}}}
-\newcommand{\trainP}{\ensuremath{\widehat P}}
-\newcommand{\tr}[1]{\ensuremath{\mathchoice{\textrm{Tr} \left( #1 \right)}{\textrm{Tr} ( #1 )}{}{}}}
+\newcommand{\model}{\ensuremath{\mathcal M}}
+\newcommand{\loglik}{\ensuremath{\mathcal L}}
+\newcommand{\trainK}{\ensuremath{\widehat{\bK}_{\bX,\bX}}}
+\newcommand{\trainP}{\ensuremath{\widehat{\bP}}}
+
+% Method specific terms
 \newcommand{\mmm}[1]{\ensuremath{\Xi (#1)}}
 \newcommand{\mvm}[1]{\ensuremath{\xi ( #1 )}}
 \newcommand{\row}[1]{\ensuremath{\rho ( #1 )}}
-\newcommand{\mmacro}{BBMM}
-\newcommand{\mmfullname}{Blackbox Matrix-Matrix}
-\newcommand{\mcgacro}{mBCG}
-\newcommand{\mc}[1]{\mathcal{#1}}
-\newcommand{\data}{\mc{D}}
-\newcommand{\model}{\mc{M}}
-\newcommand{\given}{\mid}
-\newcommand{\E}{\mathbb{E}}
-\newcommand{\intd}[1]{\,\mathrm{d}{#1}}
-\newcommand{\mat}[1]{\bm{\mathrm{#1}}}
-\newcommand{\acro}[1]{\textsc{\MakeLowercase{#1}}}
-\newcommand{\R}{\ensuremath{\boldmatrix{R}}}
-\newcommand{\inv}{^{-1}}
-\newcommand{\trans}{^{\top}}

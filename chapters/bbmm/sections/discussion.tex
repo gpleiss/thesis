@@ -1,12 +1,12 @@
 %!TEX root=main_arxiv.tex
 \section{Discussion}
-In this paper, we discuss a novel framework for Gaussian process inference (\mmacro{}) based on blackbox matrix-matrix multiplication routines with kernel matrices.
+In this paper, we discuss a novel framework for Gaussian process inference (BBMM) based on blackbox matrix-matrix multiplication routines with kernel matrices.
 We have implemented this framework and several state-of-the-art GP models in our new publicly available {\href{https://gpytorch.ai}{GPyTorch}} package.
 
 \paragraph{Non-Gaussian likelihoods.}
-Although this paper primarily focuses on the regression setting, \mmacro{} is fully compatible with variational techniques such as \cite{hensman2015scalable,wilson2016stochastic}, which are also supported in GPyTorch.
+Although this paper primarily focuses on the regression setting, BBMM is fully compatible with variational techniques such as \cite{hensman2015scalable,wilson2016stochastic}, which are also supported in GPyTorch.
 These approaches require computing the variational lower bound (or ELBO) rather than the GP marginal log likelihood \eqref{eq:log_lik_and_deriv}. We leave the exact details of the ELBO derivation to other papers (e.g. \cite{hensman2015scalable}).
-However, we note that a single call to \mcgacro{} can be used to compute the KL divergence between two multivariate Gaussians, which is the most computationally intensive term of the ELBO.
+However, we note that a single call to mBCG can be used to compute the KL divergence between two multivariate Gaussians, which is the most computationally intensive term of the ELBO.
 
 \paragraph{Avoiding the Cholesky decomposition.}
 A surprising and important take-away of this paper is that it is beneficial to avoid the Cholesky decomposition for GP inference, even in the exact GP setting.

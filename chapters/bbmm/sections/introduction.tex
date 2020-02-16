@@ -8,25 +8,25 @@ the tools most commonly used for GP inference do not effectively utilize modern 
 In this paper, we address this gap by introducing a highly efficient framework for Gaussian process inference.
 Whereas previous inference approaches require the user to provide routines for computing the full GP marginal log likelihood for a sufficiently complex model,
 our framework only requires access to a blackbox routine that performs matrix-matrix multiplications with the kernel matrix and its derivative.
-Accordingly, we refer to our method as \mmfullname{} (\mmacro{}) Inference.
+Accordingly, we refer to our method as BlackBox Matrix$\times$Matrix (BBMM) Inference.
 
 In contrast to the Cholesky decomposition, which is at the heart of many existing inference engines, matrix-matrix multiplications fully utilize GPU acceleration.
 We will demonstrate that this matrix-matrix approach also significantly eases implementation for a wide class of existing GP models from the literature.
 In particular, we make the following contributions:
 
 \noindent
-1. Inspired by iterative matrix-vector multiplication (MVM)-based inference methods  \cite{cunningham2008fast,saatcci2012scalable,wilson2015kernel,wilson2015thoughts,dong2017scalable}, we provide a modified \emph{batched} version of linear conjugate gradients (\mcgacro{}) that provides all computations necessary for both the marginal likelihood and its derivatives.
-Moreover, \mcgacro{} uses large matrix-matrix multiplications that more efficiently utilize modern hardware than both existing Cholesky and MVM based inference strategies.
+1. Inspired by iterative matrix-vector multiplication (MVM)-based inference methods  \cite{cunningham2008fast,saatcci2012scalable,wilson2015kernel,wilson2015thoughts,dong2017scalable}, we provide a modified \emph{batched} version of linear conjugate gradients (mBCG) that provides all computations necessary for both the marginal likelihood and its derivatives.
+Moreover, mBCG uses large matrix-matrix multiplications that more efficiently utilize modern hardware than both existing Cholesky and MVM based inference strategies.
 Our approach also circumvents several critical space complexity and numerical stability issues present in existing inference methods.
-Most notably, \mmacro{} reduces the time complexity of exact GP inference from $\bigo{n^3}$ to $\bigo{n^2}$.
+Most notably, BBMM reduces the time complexity of exact GP inference from $\bigo{n^3}$ to $\bigo{n^2}$.
 
 \noindent
 2. We introduce a method for \emph{preconditioning} this modified conjugate gradients algorithm based on the pivoted Cholesky decomposition \cite{bach2013sharp,harbrecht2012low}.
 All required operations with this preconditioner are efficient, and in practice require negligible time.
 We demonstrate both empirically and theoretically that this preconditioner significantly accelerates inference.
 
-\noindent 3. We introduce \textbf{\href{https://gpytorch.ai}{GPyTorch}}, a new software platform using \mmacro{} inference for
+\noindent 3. We introduce \textbf{\href{https://gpytorch.ai}{GPyTorch}}, a new software platform using BBMM inference for
 scalable Gaussian processes, which is built on top of PyTorch: \url{https://gpytorch.ai}.
-On datasets as large as $3000$ data points (until we fill GPU memory) we demonstrate that \emph{exact} GPs with \mmacro{} are \emph{up to $20\times$ faster than GPs using Cholesky-based approaches}.
-Moreover, the popular SKI \cite{wilson2015kernel} and SGPR \cite{titsias2009variational} frameworks with \mmacro{} achieve up to $15\times$ and $4\times$ speedups (respectively) on datasets as large as $500,\!000$ data points.
+On datasets as large as $3000$ data points (until we fill GPU memory) we demonstrate that \emph{exact} GPs with BBMM are \emph{up to $20\times$ faster than GPs using Cholesky-based approaches}.
+Moreover, the popular SKI \cite{wilson2015kernel} and SGPR \cite{titsias2009variational} frameworks with BBMM achieve up to $15\times$ and $4\times$ speedups (respectively) on datasets as large as $500,\!000$ data points.
 Additionally, SKI, SGPR and other scalable approximations are implemented in \emph{less than 50 lines of code}, requiring only an efficient matrix-matrix multiplication routine.

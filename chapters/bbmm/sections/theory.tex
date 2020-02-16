@@ -1,6 +1,6 @@
 %!TEX root=main.tex
 \paragraph{Theoretical analysis of CG convergence.}
-By leveraging analysis from \cite{harbrecht2012low}, we can show that for RBF kernels the condition number of the preconditioned $\trainK$ matrix decreases exponentially with the rank $k$ of $L_k$.
+By leveraging analysis from \cite{harbrecht2012low}, we can show that for RBF kernels the condition number of the preconditioned $\trainK$ matrix decreases exponentially with the rank $k$ of $\bL_k$.
 We begin by restating \cite{harbrecht2012low} primary convergence result.
 %
 \begin{theorem}[\citet{harbrecht2012low}]
@@ -28,7 +28,7 @@ These two theorems together let us argue for the theoretical soundness of the pi
 To bound the condition number of the matrix $\trainP^{-1} \trainK$, we begin bounding the difference between a linear solve with the $\trainP$ and the full matrix $\trainK$.
 %
 \begin{theorem}
-Let $\by$ be any vector, and let $\bu^{*} = \trainK^{-1}\by$ and $\tilde{\bu} = \trainP_{k}^{-1}\by$, where $\trainP_{k}=L_{k} L_K^\top + \sigma^{2}I$ and $L_{k} L_k^\top$ is the rank $k$ pivoted Cholesky decomposition of $K_{XX}$.
+Let $\by$ be any vector, and let $\bu^{*} = \trainK^{-1}\by$ and $\tilde{\bu} = \trainP_{k}^{-1}\by$, where $\trainP_{k}=\bL_{k} \bL_K^\top + \sigma^{2}I$ and $\bL_{k} \bL_k^\top$ is the rank $k$ pivoted Cholesky decomposition of $K_{XX}$.
 There exists some $b>0$ so that $\frac{\Vert \bu^{*} - \tilde{\bu}\Vert_{2}}{\Vert\bu^{*}\Vert_{2}} \lesssim \frac{n\exp(-bk)}{\sigma}$.
 \end{theorem}
 %
@@ -50,7 +50,7 @@ In particular, when solving a system $\trainP_{k}^{-1}\trainK\bu = \trainP_{k}^{
 \begin{equation}
   \begin{aligned}
   \Vert \trainK^{-1} y - \bu_{k} \Vert_{A}
-  &\leq 2 \left( \left( {\sqrt{\kappa\left(\trainP_{k}^{-1}\trainK\right)} - 1} \right) / \left( {\sqrt{\kappa\left(\trainP_{k}^{-1}\trainK\right)} + 1} \right) \right)^{p}\Vert \trainK^{*}\y - \bu_{0} \Vert_{A}
+  &\leq 2 \left( \left( {\sqrt{\kappa\left(\trainP_{k}^{-1}\trainK\right)} - 1} \right) / \left( {\sqrt{\kappa\left(\trainP_{k}^{-1}\trainK\right)} + 1} \right) \right)^{p}\Vert \trainK^{*}\by - \bu_{0} \Vert_{A}
   \\
   &\leq 2 \left(\frac{1}{2 + \bigo{n e^{-kb/2} / \sigma}}\right)^{p}\Vert \trainK^{-1} y - \bu_{0} \Vert_{A}
 \end{aligned}
