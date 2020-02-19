@@ -1,0 +1,126 @@
+\chapter{Background}
+
+For a majority of this thesis we will assume that we are building predictive models for regression problems.
+As a running example, imagine that we wish to predict a child's future weight $y \in \reals$ from some features about the child $\bx \in \reals^\numdim$---such as the their current weight, their mother's income level, etc.
+Our model will assume that the child's height $y$ can be explained by through 1) some (latent) function $f(\bx)$ of the features and 2) some observational noise $\epsilon$:
+%
+\begin{equation}
+  y = f \left( \bx \right) + \epsilon, \quad \epsilon \sim \normaldist{0}{\sigma_\text{obs}^2}.
+  \label{eqn:regression}
+\end{equation}
+%
+In particular, we assume the observational noise follows some Gaussian distribution with variance $\sigma_\text{obs}^2$.
+Our goal, in a rough sense, is to choose a function $f(\bx)$ (or a distribution of functions) that fits our available training data $\dset_\text{train} = \{(\bx_1, y_1), \ldots, (\bx_n, y_n)\}$ and makes accurate predictions on new data points $( \bxtest, \ytest )$ at test time.
+
+This setup is one of the most studied problems in machine learning, and there are numerous different approaches to tackling this problem.
+In this thesis we concern ourselves with the approach of \emph{Gaussian process regression}, which is a {\bf non-parametric} and {\bf fully-Bayesian} approach to regression problems.
+It is non-parametric because the class of possible model functions $f(\bx)$ is defined through relationships between pairs of training data points,
+rather than being defined through some pre-defined functional form (e.g. linear functions, quadratic functions, neural networks, etc.)
+It is fully Bayesian because its predictions come not on a single candidate function $f(\bx)$,
+but instead come from a \emph{distribution} over all possible $f(\bx)$ and the choice of function $f(\cdot)$ can be marginalized out.
+
+\section{Gaussian Process Regression}
+
+For someone without much prior knowledge (pun intended) about Gaussian processes, the terminology can appear confusing and overloaded.
+The term \emph{Gaussian process} tends to be used in two different ways.
+Formally, it refers to a distribution over functions that we use to define a prior over the latent function $f(\cdot)$.
+Within a machine learning context, it can also refer the class of predictive models that make use of Gaussian process priors.
+As we will soon see, in the context of regression these two meanings are in fact one-in-the-same.
+However, for clarity we will distinguish when ``Gaussian process'' is describing a distribution over functions and when it is describing a class of predictive models.
+
+\subsection{Gaussian process distributions.}
+A \emph{Gaussian process} is a distribution over functions $f(\cdot) \sim \mathcal{GP}$, which can only be realized by applying $f$ to some finite set of points.
+Given $N$ data points $\bX = [ \bx_1, \ldots, \bx_N ] \in \reals^{\numdata \times \numdim}$ (e.g. the features of $N$ different children in our running example), the distribution over $\bfn = [ f(\bx_1), \ldots, f(\bx_N) ] \in \reals^\numdata$ is a multivariate Normal distribution.
+The multivariate Normal's mean $\bmu_\bX$ comes from a \emph{mean function} $\mu(\cdot)$ applied to each $\bx_i$, and its covariance matrix $\bK_{\bX\bX}$ comes from a \emph{covariance function} $k(\cdot, \cdot)$ (also referred to as a \emph{kernel function}) applied to every pair of data points:
+\begin{equation}
+ p \left( \bfn \right) = \normaldist{ \bfn ; \bmu_\bX}{ \bK_{\bX\bX} },
+ \label{eqn:prior_finite}
+\end{equation}
+where $f^{(i)} = f(\bx_i)$, $\mu^{(i)}_\bX = \mu( \bx_i )$ and $\bK_{\bX\bX}^{(i,j)} = k(\bx_i, \bx_j)$.
+(We will be using the above short-hand notations $\bfn$, $\bmu_\bX$, and $\bK_{\bX\bX}$ throughout the remainder of this thesis.)
+The matrix $\bK_{\bX\bX} \in \reals^{\numdata \times \numdata}$ is often referred to as the \emph{kernel matrix} of $\bX$.
+
+The Gaussian process distribution over $f(\cdot)$ is completely defined by the mean function $\mu(\cdot)$ and covariance function $k(\cdot, \cdot)$.
+$\mu(\cdot)$ can be any real-valued function, though it is common simply to choose the zero-function (i.e. $\mu(\cdot) = 0$).
+The covariance function $k(\cdot, \cdot)$ must be a valid kernel function, which means that all kernel matrices $\bK$ must be positive definite.
+See \autoref{sec:common_kernels} for common choices of $k(\cdot, \cdot)$.
+
+\subsection{Gaussian process models.}
+Recall our predictive model form \autoref{eqn:regression}: $y = f \left( \bx \right) + \epsilon$.
+From a probabilistic perspective, this defines the \emph{likelihood} for a Gaussian observational noise model:
+%
+\begin{equation}
+  p(y \mid f(\bx)) = \normaldist{ y; f(\bx)}{\sigma^2_\text{obs}}.
+  \label{eqn:likelihood}
+\end{equation}
+%
+where again $\sigma^2_\text{obs}$ is a parameter that defines the observational noise variance.
+
+In a \emph{Gaussian process model}, we assume assume a priori that the latent function $f(\cdot)$ is drawn from a Gaussian process distribution $\normaldist{\mu(\cdot)}{k(\cdot, \cdot)}$.
+Given a training dataset $\bX = [\bx_1, \ldots, \bx_n]$ and $\by = [y_1, \ldots, y_n]$,
+
+%%%%%%%%%%%
+
+In general, we assume that the observational noise $\epsilon$ is independent for all data points.
+Therefore, given a training dataset $\bX = [\bx_1, \ldots, \bx_n]$ and $\by = [y_1, \ldots, y_n]$, we can write the likelihood for all data points as
+%
+\begin{equation}
+  p(\by \mid \bfn) = \normaldist{ \by; \bfn}{\sigma^2_\text{obs} \bI}.
+  \label{eqn:likelihood_all}
+\end{equation}
+
+Note that the likelihood is conditioned on our choice of latent function $f(\cdot)$.
+In a \emph{Gaussian process model}, we \emph{marginalizing} over all possible functions $f(\cdot)$.
+More formally, we assume a Gaussian process prior distribution over the model's function $f(\cdot) \sim \GP{\mu(\cdot)}{k(\cdot, \cdot)}$.
+We can then marginalize away any dependence on the function $f(\cdot)$ using the product rule of probability:
+%
+\begin{equation}
+  p( \by \mid \bX, \sigma^2_\text{obs}, \mu, k ) = \int_\bfn \: p( y \mid \bfn, \sigma^2_\text{obs} ) \: p( \bfn \mid \bX, \mu, k ) \intd \bfn.
+  \label{eqn:ml_full}
+\end{equation}
+%
+where $p( y \mid \bfn, \sigma^2_\text{obs})$ is given by \autoref{eqn:likelihood_all} and $p( \bfn \mid \bX, \mu, k )$ is given by \autoref{eqn:prior_finite}.
+Here we explicitly note the marginal likelihood's dependence on $\mu$, $k$, and $\sigma^2_\text{obs}$, though typically for brevity we will simply write it as $p(\by \mid \bX)$.
+Because $p( \bfn \mid \bX)$ and $p( y \mid \bfn)$ are both multivariate Gaussians, we can actually compute the integral in \autoref{eqn:ml_full} in closed-form using common Gaussian identities (see e.g. \cite{bishop2006pattern,rasmussen2006gaussian}):
+%
+\begin{equation}
+  p( \by \mid \bX) = \normaldist{ \by; \bmu_\bX}{\trainK}, \quad
+  \trainK = \bK_{\bX\bX} + \sigma^2 \bI.
+  \label{eqn:ml_exact}
+\end{equation}
+
+\subsection{Common Covariance Functions}
+\label{sec:common_kernels}
+
+
+\section{Summary of Notation}
+
+\begin{table}[h!]
+  \centering
+  \caption{Summary of Notation}
+  \resizebox{\textwidth}{!}{%
+    \begin{tabular}{ ccc }
+      \toprule
+      {\bf Notation} & {\bf Domain} & {\bf Description} \\
+      \midrule
+      \midrule
+      $\numdata$ & $\ints$ & Number of training data points \\
+      $\numdim$ & $\ints$ & Dimensionality of inputs \\
+      $\numinduc$ & $\ints$ & Number of inducing data points \\
+      \midrule
+      $\bX$ & $\reals^{\numdata \times \numdim}$ & Training features \\
+      $\by$ & $\reals^{\numdata}$ & Training targets \\
+      $\bxtest$ & $\reals^{\numdim}$ & Features of a test data point \\
+      $\ytest$ & $\reals$ & Target of a test data point \\
+      \midrule
+      $\mu( \cdot )$ & $\reals^\numdim \rightarrow \reals$ & The GP (prior) mean function \\
+      $k( \cdot, \cdot )$ & $\reals^\numdim \times \reals^\numdim \rightarrow \reals$ & The GP (prior) covariance/kernel function \\
+      $\sigma_\text{obs}^2$ & $\reals$ & Observational variance of the Gaussian likelihood \\
+      \midrule
+      $\bmu_\bX$ & $\reals^\numdata$ & (Prior) mean vector for training data $\bX$ \\
+      $\bK_{\bX\bX}$ & $\reals^{\numdata \times \numdata}$ & (Prior) kernel matrix for training data $\bX$ \\
+      $\trainK$ & $\reals^{\numdata \times \numdata}$ & (Prior) kernel matrix $\bK_{\bX\bX}$ plus observational noise $\sigma^2_\text{obs} \bI$ \\
+      \bottomrule
+    \end{tabular}
+  }
+\end{table}

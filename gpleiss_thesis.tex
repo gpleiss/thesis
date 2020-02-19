@@ -9,7 +9,8 @@
 \usepackage{natbib}
 \usepackage[hidelinks]{hyperref}
 \usepackage{color}
-\usepackage{amsmath,amsthm,verbatim,amssymb,amsfonts,amscd,mathrsfs}
+\usepackage{amsmath,amsthm,amsbsy,verbatim,amssymb,amsfonts,amscd,mathrsfs}
+\usepackage{mathtools}
 \usepackage[algo2e,ruled]{algorithm2e}
 \usepackage{booktabs} % for professional tables
 \usepackage{multirow}
@@ -66,7 +67,9 @@
 
 
 %%%%%%%%%%%%%% Autoref
+\renewcommand{\chapterautorefname}{Chapter}
 \renewcommand{\sectionautorefname}{Section}
+\renewcommand{\subsectionautorefname}{Section}
 \renewcommand{\algorithmautorefname}{Algorithm}
 \newcommand{\definitionautorefname}{Definition}
 \newcommand{\thmautorefname}{Theorem}
@@ -117,6 +120,7 @@
 \pagestyle{cornell} \addtolength{\parskip}{0.5\baselineskip}
 
 \input{chapters/introduction}
+\input{chapters/background}
 \input{chapters/bbmm/main}
 \input{chapters/love/main}
 \input{chapters/largeexact/main}

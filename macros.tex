@@ -8,6 +8,7 @@
 % Probability
 \newcommand{\bigo}[1]{\ensuremath{\mathchoice{\mathcal O \! \left( #1 \right)}}{\mathcal O ( #1 )}{}{}}
 \newcommand{\bigomega}[1]{\ensuremath{\mathchoice{\Omega \! \left( #1 \right)}}{\Omega ( #1 )}{}{}}
+\newcommand{\ints}{\ensuremath{\mathbb{Z}}}
 \newcommand{\reals}{\ensuremath{\mathbb{R}}}
 \newcommand{\GP}[2]{\ensuremath{\mathcal{GP} \left( #1, #2 \right)}}
 \newcommand{\normaldist}[2]{\ensuremath{\mathcal{N} \left( #1, #2 \right)}}
@@ -37,6 +38,7 @@
 \newcommand{\bfn}{\ensuremath{\mathbf{f}}}
 \newcommand{\bk}{\ensuremath{\mathbf{k}}}
 \newcommand{\bm}{\ensuremath{\mathbf{m}}}
+\newcommand{\bmu}{\ensuremath{\boldsymbol{\mu}}}
 \newcommand{\bp}{\ensuremath{\mathbf{p}}}
 \newcommand{\bq}{\ensuremath{\mathbf{q}}}
 \newcommand{\br}{\ensuremath{\mathbf{r}}}
@@ -67,13 +69,18 @@
 \newcommand{\bY}{\ensuremath{\boldmatrix{Y}}}
 \newcommand{\bZ}{\ensuremath{\boldmatrix{Z}}}
 
+% Constants
+\newcommand{\numdata}{\ensuremath{N}}
+\newcommand{\numdim}{\ensuremath{D}}
+\newcommand{\numinduc}{\ensuremath{M}}
+
 % Data/dataset specific terms
-\newcommand{\bxtest}{\ensuremath{x^*}}
-\newcommand{\bytest}{\ensuremath{y^*}}
+\newcommand{\bxtest}{\ensuremath{\bx^*}}
+\newcommand{\ytest}{\ensuremath{y^*}}
 \newcommand{\dset}{\ensuremath{\mathcal D}}
 \newcommand{\model}{\ensuremath{\mathcal M}}
 \newcommand{\loglik}{\ensuremath{\mathcal L}}
-\newcommand{\trainK}{\ensuremath{\widehat{\bK}_{\bX,\bX}}}
+\newcommand{\trainK}{\ensuremath{\widehat{\bK}_{\bX\bX}}}
 \newcommand{\trainP}{\ensuremath{\widehat{\bP}}}
 
 % Method specific terms
