@@ -10,8 +10,8 @@
 \newcommand{\bigomega}[1]{\ensuremath{\mathchoice{\Omega \! \left( #1 \right)}}{\Omega ( #1 )}{}{}}
 \newcommand{\ints}{\ensuremath{\mathbb{Z}}}
 \newcommand{\reals}{\ensuremath{\mathbb{R}}}
-\newcommand{\GP}[2]{\ensuremath{\mathcal{GP} \left( #1, #2 \right)}}
-\newcommand{\normaldist}[2]{\ensuremath{\mathcal{N} \left( #1, #2 \right)}}
+\newcommand{\GP}[2]{\ensuremath{\mathcal{GP} \left[ #1, #2 \right]}}
+\newcommand{\normaldist}[2]{\ensuremath{\mathcal{N} \left[ #1, #2 \right]}}
 \renewcommand{\Pr}[1]{\ensuremath{\text{Pr} \left[ #1 \right]}}
 \newcommand{\Ev}[1]{\ensuremath{\expectedvalue \left[ #1 \right]}}
 \newcommand{\Evover}[2]{\ensuremath{\expectedvalue_{#1} \left[ #2 \right]}}
@@ -50,6 +50,8 @@
 \newcommand{\bx}{\ensuremath{\mathbf{x}}}
 \newcommand{\by}{\ensuremath{\mathbf{y}}}
 \newcommand{\bz}{\ensuremath{\mathbf{z}}}
+\newcommand{\bzero}{\ensuremath{\mathbf{0}}}
+\newcommand{\bone}{\ensuremath{\mathbf{1}}}
 \newcommand{\bA}{\ensuremath{\boldmatrix{A}}}
 \newcommand{\bB}{\ensuremath{\boldmatrix{B}}}
 \newcommand{\bC}{\ensuremath{\boldmatrix{C}}}
@@ -61,6 +63,7 @@
 \newcommand{\bP}{\ensuremath{\boldmatrix{P}}}
 \newcommand{\bQ}{\ensuremath{\boldmatrix{Q}}}
 \newcommand{\bR}{\ensuremath{\boldmatrix{R}}}
+\newcommand{\bSigma}{\ensuremath{\boldsymbol{\Sigma}}}
 \newcommand{\bT}{\ensuremath{\boldmatrix{T}}}
 \newcommand{\bU}{\ensuremath{\boldmatrix{U}}}
 \newcommand{\bV}{\ensuremath{\boldmatrix{V}}}
@@ -76,7 +79,13 @@
 
 % Data/dataset specific terms
 \newcommand{\bxtest}{\ensuremath{\bx^*}}
+\newcommand{\bXtest}{\ensuremath{\bX^*}}
 \newcommand{\ytest}{\ensuremath{y^*}}
+\newcommand{\bytest}{\ensuremath{\by^*}}
+\newcommand{\meantest}[1]{\ensuremath{\mu^* \left( #1 \right)}}
+\newcommand{\bmeantest}[1]{\ensuremath{\bmu^* \left( #1 \right)}}
+\newcommand{\covtest}[1]{\ensuremath{\sigma^* \left( #1 \right)}}
+\newcommand{\Covtest}[1]{\ensuremath{\bSigma^* \left( #1 \right)}}
 \newcommand{\dset}{\ensuremath{\mathcal D}}
 \newcommand{\model}{\ensuremath{\mathcal M}}
 \newcommand{\loglik}{\ensuremath{\mathcal L}}
