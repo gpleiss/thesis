@@ -2,7 +2,7 @@
 
 For a majority of this thesis we will assume that we are building predictive models for regression problems.
 As a running example, imagine that we wish to predict a child's future weight $y \in \reals$ from some features about the child $\bx \in \reals^\numdim$---such as the their current weight, their mother's income level, etc.
-Our model will assume that the child's height $y$ can be explained by through 1) some (latent) function $f(\bx)$ of the features and 2) some observational noise $\epsilon$:
+We assume that the child's height $y$ can be explained by 1) some latent function $f(\bx)$ of the features and 2) some observational noise $\epsilon$:
 %
 \begin{equation}
   y = f \left( \bx \right) + \epsilon, \quad \epsilon \sim \normaldist{0}{\sigma_\text{obs}^2}.
@@ -10,28 +10,30 @@ Our model will assume that the child's height $y$ can be explained by through 1)
 \end{equation}
 %
 In particular, we assume the observational noise follows some Gaussian distribution with variance $\sigma_\text{obs}^2$.
-Our goal, in a rough sense, is to choose a function $f(\bx)$ (or a distribution of functions) that fits our available training data $\dset_\text{train} = \{(\bx_1, y_1), \ldots, (\bx_n, y_n)\}$ and makes accurate predictions on new data points $( \bxtest, \ytest )$ at test time.
+At a high level, our goal is to choose a function $f(\bx)$ (or a distribution of functions) that fits our available training data $\dset_\text{train} = \{(\bx_1, y_1), \ldots, (\bx_n, y_n)\}$ and makes accurate predictions on new data points $( \bxtest, \ytest )$ at test time.
 
 This setup is one of the most studied problems in machine learning, and there are numerous different approaches to tackling this problem.
-In this thesis we concern ourselves with the approach of \emph{Gaussian process regression}, which is a {\bf non-parametric} and {\bf fully-Bayesian} approach to regression problems.
-It is non-parametric because the class of possible model functions $f(\bx)$ is defined through relationships between pairs of training data points,
-rather than being defined through some pre-defined functional form (e.g. linear functions, quadratic functions, neural networks, etc.)
-It is fully Bayesian because its predictions come not on a single candidate function $f(\bx)$,
-but instead come from a \emph{distribution} over all possible $f(\bx)$ and the choice of function $f(\cdot)$ can be marginalized out.
+In this thesis we concern ourselves with the approach of \emph{Gaussian process regression}, which is a {\bf non-parametric} and {\bf fully-Bayesian} approach to regression.
+It is non-parametric because the class of possible functions $f(\cdot)$ is defined through relationships between pairs of training data points,
+rather than being defined through some prescribed functional form (e.g. linear functions, quadratic functions, neural networks, etc.)
+It is fully Bayesian because its predictions come from the \emph{distribution} of all possible functions $f(\cdot)$ and the choice of $f(\cdot)$ is marginalized out.
 
 \section{Gaussian Process Regression}
 
-For someone without much prior knowledge (pun intended) about Gaussian processes, the terminology can appear confusing and overloaded.
-The term \emph{Gaussian process} tends to be used in two different ways.
-Formally, it refers to a distribution over functions that we use to define a prior over the latent function $f(\cdot)$.
-Within a machine learning context, it can also refer the class of predictive models that make use of Gaussian process priors.
+%For someone without much prior knowledge (pun intended) about Gaussian processes, the terminology can appear confusing and overloaded.
+In the machine learning literature the term \emph{Gaussian process} is used to mean two different things.
+Formally, it refers to a distribution over functions that is used to define a prior over $f(\cdot)$.
+It can also refer the class of predictive models that make use of Gaussian process priors on $f(\cdot)$.
 As we will soon see, in the context of regression these two meanings are in fact one-in-the-same.
-However, for clarity we will distinguish when ``Gaussian process'' is describing a distribution over functions and when it is describing a class of predictive models.
+However, for clarity in this section we will distinguish when ``Gaussian process'' is describing a prior distribution over functions and when it is describing a class of predictive models.
 
-\subsection{Gaussian process distributions.}
-A \emph{Gaussian process} is a distribution over functions $f(\cdot) \sim \mathcal{GP}$, which can only be realized by applying $f$ to some finite set of points.
-Given $N$ data points $\bX = [ \bx_1, \ldots, \bx_N ] \in \reals^{\numdata \times \numdim}$ (e.g. the features of $N$ different children in our running example), the distribution over $\bfn = [ f(\bx_1), \ldots, f(\bx_N) ] \in \reals^\numdata$ is a multivariate Normal distribution.
-The multivariate Normal's mean $\bmu_\bX$ comes from a \emph{mean function} $\mu(\cdot)$ applied to each $\bx_i$, and its covariance matrix $\bK_{\bX\bX}$ comes from a \emph{covariance function} $k(\cdot, \cdot)$ (also referred to as a \emph{kernel function}) applied to every pair of data points:
+\subsection{Gaussian Process Priors}
+A \emph{Gaussian process} is a distribution $f(\cdot) \sim \mathcal{GP}$ that extends the multivariate-Gaussian distribution from finite-dimensional vectors to functions.
+It is defined by a \emph{mean function} $\mu(\cdot)$ and a \emph{covariance function} $k(\cdot, \cdot)$ (also referred to as a \emph{kernel function}).
+%It can only be realized by applying $f$ to some finite set of points.
+Given $N$ data points $\bX = [ \bx_1, \ldots, \bx_N ] \in \reals^{\numdata \times \numdim}$ (e.g. the features of $N$ different children in our running example),
+the distribution over $\bfn = [ f(\bx_1), \ldots, f(\bx_N) ] \in \reals^\numdata$ is a multivariate Normal distribution:
+%The multivariate Normal's mean $\bmu_\bX$ comes from a \emph{mean function} $\mu(\cdot)$ applied to each $\bx_i$, and its covariance matrix $\bK_{\bX\bX}$ comes from a \emph{covariance function} $k(\cdot, \cdot)$ (also referred to as a \emph{kernel function}) applied to every pair of data points:
 \begin{equation}
  p \left( \bfn \right) = \normaldist{ \bfn ; \bmu_\bX}{ \bK_{\bX\bX} },
  \label{eqn:prior_finite}
@@ -40,14 +42,15 @@ where $f^{(i)} = f(\bx_i)$, $\mu^{(i)}_\bX = \mu( \bx_i )$ and $\bK_{\bX\bX}^{(i
 (We will be using the above short-hand notations $\bfn$, $\bmu_\bX$, and $\bK_{\bX\bX}$ throughout the remainder of this thesis.)
 The matrix $\bK_{\bX\bX} \in \reals^{\numdata \times \numdata}$ is often referred to as the \emph{kernel matrix} of $\bX$.
 
-The Gaussian process distribution over $f(\cdot)$ is completely defined by the mean function $\mu(\cdot)$ and covariance function $k(\cdot, \cdot)$.
+%Analogously to its finite-dimensional counterpart, a Gaussian process is completely defined by its mean and covariance functions $\mu(\cdot)$ and $k(\cdot, \cdot)$.
 $\mu(\cdot)$ can be any real-valued function, though it is common simply to choose the zero-function (i.e. $\mu(\cdot) = 0$).
 The covariance function $k(\cdot, \cdot)$ must be a valid kernel function, which means that all kernel matrices $\bK$ must be positive definite.
 See \autoref{sec:common_kernels} for common choices of $k(\cdot, \cdot)$.
 
-\subsection{Gaussian process models.}
-Recall our predictive model form \autoref{eqn:regression}: $y = f \left( \bx \right) + \epsilon$.
-From a probabilistic perspective, this defines the \emph{likelihood} for a Gaussian observational noise model:
+\subsection{Gaussian Process Models}
+Recall from \autoref{eqn:regression} ($y = f \left( \bx \right) + \epsilon$) that we assume the targets $y$ are given by $f(\mathbf x)$ and some independent Gaussian noise $\epsilon$.
+
+We formalize this assumption by modelling $y$ with a \emph{Gaussian likelihood}:
 %
 \begin{equation}
   p(y \mid f(\bx)) = \normaldist{ y; f(\bx)}{\sigma^2_\text{obs}}.
