@@ -169,9 +169,39 @@ where the $\sigma_\text{obs}^2$ terms come from the observational noise (which w
 Therefore, the predictive distribution $p(\ytest \: \vert \: \bxtest, \bX, \by)$ is simply the conditional of a multivariate Gaussian.
 Applying standard Gaussian conditioning rules \citep[see e.g.][]{bishop2006pattern,rasmussen2006gaussian} results in \autoref{eqn:predictive_mean} and \autoref{eqn:predictive_var}.
 
-\subsection{``Training'' Gaussian Process Models}
+\paragraph{Predictions on multiple test points.}
+If there are multiple test points $\bxtest$, $\bxtestprime$ of interest, the predictions $p([\ytest, \ytestprime] \mid [\bxtest, \bxtestprime], \dset_\text{train})$ are jointly Gaussian distributed.
+The mean is given by \autoref{eqn:predictive_mean} and the covariance between the two points is given as
+\[ \covtest{\bxtest, \bxtestprime} = k(\bxtest, \bxtestprime) - \bk_{\bX\bxtest}^\top ( \bK_{\bX\bX} + \sigma_\text{obs}^2 \bI )^{-1} \bk_{\bX\bxtestprime}. \]
+In fact, any (finite) set of test points will be jointly Gaussian with the above covariance, meaning that the predictive distribution is also a Gaussian process.
 
-The predictive distribution of Gaussian process regression model (\autoref{eqn:predictive}) is defined non-parametrically, which leaves us few terms that need to be learned.
+\subsection{Training Gaussian Process Models}
+
+The predictive distribution of Gaussian process regression model is non-parametric, which leaves us few terms that need to be learned.
+However, we wish to pick the best mean function, kernel function, and observational noise that define a Gaussian process which best fits our training data $\dset_\text{train} = (\bX, \by)$.
+Let $\btheta$ be the set of learnable \emph{hyperparameters} of these functions.
+For example, $\btheta$ might include the lengthscale $\ell$ and outputscale $o^2$ of the kernel function (see \autoref{sec:common_kernels}) as well as the observational noise parameter $\sigma_\text{obs}$.
+In more complex Gaussian process models, $\btheta$ may also include inducing point locations \cite{titsias2009variational} or neural network parameters for deep kernel learning \cite{wilson2016deep}.
+We can measure the fit of these parameters through the \emph{marginal log likelihood} of the Gaussian process applied to the training data $\bX, \by$:
+%
+\begin{align}
+  \log p( \by \mid \bX, \btheta)
+  &= \log \normaldist{ \by ; \bmu }{ \trainK }
+  \nonumber{} \\
+  &\propto \log \left\vert \trainK \right\vert - (\by - \bmu)^{\top} \trainK^{-1} (\by - \bmu),
+  \label{eqn:log_lik}
+\end{align}
+%
+where $\trainK$ is shorthand for the training kernel matrix with added observational noise: $\trainK = \bK_{\bX\bX} + \sigma_\text{obs}^2 \bI$.
+Note that the dependence on $\btheta$ is implicitly absorbed into $\bmu$ and $\trainK$.
+We can use \autoref{eqn:log_lik} to learn the parameters $\btheta$ via gradient-based optimization or sampling.
+Its derivative is given by
+%
+\begin{align}
+  \frac{\partial \log p( \by \mid \bX, \btheta )}{\partial \btheta} &= (\by - \bmu)^{\top} \trainK^{-1}\frac{\partial \trainK}{\partial \btheta}\trainK^{-1} (\by - \bmu)
+  + \tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}}.
+  \label{eq:log_lik_deriv}
+\end{align}
 
 %We formalize this assumption by modelling $y$ with a \emph{Gaussian likelihood}:
 %%
@@ -218,6 +248,10 @@ The predictive distribution of Gaussian process regression model (\autoref{eqn:p
 \subsection{Common Covariance Functions}
 \label{sec:common_kernels}
 
+\subsection{Inducing Point Methods}
+
+As we will discuss in detail in the next chapters, computing the marginal log likelihood (\autoref{eqn:log_lik}) and the predictive distribution (\autoref{eqn:predictive_mean,eqn:predictive_var}) has been computationally prohibitive for large datasets.
+
 
 \section{Summary of Notation}
 
@@ -247,8 +281,8 @@ The predictive distribution of Gaussian process regression model (\autoref{eqn:p
       $\bK_{\bX\bX}$ & $\reals^{\numdata \times \numdata}$ & (Prior) kernel matrix for training data $\bX$ \\
       $\trainK$ & $\reals^{\numdata \times \numdata}$ & (Prior) kernel matrix $\bK_{\bX\bX}$ plus observational noise $\sigma^2_\text{obs} \bI$ \\
       \midrule
-      $\meantest( \cdot )$ & $\reals^\numdim \rightarrow \reals$ & Predictive mean function of the GP model \\
-      $\covtest( \cdot, \cdot )$ & $\reals^\numdim \rightarrow \reals$ & Predictive variance function of the GP model\\
+      $\meantest{ \cdot }$ & $\reals^\numdim \rightarrow \reals$ & Predictive mean function of the GP model \\
+      $\covtest{ \cdot }$ & $\reals^\numdim \rightarrow \reals$ & Predictive variance function of the GP model\\
       \bottomrule
     \end{tabular}
   }

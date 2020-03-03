@@ -22,7 +22,9 @@ Predictions with a GP are made utilizing the \emph{predictive posterior distribu
 \end{align}
 %
 \paragraph{Training a Gaussian process.}
-Gaussian processes depend on a number of \emph{hyperparameters} $\theta$. Hyperparameters may include the likelihood noise, kernel lengthscale, inducing point locations \cite{titsias2009variational}, or neural network parameters for deep kernel learning \cite{wilson2016deep}. These parameters are commonly learned by minimization or sampling via the \emph{negative log marginal likelihood}, given (with derivative) by
+Gaussian processes depend on a number of \emph{hyperparameters} $\theta$.
+Hyperparameters may include the likelihood noise, kernel lengthscale, inducing point locations \cite{titsias2009variational}, or neural network parameters for deep kernel learning \cite{wilson2016deep}.
+These parameters are commonly learned by minimizing or sampling via the \emph{negative log marginal likelihood}, given (with derivative) by
 %
 \begin{equation}
   \loglik (\theta \! \mid \! \bX, \by) \propto \log \left\vert \trainK \right\vert - \by^{\top}\trainK^{-1}\by,
