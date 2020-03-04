@@ -107,11 +107,12 @@ where $\meantest{\cdot}$ and $\covtest{\cdot}$ are given by:
 \end{align}
 %
 Here the shorthand $\bk_{\bX \bxtest} \in \reals^N$ is the vector of covariances between $\bxtest$ and all training points $\bX = [\bx_1, \ldots, \bx_N].$
-Note that, under \cref{eqn:predictive_mean} and \cref{eqn:predictive_var}, the Gaussian process' prediction for a child's weight depends on
+Note that, under \cref{eqn:predictive_mean,eqn:predictive_var}, the Gaussian process' prediction for a child's weight depends on
 \begin{enumerate*}
   \item the weights of previously-observed children and
   \item the similarities between the children's features (as determined by their prior covariances $\bk_{\bX \bxtest}$).
 \end{enumerate*}
+We will discuss a framework for efficiently computing the predictive distribution in \cref{chapter:bbmm,chapter:love}.
 
 \paragraph{Short derivation of the predictive distribution.}
 To understand where \cref{eqn:predictive_mean} and \cref{eqn:predictive_var} come from, we start by writing the joint prior distribution for $[\bfn, f(\bxtest)]$ using \cref{eqn:prior_finite}.
@@ -188,7 +189,7 @@ We can measure the fit of these parameters through the \emph{marginal log likeli
   \log p( \by \mid \bX, \btheta)
   &= \log \normaldist{ \by ; \bmu }{ \trainK }
   \nonumber{} \\
-  &\propto \log \left\vert \trainK \right\vert - (\by - \bmu)^{\top} \trainK^{-1} (\by - \bmu),
+  &\propto - \log \left\vert \trainK \right\vert - (\by - \bmu)^{\top} \trainK^{-1} (\by - \bmu),
   \label{eqn:log_lik}
 \end{align}
 %
@@ -198,10 +199,12 @@ We can use \cref{eqn:log_lik} to learn the parameters $\btheta$ via gradient-bas
 Its derivative is given by
 %
 \begin{align}
-  \frac{\partial \log p( \by \mid \bX, \btheta )}{\partial \btheta} &= (\by - \bmu)^{\top} \trainK^{-1}\frac{\partial \trainK}{\partial \btheta}\trainK^{-1} (\by - \bmu)
-  + \tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}}.
+  \frac{\partial \log p( \by \mid \bX, \btheta )}{\partial \btheta} &= \frac{1}{2} (\by - \bmu)^{\top} \trainK^{-1}\frac{\partial \trainK}{\partial \btheta}\trainK^{-1} (\by - \bmu)
+  - \frac{1}{2} \tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}}.
   \label{eq:log_lik_deriv}
 \end{align}
+%
+We will discuss how to efficiently compute these terms in \cref{chapter:bbmm}.
 
 %We formalize this assumption by modelling $y$ with a \emph{Gaussian likelihood}:
 %%
@@ -248,11 +251,14 @@ Its derivative is given by
 \subsection{Common Covariance Functions}
 \label{sec:common_kernels}
 
-\subsection{Inducing Point Methods}
+\subsection{Approximate Gaussian Processes}
 
-As we will discuss in detail in the next chapters, computing the marginal log likelihood (\cref{eqn:log_lik}) and the predictive distribution (\cref{eqn:predictive_mean,eqn:predictive_var}) has been computationally prohibitive for large datasets.
-This has motivated the development of several approximate Gaussian process regression methods \citep[e.g.][]{quinonero2005unifying,snelson2006sparse,titsias2009variational,hensman2013gaussian,wilson2015kernel,gardner2018product,evans2018scalable} which trade off exactness for computational scalability.
-Many of these methods approximate the training kernel matrix $\bK_{\bX\bX}$ with a structured or low-rank matrix $\approxK$ that affords faster matrix operations and requires less storage.
+As we will discuss in detail in the next chapters, computing the marginal log likelihood (\cref{eqn:log_lik}) and the predictive distribution (\cref{eqn:predictive_mean,eqn:predictive_var}) has historically been computationally prohibitive for large datasets.
+This has motivated the development of several approximate Gaussian process regression methods \citep[e.g.][]{quinonero2005unifying,snelson2006sparse,rahimi2008random,titsias2009variational,hensman2013gaussian,wilson2015kernel,gardner2018product,evans2018scalable} that trade off exactness for computational scalability.
+Many of these methods replace the training kernel matrix $\bK_{\bX\bX}$ with a structured or low-rank matrix $\approxK$ that affords faster matrix operations and requires less storage.
+
+Many of the approximate methods can be derived through several ways, such as by introducing additional latent variables \cite{quinonero2005unifying,snelson2006sparse} and/or applying a variational approach to inference \cite{titsias2009variational,hensman2013gaussian}.
+In this section, we will derive the methods through the framework of \emph{kernel approximation}:  the  of the methods as differnt m methods  m all methods as ways to approximate the kernel matrix $\bK_{\bX\bX}$.
 
 \section{Summary of Notation}
 
