@@ -12,7 +12,7 @@
 %If a model encounters \emph{out-of-distribution} (OOD) inputs -- inputs that deviate from the distribution of training data -- its predictions are likely to be erroneous or nonsensical \cite{begoli2019uncertainty,jiang2012calibrating}.
 %%This may occur if the model is used in scenarios that experience covariate shift \cite{sugiyama2007covariate} or if the model encounters previously-unseen categories of data \cite{yu2017occ,hassen2018openset}.
 %%Such scenarios are examples of \emph{out-of-distribution} (OOD) inputs.
-%This phenomenon is illustrated in \autoref{fig:ood_teaser}, which displays predictions from a neural network trained to predict prices of middle-class houses in Kentucky.
+%This phenomenon is illustrated in \cref{fig:ood_teaser}, which displays predictions from a neural network trained to predict prices of middle-class houses in Kentucky.
 %The model is able to make sensible predictions on other Kentucky houses (left and center-left images).
 %At the same time, the model vastly underestimates the price of a California mansion (center-right) and predicts and absurdly large price for a chair (right), as these inputs are not similar to any of the training set inputs.
 %This is because the range of predicted prices for the out-of-distribution matches the range of Kentucky housing prices.

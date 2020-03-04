@@ -10,10 +10,10 @@ However, we note that a single call to mBCG can be used to compute the KL diverg
 
 \paragraph{Avoiding the Cholesky decomposition.}
 A surprising and important take-away of this paper is that it is beneficial to avoid the Cholesky decomposition for GP inference, even in the exact GP setting.
-The basic algorithm for the Cholesky decomposition (described in \autoref{app:pivoted_cholesky}) involves a divide-and conquer approach that can prove ill-suited for parallel hardware.
+The basic algorithm for the Cholesky decomposition (described in \cref{app:pivoted_cholesky}) involves a divide-and conquer approach that can prove ill-suited for parallel hardware.
 Additionally, the Cholesky decomposition performs a large amount of computation to get a linear solve when fast approximate methods suffice.
 Ultimately, the Cholesky decomposition of a full matrix takes $\bigo{n^3}$ time while CG takes $\bigo{n^2}$ time.
-Indeed, as shown in \autoref{fig:cg_error}, CG may even provide \emph{better} linear solves than the Cholesky decomposition.
+Indeed, as shown in \cref{fig:cg_error}, CG may even provide \emph{better} linear solves than the Cholesky decomposition.
 %We liken this difference to the practical speed differences observed between second order methods like Newton's method and SGD in other settings.
 While we use a pivoted version of this algorithm for preconditioning, we only compute the first five rows of this decomposition.
 By terminating the algorithm very early, we avoid the computational bottleneck and many of the numerical instabilities.

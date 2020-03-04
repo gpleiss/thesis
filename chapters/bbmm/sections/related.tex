@@ -20,7 +20,7 @@ For example, methods like Jacobi preconditioning have no effect when using a sta
 \paragraph{The Pivoted Cholesky decomposition}
 is an efficient algorithm for computing a low-rank decomposition of a positive definite matrix \cite{harbrecht2012low,bach2013sharp}, which we use in the context of preconditioning.
 \citet{harbrecht2012low} explores the use of the pivoted Cholesky decomposition as a low rank approximation, although primarily in a scientific computing context.
-In proving convergence bounds for our preconditioner we explicitly make use of some theoretical results from \cite{harbrecht2012low} (see \autoref{app:theory}).
+In proving convergence bounds for our preconditioner we explicitly make use of some theoretical results from \cite{harbrecht2012low} (see \cref{app:theory}).
 \citet{bach2013sharp} considers using random column sampling as well as the pivoted Cholesky decomposition as a low-rank approximation to kernel matrices.
 However, \citet{bach2013sharp} treats this decomposition as an approximate training method, whereas we use the pivoted Cholesky decomposition primarily
 as a preconditioner, which avoids any loss of accuracy from the low rank approximation as well as the complexity of computing derivatives.

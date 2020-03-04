@@ -75,18 +75,18 @@ where $e_{1}$ is the first row of the identity matrix. Running Lanczos with a st
 In mBCG, we adapt a technique from \citet{saad2003iterative} which allows us to compute $\tilde{\bT}_{1},\ldots,\tilde{\bT}_{t}$ corresponding to the input vectors $\bz_{1},\ldots,\bz_{t}$  to mBCG from the coefficients of CG in $\bigo{1}$ additional work per iteration.
 This approach allows us to compute a log determinant estimate identical to \eqref{eq:slq} \emph{without running the Lanczos algorithm}.
 Thus we avoid the extra computation, storage, and numerical instability associated with Lanczos iterations.
-We describe the details of this adaptation in \autoref{app:mod_cg}.
+We describe the details of this adaptation in \cref{app:mod_cg}.
 
 \paragraph{Runtime and space.}
 As shown above, we are able to approximate all inference terms from a single call to mBCG.
 These approximations improve with the number of mBCG iterations.
-Each iteration requires one matrix-matrix multiply with $\trainK$, and the subsequent work to derive these inference terms takes negligible additional time (\autoref{app:method_runtime}).
-Therefore, $p$ iterations of mBCG requires $\bigo{nt}$ space (see \autoref{app:method_runtime}) and $\bigo{p \: \mmm{\trainK}}$ time,
+Each iteration requires one matrix-matrix multiply with $\trainK$, and the subsequent work to derive these inference terms takes negligible additional time (\cref{app:method_runtime}).
+Therefore, $p$ iterations of mBCG requires $\bigo{nt}$ space (see \cref{app:method_runtime}) and $\bigo{p \: \mmm{\trainK}}$ time,
 where $\mmm{\trainK}$ is the time to multiply $\trainK$ by a $n \times t$ matrix.
 This multiplication takes $\bigo{n^2 t}$ time with a standard matrix.
 It is worth noting that this is a lower asymptotic complexity that standard Cholesky-based inference, which is $\bigo{n^3}$.
 Therefore, BBMM offers a computational speedup for exact GP inference.
-As we will show in \autoref{sec:advantages}, this time complexity can be further reduced with structured data or sparse GP approximations.
+As we will show in \cref{sec:advantages}, this time complexity can be further reduced with structured data or sparse GP approximations.
 %
 \subsection{Preconditioning}
 \label{sec:preconditioning}
@@ -111,10 +111,10 @@ The pivoted Cholesky algorithm allows us to compute a low-rank approximation of 
 We precondition mBCG with $(\bL_k \bL_k^\top + \sigma^2 \bI)^{-1}$, where $\sigma^2$ is the Gaussian likelihood's noise term.
 Intuitively, if $\bP_{k}=\bL_{k}\bL_{k}^{\top}$ is a good approximation of $\bK_{\bX\bX}$, then $(\bP_{k} + \sigma^{2}\bI)^{-1}\trainK \approx \bI$.
 
-While we review the pivoted Cholesky algorithm fully in \autoref{app:pivoted_cholesky}, we would like to emphasize three key properties. First, it can be computed in $\bigo{\row{\bK_{\bX\bX}}k^{2}}$ time, where $\row{\bK_{\bX\bX}}$ is the time to access a row (nominally this is $\bigo{n}$).
+While we review the pivoted Cholesky algorithm fully in \cref{app:pivoted_cholesky}, we would like to emphasize three key properties. First, it can be computed in $\bigo{\row{\bK_{\bX\bX}}k^{2}}$ time, where $\row{\bK_{\bX\bX}}$ is the time to access a row (nominally this is $\bigo{n}$).
 Second, linear solves with $\trainP = \bL_{k}\bL_{k}^{\top} + \sigma^{2}\bI$ can be performed in $\bigo{nk^{2}}$ time. Finally, the log determinant of $\trainP$ can be computed in $\bigo{nk^{2}}$ time.
-In \autoref{sec:results} we empirically show that this preconditioner dramatically accelerates CG convergence.
-Further, in \autoref{app:theory}, we prove the following lemma and theorem for univariate RBF kernels:
+In \cref{sec:results} we empirically show that this preconditioner dramatically accelerates CG convergence.
+Further, in \cref{app:theory}, we prove the following lemma and theorem for univariate RBF kernels:
 
 \begin{lemma}
   \label{thm:condition_number}
@@ -139,7 +139,7 @@ Further, in \autoref{app:theory}, we prove the following lemma and theorem for u
   \end{equation}
 \end{theorem}
 %
-\autoref{thm:cg_convergence_rbf} implies that we should expect the convergence of conjugate gradients to improve \emph{exponentially} with the rank of the pivoted Cholesky decomposition used for RBF kernels. In our experiments we observe significantly improved convergence for other kernels as well (\autoref{sec:results}). Furthermore, we can leverage \autoref{thm:condition_number} and existing theory from \cite{ubaru2017fast} to argue that preconditioning improves our log determinant estimate. In particular, we restate Theorem 4.1 of \citet{ubaru2017fast} here:
+\cref{thm:cg_convergence_rbf} implies that we should expect the convergence of conjugate gradients to improve \emph{exponentially} with the rank of the pivoted Cholesky decomposition used for RBF kernels. In our experiments we observe significantly improved convergence for other kernels as well (\cref{sec:results}). Furthermore, we can leverage \cref{thm:condition_number} and existing theory from \cite{ubaru2017fast} to argue that preconditioning improves our log determinant estimate. In particular, we restate Theorem 4.1 of \citet{ubaru2017fast} here:
 \begin{theorem}[Theorem 4.1 of \citet{ubaru2017fast}]
   \label{thm:slq_convergence}
   Let $\bK_{\bX\bX} \in \reals^{n \times n}$, and let $\bL_k \bL_k^\top$ be its rank $k$ pivoted Cholesky decomposition. Suppose we run $p \geq \frac{1}{4} \sqrt{ \kappa \left( \trainP_{k}^{-1}\trainK \right) } \log \frac{D}{\epsilon}$ iterations of mBCG, where $D$ is a term involving this same condition number that vanishes as $k \to n$ (see \cite{ubaru2017fast}), and we use $t \geq \frac{24}{\epsilon^{2}}\log(2/\delta)$ vectors $\bz_{i}$ for the solves. Let $\Gamma$ be the log determinant estimate from \eqref{eq:slq}. Then:
@@ -147,7 +147,7 @@ Further, in \autoref{app:theory}, we prove the following lemma and theorem for u
     \textrm{Pr}\left[\vert \log \vert \trainP^{-1}\trainK \vert - \Gamma \vert \leq \epsilon\vert \log \vert \trainP^{-1}\trainK \vert \vert \right] \geq 1 - \delta.
   \end{equation}
 \end{theorem}
-Because \autoref{thm:condition_number} states that the condition number $\kappa \left( \trainP_{k}^{-1}\trainK \right)$ decays exponentially with the rank of $\bL_{k}$, \autoref{thm:slq_convergence} implies that we should expect that the number of CG iterations required to accurately estimate $\log \vert \trainP^{-1}\trainK \vert$ decreases quickly as $k$ increases.
+Because \cref{thm:condition_number} states that the condition number $\kappa \left( \trainP_{k}^{-1}\trainK \right)$ decays exponentially with the rank of $\bL_{k}$, \cref{thm:slq_convergence} implies that we should expect that the number of CG iterations required to accurately estimate $\log \vert \trainP^{-1}\trainK \vert$ decreases quickly as $k$ increases.
 In addition, in the limit as $k \rightarrow n$ we have that $\log \vert \trainK \vert = \log \vert \trainP \vert$.
 This is because $\log \vert \trainP^{-1}\trainK \vert \rightarrow 0$ (since $\trainP^{-1}\trainK$ converges to $\bI$) and we have that $\log \vert \trainK \vert = \log \vert \trainP^{-1}\trainK \vert + \log \vert \trainP \vert$.
 Since our calculation of $\log \vert \trainP \vert$ is exact, our final estimate of $\log \vert \trainK \vert$ becomes more exact as $k$ increases.

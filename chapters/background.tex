@@ -46,10 +46,10 @@ The matrix $\bK_{\bX\bX} \in \reals^{\numdata \times \numdata}$ is often referre
 %Analogously to its finite-dimensional counterpart, a Gaussian process is completely defined by its mean and covariance functions $\mu(\cdot)$ and $k(\cdot, \cdot)$.
 $\mu(\cdot)$ can be any real-valued function, though it is common simply to choose the zero-function (i.e. $\mu(\cdot) = 0$).
 The covariance function $k(\cdot, \cdot)$ must be a valid kernel function, which means that all kernel matrices $\bK$ must be positive definite.
-See \autoref{sec:common_kernels} for common choices of $k(\cdot, \cdot)$.
+See \cref{sec:common_kernels} for common choices of $k(\cdot, \cdot)$.
 
 \subsection{Gaussian Process Models}
-Recall our high-level regression model from \autoref{eqn:regression}: $y = f \left( \bx \right) + \epsilon$.
+Recall our high-level regression model from \cref{eqn:regression}: $y = f \left( \bx \right) + \epsilon$.
 \emph{Gaussian process regression models} are a class of predictive models where
 %
 \begin{enumerate}
@@ -107,14 +107,14 @@ where $\meantest{\cdot}$ and $\covtest{\cdot}$ are given by:
 \end{align}
 %
 Here the shorthand $\bk_{\bX \bxtest} \in \reals^N$ is the vector of covariances between $\bxtest$ and all training points $\bX = [\bx_1, \ldots, \bx_N].$
-Note that, under \autoref{eqn:predictive_mean} and \autoref{eqn:predictive_var}, the Gaussian process' prediction for a child's weight depends on
+Note that, under \cref{eqn:predictive_mean} and \cref{eqn:predictive_var}, the Gaussian process' prediction for a child's weight depends on
 \begin{enumerate*}
   \item the weights of previously-observed children and
   \item the similarities between the children's features (as determined by their prior covariances $\bk_{\bX \bxtest}$).
 \end{enumerate*}
 
 \paragraph{Short derivation of the predictive distribution.}
-To understand where \autoref{eqn:predictive_mean} and \autoref{eqn:predictive_var} come from, we start by writing the joint prior distribution for $[\bfn, f(\bxtest)]$ using \autoref{eqn:prior_finite}.
+To understand where \cref{eqn:predictive_mean} and \cref{eqn:predictive_var} come from, we start by writing the joint prior distribution for $[\bfn, f(\bxtest)]$ using \cref{eqn:prior_finite}.
 Under the Gaussian process prior of $f(\cdot)$, this joint distribution will be a multivariate-Gaussian.
 %
 \begin{align*}
@@ -134,7 +134,7 @@ Under the Gaussian process prior of $f(\cdot)$, this joint distribution will be 
 \end{align*}
 %
 We then compute the joint marginal likelihood $p( [ \by, \ytest ] \mid [ \bX, \bxtest ] )$ by integrating out the dependence on $p( [\bfn, f(\bxtest)] )$.
-Under the Gaussian noise observation model of \autoref{eqn:regression}, it happens that the marginal likelihood is also multivariate Gaussian and can be computed in closed form.
+Under the Gaussian noise observation model of \cref{eqn:regression}, it happens that the marginal likelihood is also multivariate Gaussian and can be computed in closed form.
 %
 \begin{align*}
   p \left(
@@ -167,11 +167,11 @@ where the $\sigma_\text{obs}^2$ terms come from the observational noise (which w
 \gp{TODO: fix mid sign}
 %
 Therefore, the predictive distribution $p(\ytest \: \vert \: \bxtest, \bX, \by)$ is simply the conditional of a multivariate Gaussian.
-Applying standard Gaussian conditioning rules \citep[see e.g.][]{bishop2006pattern,rasmussen2006gaussian} results in \autoref{eqn:predictive_mean} and \autoref{eqn:predictive_var}.
+Applying standard Gaussian conditioning rules \citep[see e.g.][]{bishop2006pattern,rasmussen2006gaussian} results in \cref{eqn:predictive_mean} and \cref{eqn:predictive_var}.
 
 \paragraph{Predictions on multiple test points.}
 If there are multiple test points $\bxtest$, $\bxtestprime$ of interest, the predictions $p([\ytest, \ytestprime] \mid [\bxtest, \bxtestprime], \dset_\text{train})$ are jointly Gaussian distributed.
-The mean is given by \autoref{eqn:predictive_mean} and the covariance between the two points is given as
+The mean is given by \cref{eqn:predictive_mean} and the covariance between the two points is given as
 \[ \covtest{\bxtest, \bxtestprime} = k(\bxtest, \bxtestprime) - \bk_{\bX\bxtest}^\top ( \bK_{\bX\bX} + \sigma_\text{obs}^2 \bI )^{-1} \bk_{\bX\bxtestprime}. \]
 In fact, any (finite) set of test points will be jointly Gaussian with the above covariance, meaning that the predictive distribution is also a Gaussian process.
 
@@ -180,7 +180,7 @@ In fact, any (finite) set of test points will be jointly Gaussian with the above
 The predictive distribution of Gaussian process regression model is non-parametric, which leaves us few terms that need to be learned.
 However, we wish to pick the best mean function, kernel function, and observational noise that define a Gaussian process which best fits our training data $\dset_\text{train} = (\bX, \by)$.
 Let $\btheta$ be the set of learnable \emph{hyperparameters} of these functions.
-For example, $\btheta$ might include the lengthscale $\ell$ and outputscale $o^2$ of the kernel function (see \autoref{sec:common_kernels}) as well as the observational noise parameter $\sigma_\text{obs}$.
+For example, $\btheta$ might include the lengthscale $\ell$ and outputscale $o^2$ of the kernel function (see \cref{sec:common_kernels}) as well as the observational noise parameter $\sigma_\text{obs}$.
 In more complex Gaussian process models, $\btheta$ may also include inducing point locations \cite{titsias2009variational} or neural network parameters for deep kernel learning \cite{wilson2016deep}.
 We can measure the fit of these parameters through the \emph{marginal log likelihood} of the Gaussian process applied to the training data $\bX, \by$:
 %
@@ -194,7 +194,7 @@ We can measure the fit of these parameters through the \emph{marginal log likeli
 %
 where $\trainK$ is shorthand for the training kernel matrix with added observational noise: $\trainK = \bK_{\bX\bX} + \sigma_\text{obs}^2 \bI$.
 Note that the dependence on $\btheta$ is implicitly absorbed into $\bmu$ and $\trainK$.
-We can use \autoref{eqn:log_lik} to learn the parameters $\btheta$ via gradient-based optimization or sampling.
+We can use \cref{eqn:log_lik} to learn the parameters $\btheta$ via gradient-based optimization or sampling.
 Its derivative is given by
 %
 \begin{align}
@@ -235,9 +235,9 @@ Its derivative is given by
   %\label{eqn:ml_full}
 %\end{equation}
 %%
-%where $p( y \mid \bfn, \sigma^2_\text{obs})$ is given by \autoref{eqn:likelihood_all} and $p( \bfn \mid \bX, \mu, k )$ is given by \autoref{eqn:prior_finite}.
+%where $p( y \mid \bfn, \sigma^2_\text{obs})$ is given by \cref{eqn:likelihood_all} and $p( \bfn \mid \bX, \mu, k )$ is given by \cref{eqn:prior_finite}.
 %Here we explicitly note the marginal likelihood's dependence on $\mu$, $k$, and $\sigma^2_\text{obs}$, though typically for brevity we will simply write it as $p(\by \mid \bX)$.
-%Because $p( \bfn \mid \bX)$ and $p( y \mid \bfn)$ are both multivariate Gaussians, we can actually compute the integral in \autoref{eqn:ml_full} in closed-form using common Gaussian identities (see e.g. \cite{bishop2006pattern,rasmussen2006gaussian}):
+%Because $p( \bfn \mid \bX)$ and $p( y \mid \bfn)$ are both multivariate Gaussians, we can actually compute the integral in \cref{eqn:ml_full} in closed-form using common Gaussian identities (see e.g. \cite{bishop2006pattern,rasmussen2006gaussian}):
 %%
 %\begin{equation}
   %p( \by \mid \bX) = \normaldist{ \by; \bmu_\bX}{\trainK}, \quad

@@ -47,7 +47,7 @@ All speed experiments are run on an Intel Xeon E5-2650 CPU and an NVIDIA Titan X
 %
 
 \paragraph{Speed comparison.}
-\autoref{fig:timing_results} shows the speedup obtained by GPU-accelerated BBMM over the leading CPU-based inference engines (Cholesky for Exact/SGPR, \citet{dong2017scalable} for SKI).
+\cref{fig:timing_results} shows the speedup obtained by GPU-accelerated BBMM over the leading CPU-based inference engines (Cholesky for Exact/SGPR, \citet{dong2017scalable} for SKI).
 As would be expected, GPU-accelerated BBMM is faster than CPU-based inference.
 On Exact and SKI, BBMM is up to \emph{32 times faster} than CPU inference, and up to 10 times faster on SGPR.
 The largest speedups occur on the largest datasets, since smaller datasets experience larger GPU overhead.
@@ -65,16 +65,16 @@ This speedup is because BBMM is able to calculate all inference terms in paralle
 \end{figure}
 
 \paragraph{Error comparison.}
-In \autoref{fig:error_results} we report test mean average error (MAE) for Exact and SGPR models.\footnote{
-  SKI models are excluded from \autoref{fig:error_results}.
-  This is because the BBMM inference engine and the inference engine of \citet{dong2017scalable} return identical outputs (see \autoref{app:mod_cg}) even though BBMM is faster.
+In \cref{fig:error_results} we report test mean average error (MAE) for Exact and SGPR models.\footnote{
+  SKI models are excluded from \cref{fig:error_results}.
+  This is because the BBMM inference engine and the inference engine of \citet{dong2017scalable} return identical outputs (see \cref{app:mod_cg}) even though BBMM is faster.
 }
 We demonstrate results using both the RBF kernel and a Matern-5/2 kernel.
 Across all datasets, our method is at least as accurate in terms of final test MAE.
 On a few datasets (e.g. Gas, Airfoil, and Wine with Exact GPs) BBMM even improves final test error.
 CG has a regularizing effects which may improve methods involving the exact kernel over the Cholesky decomposition, where numerical issues resulting from extremely small eigenvalues of the kernel matrix are ignored.
 For example, Cholesky methods frequently add noise (or ``jitter'') to the diagonal of the kernel matrix for numerical stability.
-It is possible to reduce the numerical instabilities with double precision (see \autoref{fig:cg_error}); however, this requires an increased amount of computation.
+It is possible to reduce the numerical instabilities with double precision (see \cref{fig:cg_error}); however, this requires an increased amount of computation.
 BBMM on the other hand avoids adding this noise, without requiring double precision.
 
 \begin{figure}[t]
@@ -91,10 +91,10 @@ BBMM on the other hand avoids adding this noise, without requiring double precis
 To demonstrate the effectiveness of preconditioning at accelerating the convergence of conjugate gradients, we first train a deep RBF kernel model on two datasets, Protein and KEGG, and evaluate the solve error of performing $\trainK^{-1}\by$ in terms of the relative residual $\Vert \trainK\bu - \by \Vert / \Vert \by \Vert$ as a function of the number of CG iterations performed.
 We look at this error when using no preconditioner, as well as a rank 2, 5, and 9 preconditioner.
 To demonstrate that the preconditioner is not restricted to use with an RBF kernel, we evaluate using a deep RBF kernel on Protein and a deep Matern-5/2 kernel on KEGG.
-The results are in the top of \autoref{fig:precond_results}.
+The results are in the top of \cref{fig:precond_results}.
 As expected based on our theoretical intuitions for this preconditioner, increasing the rank of the preconditioner substantially reduces the number of CG iterations required to achieve convergence.
 
-In the bottom of \autoref{fig:precond_results}, we confirm that these more accurate solves indeed have an effect on the final test MAE.
+In the bottom of \cref{fig:precond_results}, we confirm that these more accurate solves indeed have an effect on the final test MAE.
 We plot, as a function of the total wallclock time required to compute predictions, the test MAE resulting from using no preconditioner and from using a rank 5 preconditioner.
 The wallclock time is varied by changing the number of CG iterations used to compute the predictive mean.
 We observe that, because such a low rank preconditioner is sufficient, using preconditioning results in significantly more accurate solves while having virtually no impact on the running time of each CG iteration.
