@@ -250,8 +250,9 @@ Its derivative is given by
 
 \subsection{Inducing Point Methods}
 
-As we will discuss in detail in the next chapters, computing the marginal log likelihood (\autoref{eqn:log_lik}) and the predictive distribution (\autoref{eqn:predictive_mean,eqn:predictive_var}) has been computationally prohibitive for large datasets.
-
+As we will discuss in detail in the next chapters, computing the marginal log likelihood (\cref{eqn:log_lik}) and the predictive distribution (\cref{eqn:predictive_mean,eqn:predictive_var}) has been computationally prohibitive for large datasets.
+This has motivated the development of several approximate Gaussian process regression methods \citep[e.g.][]{quinonero2005unifying,snelson2006sparse,titsias2009variational,hensman2013gaussian,wilson2015kernel,gardner2018product,evans2018scalable} which trade off exactness for computational scalability.
+Many of these methods approximate the training kernel matrix $\bK_{\bX\bX}$ with a structured or low-rank matrix $\approxK$ that affords faster matrix operations and requires less storage.
 
 \section{Summary of Notation}
 
