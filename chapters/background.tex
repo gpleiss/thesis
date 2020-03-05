@@ -49,6 +49,8 @@ The covariance function $k(\cdot, \cdot)$ must be a valid kernel function, which
 See \cref{sec:common_kernels} for common choices of $k(\cdot, \cdot)$.
 
 \subsection{Gaussian Process Models}
+\label{sec:gp_models}
+
 Recall our high-level regression model from \cref{eqn:regression}: $y = f \left( \bx \right) + \epsilon$.
 \emph{Gaussian process regression models} are a class of predictive models where
 %
@@ -125,7 +127,7 @@ Under the Gaussian process prior of $f(\cdot)$, this joint distribution will be 
   \right)
   &= \normaldist{
     \begin{bmatrix} \bfn \\ f(\bxtest) \end{bmatrix} ;
-    \begin{bmatrix} \bzero \\ 0 \end{bmatrix}
+    \begin{bmatrix} \bmu \\ \mu(\bxtest) \end{bmatrix}
   }{
     \begin{bmatrix}
       \bK_{\bX \bX}    & \bk_{\bX \bxtest} \\
@@ -177,6 +179,7 @@ The mean is given by \cref{eqn:predictive_mean} and the covariance between the t
 In fact, any (finite) set of test points will be jointly Gaussian with the above covariance, meaning that the predictive distribution is also a Gaussian process.
 
 \subsection{Training Gaussian Process Models}
+\label{sec:gp_training}
 
 The predictive distribution of Gaussian process regression model is non-parametric, which leaves us few terms that need to be learned.
 However, we wish to pick the best mean function, kernel function, and observational noise that define a Gaussian process which best fits our training data $\dset_\text{train} = (\bX, \by)$.
@@ -186,10 +189,10 @@ In more complex Gaussian process models, $\btheta$ may also include inducing poi
 We can measure the fit of these parameters through the \emph{marginal log likelihood} of the Gaussian process applied to the training data $\bX, \by$:
 %
 \begin{align}
-  \log p( \by \mid \bX, \btheta)
-  &= \log \normaldist{ \by ; \bmu }{ \trainK }
+  -\log p( \by \mid \bX, \btheta)
+  &= -\log \normaldist{ \by ; \bmu }{ \trainK }
   \nonumber{} \\
-  &\propto - \log \left\vert \trainK \right\vert - (\by - \bmu)^{\top} \trainK^{-1} (\by - \bmu),
+  &\propto \log \left \vert \trainK \right \vert + (\by - \bmu)^{\top} \trainK^{-1} (\by - \bmu),
   \label{eqn:log_lik}
 \end{align}
 %
@@ -199,9 +202,10 @@ We can use \cref{eqn:log_lik} to learn the parameters $\btheta$ via gradient-bas
 Its derivative is given by
 %
 \begin{align}
-  \frac{\partial \log p( \by \mid \bX, \btheta )}{\partial \btheta} &= \frac{1}{2} (\by - \bmu)^{\top} \trainK^{-1}\frac{\partial \trainK}{\partial \btheta}\trainK^{-1} (\by - \bmu)
-  - \frac{1}{2} \tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}}.
-  \label{eq:log_lik_deriv}
+  \frac{\partial - \log p( \by \mid \bX, \btheta )}{\partial \btheta} &\propto
+   \tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}} -
+	 (\by - \bmu)^{\top} \trainK^{-1}\frac{\partial \trainK}{\partial \btheta}\trainK^{-1} (\by - \bmu).
+  \label{eqn:log_lik_deriv}
 \end{align}
 %
 We will discuss how to efficiently compute these terms in \cref{chapter:bbmm}.
@@ -255,10 +259,57 @@ We will discuss how to efficiently compute these terms in \cref{chapter:bbmm}.
 
 As we will discuss in detail in the next chapters, computing the marginal log likelihood (\cref{eqn:log_lik}) and the predictive distribution (\cref{eqn:predictive_mean,eqn:predictive_var}) has historically been computationally prohibitive for large datasets.
 This has motivated the development of several approximate Gaussian process regression methods \citep[e.g.][]{quinonero2005unifying,snelson2006sparse,rahimi2008random,titsias2009variational,hensman2013gaussian,wilson2015kernel,gardner2018product,evans2018scalable} that trade off exactness for computational scalability.
-Many of these methods replace the training kernel matrix $\bK_{\bX\bX}$ with a structured or low-rank matrix $\approxK$ that affords faster matrix operations and requires less storage.
+Many of these methods approximate the training kernel matrix $\bK_{\bX\bX}$ with a structured or low-rank matrix $\approxK$ that affords faster matrix operations and requires less storage.
 
-Many of the approximate methods can be derived through several ways, such as by introducing additional latent variables \cite{quinonero2005unifying,snelson2006sparse} and/or applying a variational approach to inference \cite{titsias2009variational,hensman2013gaussian}.
-In this section, we will derive the methods through the framework of \emph{kernel approximation}:  the  of the methods as differnt m methods  m all methods as ways to approximate the kernel matrix $\bK_{\bX\bX}$.
+\paragraph{Inducing Points.}
+A common mechanism for scalable methods is to introduce a set of pseudo-inputs, or \emph{inducing points}, which function as a sufficient statistic for the predictive distribution.
+The kernel function for \emph{real}-inputs $\bx$, $\bx'$ is approximated by interpolating against the kernel matrix for the \emph{pseudo}-inputs $\bZ = [\bz_1, \ldots, \bz_M]$.
+%
+\begin{align}
+	\widetilde k(\bx, \bx') &\approx \:\:
+		\overbracket{ \left( \bk_{\bZ\bx}^\top \bK_{\bZ\bZ}^{-1} \right) }^{\text{interpolation}} \:\: \bK_{\bZ\bZ} \:\:
+		\overbracket{ \left( \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx'} 		 \right) }^{\text{interpolation}}
+	\nonumber{} \\
+	&= \:\:
+	\bk_{\bZ\bx}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx'}.
+	\label{eqn:inducing_interpolation}
+\end{align}
+%
+In its simplest form, it is common to choose $M \ll N$ inducing points.
+The approximate training kernel matrix $\widetilde \bK_{\bX\bX} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bx}$ will then have low-rank structure, allowing for efficient computation of \cref{eqn:predictive_mean,eqn:predictive_var,eqn:log_lik,eqn:log_lik_deriv}.
+The locations of the inducing points $\bZ$ are considered to be additional parameters to optimize via \cref{eqn:log_lik} (typically with gradient descent).
+
+Here we have presented inducing points as a mechanism for approximating kernel matrices.
+Under this view, we can use the same training/prediction equations as presented in \cref{sec:gp_models,sec:gp_training}---replacing the kernel matrices/vectors with their approximations.
+As we will discuss in \cref{chapter:bbmm}, this allows us to create a simple unifying framework to Gaussian process training and inference.
+We do note it is also possible to motivate/derive inducing point methods in other ways---e.g. through a greedy approximation \cite{smola2001sparse} or a variational bound \cite{titsias2009variational,hensman2013gaussian}.
+However, under these interpretations it is less straightforward to derive connections to \cref{eqn:predictive_mean,eqn:predictive_var,eqn:log_lik,eqn:log_lik_deriv}.
+
+\paragraph{Variants.}
+The basic formula of \cref{eqn:inducing_interpolation} can be extended to create a variety of approximate Gaussian process regression methods.
+We briefly present three common variants here---all of which use $M \ll N$ inducing points and learn their locations through gradient descent of \cref{eqn:log_lik}.
+In the next section we will discuss a fourth variant---Structured Kernel Interpolation \cite{wilson2015kernel}---which is a notably unique method that utilizes inducing points in a different way.
+
+\begin{itemize}
+	\item {\bf Subset of Regressors (SoR)} \cite{silverman1985some,smola2001sparse} is arguably the most standard variant.
+	Here, the kernel matrix $\bK_{\bX\bX}$ and all kernel vectors $\bk_{\bX\bxtest}$ are replaced with their approximate variants:
+	\[ \widetilde \bK_{\bX\bX} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bX}, \quad
+		 \widetilde \bk_{\bX\bxtest} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bk_{\bX\bxtest}. \]
+
+	\item {\bf Fully Independent Training Conditional (FITC) } \cite{snelson2006sparse} can be interpreted as an extension of SoR
+		where the approximate training kernel matrix has a diagonal correction term $\bLambda$.
+	\[ \widetilde \bK_{\bX\bX} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bX} + \bLambda, \quad
+		 \Lambda^{(i,i)} = k(\bx_i, \bx_i) - \bk_{\bZ\bx_i}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx_i}. \]
+	The diagonal correction term is motivated through a connection to approximate inference.
+
+	\item {\bf Sparse Gaussian Process Regression (SGPR) } \cite{titsias2009variational} uses the same kernel approximations as SoR.
+		However, when learning the inducing point locations and other parameters, SGPR uses an alternative objective function:
+		the marginal log likelihood of \cref{eqn:log_lik} augmented with a diagonal correction term:
+    \[ \loglik(\by \mid \bX, \theta) = -\log p(\by \mid \bX, \theta) + \sum_{i=1}^N \left( k(\bx_i, \bx_i) - \bk_{\bZ\bx_i}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx_i} \right). \]
+  The diagonal correction term can be derived by applying variational inference to the function values at inducing point locations.
+\end{itemize}
+
+\subsection{Structured Kernel Interpolation (SKI)}
 
 \section{Summary of Notation}
 
