@@ -18,7 +18,7 @@ We test SGPR on larger datasets ($n$ up to 50000): KEGG, Protein, Elevators, Kin
 For SKI we test five of the largest UCI datasets ($n$ up to 515000): Song, Buzz, Protein, Kin40k, and KEGG.
 
 \begin{figure}[t]
-  \includegraphics[width=\textwidth]{chapters/bbmm/figures/sparse_gp_results}
+  \includegraphics[width=\textwidth]{figures/sparse_gp_results}
   \caption{
     Speedup of GPU-accelerated inference engines.
     BBMM is in blue, and competing GPU methods are in gray.
@@ -37,7 +37,7 @@ SKI models use $10,\!000$ inducing points and  the deep kernels described in \ci
 The BBMM inference engine is implemented in our GPyTorch package.
 \begin{figure}[t!]
   \begin{center}
-    \includegraphics[width=0.48\textwidth]{chapters/bbmm/figures/cg_error}
+    \includegraphics[width=0.48\textwidth]{figures/cg_error}
   \end{center}
   \caption{Solve error for mBCG and Cholesky. \label{fig:cg_error}}
 \end{figure}
@@ -59,7 +59,7 @@ This speedup is because BBMM is able to calculate all inference terms in paralle
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\textwidth]{chapters/bbmm/figures/exact_gp_chol_vs_mvm}
+  \includegraphics[width=\textwidth]{figures/exact_gp_chol_vs_mvm}
   \caption{Comparing final Test MAE when using BBMM versus Cholesky based inference. The left two plots compare errors using Exact GPs with RBF and Matern-5/2 kernels, and the final plot compares error using SGPR with a Matern-5/2 kernel on significantly larger datasets.}
   \label{fig:error_results}
 \end{figure}
@@ -79,7 +79,7 @@ BBMM on the other hand avoids adding this noise, without requiring double precis
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\textwidth]{chapters/bbmm/figures/precond_solves}
+  \includegraphics[width=\textwidth]{figures/precond_solves}
   \caption{
     The effect of preconditioning on solve errors $\Vert K\bx^{*} - \by \Vert / \Vert \by \Vert$ achieved by linear conjugate gradients using no preconditioner versus rank 2, 5, and 9 pivoted Cholesky preconditioners on 2 UCI benchmark datasets using deep RBF and deep Matern kernels.
     The hyperparameters of $K$ were learned by maximizing the marginal log likelihood on each dataset.

@@ -1,0 +1,34 @@
+%!TEX root=../main.tex
+\section{Discussion, Related Work, and Conclusion}
+\label{sec:discussion}
+
+This paper has primarily focused on LOVE{} in the context of KISS-GP as its underlying inducing point method.
+This is because of KISS-GP's accuracy, its efficient MVMs, and its constant asymptotic complexities when used with LOVE{}.
+However, LOVE and MVM inference are fully compatible with other inducing point techniques as well. Many inducing point methods make use of the subset of regressors (SOR) kernel approximation $\bK_{XX} \approx
+\bK_{XU}\bK_{UU}^{-1}\bK_{UX}$, optionally with a diagonal correction \cite{snelson2006sparse}, and focus on the problem of learning the
+inducing point locations \cite{quinonero2005unifying,titsias2009variational}. After $\bigo{m^{3}}$ work to Cholesky decompose
+$\bigo{\bK_{UU}}$, this approximate kernel affords $\bigo{n + m^{2}}$ MVMs. One could apply LOVE to these methods and
+compute a test-invariant cache in $\bigo{knm+km^{2}}$ time, and then compute single predictive covariances in $\bigo{mk}$ time.
+We note that, since these inducing point methods make a rank $m$ approximation to the kernel, setting $k\!=\!m$ produces exact solves with Lanczos decomposition, and recovers the $\bigo{nm^{2}}$ precomputation time and $\bigo{m^2}$ prediction time of these methods.
+
+\paragraph{Ensuring Lanczos solves are accurate.}
+Given a matrix $\widehat K_{XX}$, the Lanczos decomposition $Q_k T_k Q_k^\top$ is designed to approximate the solve $\widehat K_{XX}^{-1} \bb$, where $\bb$ is the first column of $Q_k$.
+As argued in \autoref{subsec:lanczos}, the $Q_k$ and $T_k$ can usually be re-used to approximate the solves $\widehat K_{XX}^{-1} (W_X^\top K_{UU}) \approx Q_k T_k^{-1} Q_k^\top (W_X^\top K_{UU})$.
+This property of the Lanczos decomposition is why LOVE{} can compute fast predictive variances.
+While this method usually produces accurate solves, the solves will not be accurate if some columns of $(W^\top_X K_{UU})$ are (nearly) orthogonal to the columns of $Q_k$.
+In this scenario, \citet{saad1987lanczos} suggests that the additional Lanczos iterations with a new probe vector will correct these errors.
+In practice, we find that these countermeasures are almost never necessary with LOVE{} -- the Lanczos solves are almost always accurate.
+
+\paragraph{Numerical stability of Lanczos.}
+A practical concern for LOVE{} is round-off errors that may affect the Lanczos algorithm.
+In particular it is common in floating point arithmetic for the vectors of $Q$ to lose orthogonality \cite{paige1970practical,simon1984lanczos,golub2012matrix}, resulting in an incorrect decomposition.
+To correct for this, several methods such as full reorthogonalization and partial or selective reorthogonalization exist \cite{golub2012matrix}.
+In our implementation, we use full reorthogonalization when a loss of orthogonality is detected.
+In practice, the cost of this correction is absorbed by the parallel performance of the GPU and does not impact the final running time.
+
+\paragraph{Conclusion.}
+%We have demonstrated a method for computing predictive covariances and drawing samples from the predictive distribution in constant time with almost no loss in accuracy.
+Whereas the running times of previous state-of-the-art methods depend on dataset size, LOVE{} provides \emph{constant time} and near-exact predictive variances.
+In addition to providing scalable predictions, LOVE{}'s fast sampling procedure has the potential to dramatically simplify a variety of GP applications such as \citep[e.g.,][]{deisenroth2011pilco,hernandez2014predictive,wang2017max}.
+These applications require fast posterior samples, and have previously relied on parametric approximations or finite basis approaches for approximate sampling \citep[e.g.,][]{deisenroth2011pilco,wang2017max}.
+The ability for LOVE{} to obtain samples in linear time and variances in constant time will improve these applications, and may even unlock entirely new applications for Gaussian processes in the future.

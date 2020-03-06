@@ -1,0 +1,100 @@
+%!TEX root=../main.tex
+\section{Background}
+A Gaussian process is a prior over \emph{functions}, $p(f(\mathbf{x}))$, specified by a \emph{prior mean function} $\mu(\bx)$ and \emph{prior covariance function} $k(\bx, \bx')$. Given a dataset of observations $\dset = (X, \by) = \{(\bx_i, y_i)\}_{i=1}^{n}$ and a Gaussian noise model, the posterior $p(f(\bxtest) \mid \dset)$ is again a Gaussian process with mean $\meantest(\bxtest)$ and covariance $\covtest(\bx^*,\bx^{*\prime})$:
+\begin{align}
+  \mu_{f \mid \dset}(\bx^*) &= \mu(\bx^*) + \bk_{\bX \bx^*}^\top  \widehat K_{\bX\!\bX}^{-1} (\by - \mu(\bX)) \label{eq:pred_mean}, \\
+  k_{f\mid\dset}(\bx^*, \bx^{*\prime}) &= k_{\bx^{*} \bx^{*\prime}} - \bk_{\bX \bx^{*}}^\top \widehat K_{\bX\!\bX}^{-1} \bk_{\bX \bx^{*\prime}},
+    \label{eq:pred_covar}
+\end{align}
+where $K_{\bA\bB}$ denotes the kernel matrix between $\bA$ and $\bB$, $\widehat{K}_{\bX\bX} = K_{\bX\bX} + \sigma^2 I$ (for observed noise $\sigma$) and $\by = [y(\bx_1),\dots,y(\bx_n)]^{\top}$.
+Given a set of $t$ test points $\bX^{*}$, the equations above give rise to a $t$ dimensional multivariate Gaussian joint distribution
+$p([f(\bx^{*}_{1}),...,f(\bx^{*}_{t}))] \mid \dset)$ over the function values of the $t$ test points. This last property allows for sampling functions from a posterior Gaussian process by sampling from this joint predictive distribution. For a full overview, see \cite{rasmussen2006gaussian}.
+
+\subsection{Inference with matrix-vector multiplies}
+Computing predictive means and variances with \eqref{eq:pred_mean} and \eqref{eq:pred_covar} requires computing solves with the kernel matrix $\widehat K_{X \! X}$ (e.g. $\widehat K_{X \! X}^{-1} \mathbf y$).
+These solves are often computed using the Cholesky decomposition of $\widehat K_{\bX \! \bX} = L L^\top$, which requires $\bigo{n^3}$ time to compute.
+{Linear conjugate gradients} (CG) provides an alternative approach, computing solves through matrix-vector multiplies (MVMs).
+CG exploits the fact that the solution $A^{-1}\bb$ is the unique minimizer of the quadratic function $f(\bx) =\frac{1}{2}\bx^{\top}A\bx - \bx^{\top} \bb$ for positive definite matrices \cite{golub2012matrix}.
+This function is minimized with a simple three-term recurrence, where each iteration involves a single MVM with the matrix $A$.
+
+After $n$ iterations CG is guaranteed to converge to the exact solution $A^{-1} \bb$, although in practice numerical convergence may require substantially fewer than $n$ iterations.
+Extremely accurate solutions typically require only $k \ll n$ iterations (depending on the conditioning of $A$) and $k\leq 100$ suffices in most cases~\cite{golub2012matrix}.
+For the kernel matrix $\widehat K_{X \! X}$, the standard running time of $k$ CG iterations is $\bigo{k n^2}$ (the time for $k$ MVMs).
+This runtime, which is already faster than the Cholesky decomposition, can be greatly improved if the kernel matrix $K_{\bX\!\bX}$ affords fast MVMs.
+Fast MVMs are possible if the data are structured \cite{cunningham2008fast,saatcci2012scalable}, or by using a structured inducing point method \cite{wilson2015kernel}.
+
+\subsection{The Lanczos algorithm}
+\label{subsec:lanczos}
+The Lanczos algorithm factorizes a symmetric matrix $A \in \reals^{n \times n}$ as $QTQ^\top$, where $T \! \in \! \reals^{n \times n}$ is symmetric tridiagonal and $Q \! \in \! \reals^{n \times n}$ is orthonormal. For a full discussion of the Lanczos algorithm see \citet{golub2012matrix}.
+Briefly, the Lanczos algorithm uses a probe vector $\bb$ and computes an orthogonal basis of the Krylov subspace $\mathcal{K} (A, \bb)$:
+%
+\[
+  \mathcal{K}(A,\bb) = \text{span}\left\{ \bb, A \bb, A^2 \bb, \ldots, A^{n-1} \bb \right\}.
+\]
+%
+Applying Gram-Schmidt orthogonalization to these vectors produces the columns of $Q$, $\left[ {\bb}/{\Vert \bb \Vert}, \bq_2, \bq_3, \ldots, \bq_n \right]$ (here $\Vert \bb \Vert$ is the Euclidean norm of $\bb$).
+The orthogonalization coefficients are collected into $T$.
+Because $A$ is symmetric, each vector needs only be orthogonalized against the two preceding vectors, which results in the tridiagonal structure of $T$ \cite{golub2012matrix}.
+The orthogonalized vectors and coefficients are computed in an iterative manner.
+$k$ iterations produces the first $k$ orthogonal vectors of $Q_k = \left[ \bq_1, \ldots, \bq_k \right] \! \in \! \reals^{n \times k}$)
+and their corresponding coefficients $T_k \! \in \! \reals^{k \times k}$.
+Similarly to CG, these $k$ iterations require only $\bigo{k}$ matrix vector multiplies with the original matrix $A$, which again is ideal for matrices that afford fast MVMs.
+
+The Lanczos algorithm can be used in the context of GPs for computing log determinants \cite{dong2017scalable},
+and can be used to speed up inference when there is product structure \cite{gardner2018product}.
+Another application of the Lanczos algorithm is performing matrix solves \cite{lanczos1950iteration,parlett1980new,saad1987lanczos}.
+Given a symmetric matrix $A$ and a single vector $\bb$, the matrix solve $A^{-1} \bb$ is computed by starting the Lanczos algorithm of $A$ with probe vector $\bb$.
+After $k$ iterations, the solution $A^{-1} \bb$ can be approximated using the computed Lanczos factors $Q_{k}$ and $T_{k}$ as
+%
+\begin{equation}
+  A^{-1} \bb \approx \Vert \bb \Vert Q_k T_k^{-1} \be_1,
+  \label{eq:lanczos_single_solve}
+\end{equation}
+%
+where $\be_1$ is the unit vector $[1, 0, 0, \ldots, 0]$.
+%In fact, the linear CG algorithm can be derived from \eqref{eq:lanczos_single_solve} when $A$ is positive definite \cite{golub2012matrix}.
+These solves tend to be very accurate after $k \ll n$ iterations, since the eigenvalues of the $T$ matrix converge rapidly to the largest and smallest eigenvalues of $A$ \cite{demmel1997applied}.
+The exact rate of convergence depends on the conditioning of $A$ \cite{golub2012matrix}, although in practice we find that $k\leq100$ produces extremely accurate solves for most matrices (see \autoref{sec:results}).
+In practice, CG tends to be preferred for matrix solves since Lanczos solves require storing the $Q_k \! \in \! \reals^{n \times k}$ matrix.
+However, one advantage of Lanczos is that the $Q_k$ and $T_k$ matrices can be used to jump-start subsequent solves $A^{-1} \bb'$.
+\citet{parlett1980new}, \citet{saad1987lanczos}, \citet{schneider2001krylov}, and \citet{nickisch2009bayesian} argue that solves can be approximated as
+%
+\begin{equation}
+  A^{-1} \bb' \approx Q_k T_k^{-1} Q_k^\top \bb',
+  \label{eq:lanczos_solve}
+\end{equation}
+%
+where $Q_k$ and $T_k$ come from a previous solve $A^{-1} \bb$.
+
+
+\subsection{Kernel Interpolation for Scalable Structured GPs}
+Structured kernel interpolation (SKI) \cite{wilson2015kernel} is an inducing point method explicitly designed for the MVM-based inference described above.
+Given a set of $m$ inducing points, $U = [\bu_1, \ldots, \bu_m]$, SKI assumes that a data point $\bx$ is well-approximated as a \emph{local interpolation} of $U$.
+Using cubic interpolation \cite{keys1981cubic}, $\bx$ is expressed in terms of its 4 closest inducing points, and the interpolation weights are captured in a sparse vector $\bw_\bx$.
+The $\bw_\bx$ vectors are used to approximate the kernel matrix $K_{\bX\bX} \approx \tilde K_{\bX\bX}$:
+%
+\begin{equation}
+  \tilde K_{\bX \bX} = \bW_{\bX}^\top \bK_{\bZ\bZ} \bW_{\bX}.
+  \label{eq:ski}
+\end{equation}
+%
+Here, $W_{\bX} = [\bw_{\bx_1}, \ldots, \bw_{\bx_n}]$ contains the interpolation vectors for all $\bx_i$, and $K_{UU}$ is the covariance matrix between inducing points.
+MVMs with $\tilde K_{XX}$ (i.e. $W_X^\top K_{UU} W_X \bv$) require at most $\bigo{n + m^2}$ time due to the $\bigo{n}$ sparsity of $W_X$.
+\citet{wilson2015kernel} reduce this runtime even further with \emph{Kernel Interpolation for Scalable Structured GPs} (KISS-GP),
+%an instantiation of their SKI approach
+in which all inducing points $U$ lie on a regularly spaced grid.
+This gives $K_{UU}$ Toeplitz structure (or Kronecker and Toeplitz structure),
+resulting in the ability to perform MVMs in at most $\bigo{n + m \log m}$ time.
+
+%
+\paragraph{Computing predictive means.}
+One advantage of KISS-GP's fast MVMs is the ability to perform constant time predictive mean calculations \cite{wilson2015thoughts}.
+Substituting the KISS-GP approximate kernel into \eqref{eq:pred_mean} and assuming a prior mean of 0 for notational brevity, the predictive mean is given by
+\begin{equation}
+  \meantest(\bxtest) = \bw_{\bxtest}^\top \blue{\underbrace{\bK_{\bZ\bZ} \bW_{\bX}(\bW_{\bX}^{\top}\bK_{\bZ\bZ}\bW_{\bX} + \sigma^{2} \bI)^{-1} \by}_{\ba}}.
+  \label{eq:pred_mean_ski}
+\end{equation}
+Because $\bw_{\bx^{*}}$ is the only term in \eqref{eq:pred_mean_ski} that depends on $\bx^{*}$, the remainder of the equation (denoted as $\blue\ba$) can be pre-computed: $\mu_{f \mid \dset}(\bx^{*}) = \bw_{\bx^{*}}^\top \blue \ba$.
+(Throughout this paper {\color{blue} blue} highlights computations that don't depend on test data.)
+This pre-computation takes $\bigo{n + m\log m}$ time using CG.
+After computing $\blue \ba$, the multiplication $\bw_{\bx^{*}}^\top \blue \ba$ requires $\bigo{1}$ time, as $\bw_{\bx^{*}}$ has only four nonzero elements.

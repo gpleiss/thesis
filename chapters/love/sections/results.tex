@@ -1,0 +1,164 @@
+%!TEX root=../main.tex
+\section{Results}
+\label{sec:results}
+\begin{table*}[t!]
+  \caption{
+    Speedup and accuracy of KISS-GP/LOVE{} for predictive variances.
+    KISS-GP and Exact GPs use deep kernel learning.
+    Speed results are measured on GPUs.
+    Accuracy is measured by Scaled Mean Average Error.
+    ($n$ is the number of data, $d$ is the dimensionality.)
+    \label{tab:large_dataset_results}
+  }
+  \vspace{0.5ex}
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \input{tables/love_large_dataset_results}
+  }
+\end{table*}
+
+In this section we demonstrate the effectiveness and speed of LOVE{}, both at computing predictive variances and also at posterior sampling.
+%Our goal is to show that 1) LOVE{} produces uncertainties and samples that are indistinguishable from the state-of-the-art, and 2) that LOVE{} offers substantial speed improvements.
+All LOVE{} variances are computed with $k=50$ Lanczos iterations,
+and KISS-GP models use $m\!=\!10,\!000$ inducing points unless otherwise stated.
+We perform experiments using the GPyTorch library.\footnote{
+  \url{github.com/cornellius-gp/gpytorch}}
+We optimize models with ADAM \cite{kingma2014adam} and a learning rate of $0.1$.
+All timing experiments utilize GPU acceleration, performed on a NVIDIA GTX 1070.
+
+\subsection{Predictive Variances}
+\label{sec:results_variances}
+
+\begin{table*}[t!]
+  \caption{
+    Accuracy and computation time of drawing samples from the predictive distribution.
+    \label{tab:sampling_results}
+  }
+  \vspace{0.5ex}
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \input{tables/love_sampling_results}
+  }
+\end{table*}
+
+We measure the accuracy and speed of KISS-GP/LOVE{} at computing predictive variances.
+We compare variances computed with a KISS-GP/LOVE{} model against variances computed with an Exact GP ({\bf Exact}).
+On datasets that are too large to run exact GP inference, we instead compare the KISS-GP/LOVE{} variances against KISS-GP variances computed in the standard way ({\bf KISS-GP w/o LOVE{}}).
+\citet{wilson2015thoughts} show that KISS-GP variances recover the exact variance up to 4 decimal places.
+Therefore, we will know that KISS-GP/LOVE{} produces accurate variances if it matches standard KISS-GP w/o LOVE{}.
+We report the scaled mean absolute error (SMAE)\footnote{
+  Mean absolute error divided by the variance of y.
+} \cite{rasmussen2006gaussian} of LOVE{} variances compared against these baselines.
+%(Note that the predictive posterior means are \emph{completely identical} with both methods, as LOVE{} only affects variance calculations.)
+For each dataset, we optimize the hyperparameters of a KISS-GP model.
+We then use the same hyperparameters for each baseline model when computing variances.
+
+\paragraph{One-dimensional example.}
+We first demonstrate LOVE{} on a complex one-dimensional regression task.
+The airline passenger dataset ({\bf Airline}) measures the average monthly number of passengers from 1949 to 1961 \cite{hyndman2005time}.
+We aim to extrapolate the numbers for the final 4 years (48 measurements) given data for the first 8 years (96 measurements).
+%These data exhibit short-term periodic trends as well as long-term growth trends.  Consequentially,
+Accurate extrapolation on this dataset requires a kernel function capable of expressing various patterns, such as the spectral mixture (SM) kernel \cite{wilson2013gaussian}.
+Our goal is to evaluate if LOVE{} produces reliable predictive variances, even with complex kernel functions.
+
+We compute the variances for Exact GP, KISS-GP w/o LOVE{}, and KISS-GP with LOVE{} models with a $10$-mixture SM kernel.
+In \autoref{fig:airline_results}, we see that the KISS-GP/LOVE{} confidence intervals match the Exact GP's intervals extremely well.
+The SMAE of LOVE{}'s predicted variances (compared against Exact GP variances) is $1.29 \times 10^{-4}$.
+Although not shown in the plot, we confirm the reliability of these predictions by computing the log-likelihood of the test data.
+We compare the KISS-GP/LOVE{} model to an Exact GP, a KISS-GP model without LOVE{}, and a sparse variational GP (SGPR) model with $m=1000$ inducing points.\footnote{
+ Implemented in GPFlow \cite{matthews2017gpflow}} \cite{titsias2009variational,hensman2013gaussian}.
+All methods achieve nearly identical log-likelihoods, ranging from $-221$ to $-222$.
+
+\paragraph{Large datasets.}
+We measure the accuracy of LOVE{} variances on several large-scale regression benchmarks from the UCI repository \cite{asuncion2007uci}.
+We compute the variance for all test set data points.
+Each of the models use deep RBF kernels (DKL) on these datasets with the architectures described in \cite{wilson2016deep}.
+Deep RBF kernels are extremely flexible (with up to $10^5$ hyperparameters) and are well suited to model many types of functions.
+In \autoref{tab:large_dataset_results}, we report the SMAE of the KISS-GP/LOVE{} variances compared against the two baselines.
+On all datasets, we find that LOVE{} matches KISS-GP w/o LOVE{} variances to at least $5$ decimal points.
+Furthermore, KISS-GP/LOVE{} is able to approximate Exact variances with no more than than $0.1\%$ average error.
+For any given test point, the maximum variance error is similarly small (e.g. $\leq \! 2.6\%$ on Skillcraft and $\leq \! 2.0\%$ on PoleTele).
+Therefore, using LOVE{} to compute variances results in \emph{almost no loss in accuracy}.
+
+\paragraph{Speedup.}
+In \autoref{tab:large_dataset_results} we compare the variance computation speed of a KISS-GP model with and without LOVE{} on the UCI datasets.
+In addition, we compare against the speed of SGPR with a standard RBF kernel, a competitive scalable GP approach.
+On all datasets, we measure the time to compute variances {\bf from scratch}, which includes the cost of pre-computation (though, as stated in \autoref{sec:method}, this typically occurs during training).
+In addition, we report the speed {\bf after pre-computing} any terms that aren't specific to test points (which corresponds to the test time speed).
+We see in \autoref{tab:large_dataset_results} that KISS-GP with LOVE{} yields a substantial speedup over KISS-GP without LOVE{}.
+The speedup is between $4\times$ and $44\times$, even when accounting for LOVE{}'s precomputation.
+At test time after pre-computation, LOVE{} is \emph{up to $2,\!000\times$ faster}.
+Additionally, KISS-GP/LOVE{} is significantly faster than SGPR models.
+For SGPR models with $m=100$ inducing points, the KISS-GP/LOVE{} model (with $m=10,\!000$ inducing points) is up to $10\times$ faster before pre-computation and $100\times$ faster after.
+With $m=1000$ SGPR models, KISS-GP/LOVE{} is up to $20\times$/$500\times$ faster before/after precomputation.
+The biggest improvements are obtained on the largest datasets since LOVE{}, unlike other methods, is independent of dataset size at test time.
+
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{figures/lanczos_accuracy.pdf}
+  \vspace{-2ex}
+  \caption{
+    Predictive variance error as a function of the Lanczos iterations (KISS-GP model, $m=10,\!000$, Protein, Kin40k, PoleTele, Elevators  UCI datasets).
+    \label{fig:lanczos_accuracy}
+  }
+  \vspace{-1ex}
+\end{figure}
+
+\paragraph{Accuracy vs. Lanczos iterations.}
+In \autoref{fig:lanczos_accuracy}, we measure the accuracy of LOVE{} as a function of the number of Lanczos iterations ($k$).
+We train a KISS-GP model with a deep RBF kernel on the four largest datasets from \autoref{tab:large_dataset_results}, using the setup described above.
+We measure the SMAE of KISS-GP/LOVE's predictive variances compared against the standard KISS-GP variances (KISS-GP w/o LOVE).
+As seen in \autoref{fig:lanczos_accuracy}, error decreases \emph{exponentially} with the number of Lanczos iterations, up until roughly $50$ iterations.
+After roughly $50$ iterations, the error levels off, though this may be an artifact of floating-point precision (which may also cause small subsequent fluctuations).
+Recall that $k$ also corresponds with the rank of the $R$ and $R'$ matrices in \eqref{eq:pred_covar_ski_fast}.
+
+\subsection{Sampling}
+
+We evaluate the quality of posterior samples drawn with KISS-GP/LOVE{} as described in \autoref{sec:sampling_method}.
+We compare these samples to three baselines: sampling from an {\bf Exact GP} using the Cholesky decomposition, sampling from an {\bf SGPR} model with Cholesky, and sampling with random {\bf Fourier features} \citep{rahimi2008random} -- a method commonly used in Bayesian optimization \cite{hernandez2014predictive,wang2017max}.
+The KISS-GP/LOVE{} and SGPR models use the same architecture as described in the previous section.
+For Fourier features, we use 5000 random features -- the maximum number of features that could be used without exhausting available GPU memory.
+We learn hyperparameters on the Exact GP and then use the same hyperparameters for the all methods.
+
+We test on the two largest UCI datasets which can still be solved exactly (PolTele, Eleveators) and two Bayesian optimization benchmark functions (Eggholder -- 2 dimensional, and Styblinski-Tang -- 10 dimensional).
+The UCI datasets use the same training procedure as in the previous section.
+For the BayesOpt functions, we evaluate the model after 100 queries of max value entropy search \cite{wang2017max}.
+We use a standard (non-deep) RBF kernel for Eggholder, and for Syblinski-Tang we use the additive kernel decomposition suggested by~\citet{kandasamy2015high}.\footnote{
+  The Syblinski-Tang KISS-GP model uses the sum of 10 RBF kernels -- one for each dimension -- and $m=100$ inducing points.
+}
+
+\paragraph{Sample accuracy.}
+In \autoref{tab:sampling_results} we evaluate the accuracy of the different sampling methods.
+We draw $s\!=\!1000$ samples at $t\!=\!10,\!000$ test locations and compare the sample covariance matrix with the true posterior covariance matrix $k_{f\mid\dset}(\bXtest,\bXtest)$ in terms of element-wise mean absolute error.
+It is worth noting that all methods incur some error -- even when sampling with an Exact GP.
+Nevertheless, Exact GPs, SGPR, and LOVE{} produce very accurate sample covariance matrices.
+In particular, Exact GPs and LOVE{} achieve between 1 and 3 orders of magnitude less error than the random Fourier Feature method.
+
+\paragraph{Speed.}
+Though LOVE{}, Exact GPs, and SGPR have similar sample accuracies, LOVE{} is much faster.
+Even when accounting for LOVE's pre-computation time (i.e. sampling ``from scratch''), LOVE{} is comparable to Fourier features and SGPR in terms of speed.
+At test time (i.e. after pre-computation), LOVE{} is up to $18,\!000$ times faster than Exact.
+
+\paragraph{Bayesian optimization.}
+Many acquisition functions in Bayesian optimization rely on sampling from the posterior GP.
+For example, max-value entropy search \cite{wang2017max} draws samples from a posterior GP in order to estimate the function's maximum value $p(y^{*} \! \mid \! \dset)$.
+The corresponding maximum \emph{location} distribution, $p(x^{*} \! \mid \! \dset)$, is also the primary distribution of interest in predictive entropy search \cite{hernandez2014predictive}.
+%
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/thompson_sampling_comparison.pdf}
+  \vspace{-4ex}
+  \caption{
+    A density estimation plot of the predictive maximum distribution, $p(y^* \! \mid \! \dset)$ for the (normalized) Eggholder function after 100 iterations of BayesOpt.
+    Samples drawn with KISS-GP/LOVE{} closely match samples drawn using an Exact GP. See \citet{wang2017max} for details.
+    \label{fig:thompson_sampling_comparison}
+  }
+    \vspace{-2ex}
+\end{figure}
+%
+In \autoref{fig:thompson_sampling_comparison}, we visualize each method's sampled distribution of $p(y^{*} \! \mid \! \dset)$ for the Eggholder benchmark.
+We plot kernel density estimates of the sampled maximum value distributions after $100$ BayesOpt iterations.
+Since the Exact GP sampling method uses the exact Cholesky decomposition, its sampled max-value distribution can be considered closest to ground truth.
+The Fourier feature sampled distribution differs significantly.
+In contrast, LOVE{}'s sampled distribution very closely resembles the Exact GP distribution, yet
+LOVE{} is $700 \times$ faster than the Exact GP on this dataset (\autoref{tab:sampling_results}).

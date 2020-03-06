@@ -1,0 +1,271 @@
+%!TEX root=../main.tex
+\section{Lanczos Variance Estimates (\href{https://www.youtube.com/watch?v=t5ze_e4R9QY}{LOVE{}})}
+\label{sec:method}
+
+In this section we introduce LOVE{}, an approach to efficiently approximate the predictive covariance
+\begin{align*}
+  k_{f\mid\dset}(\bx^*_i, \bx^*_j) = k_{\bx^{*}_i \bx^{*}_j} - \bk_{\bX \! \bx^{*}_i}^\top (K_{\bX\!\bX} + \sigma^2 \bI)^{-1} \bk_{\bX \! \bx^{*}_j},
+\end{align*}
+where $\bX^{*} = [ \bx^{*}_1, \ldots \bx^{*}_t ]$ denotes a set of $t$ test points, and $\bX = [\bx_1, \ldots \bx_n]$ a set of $n$ training points.
+%
+Solving $(K_{\bX \bX} + \sigma^2 \bI)^{-1}$ na\"ively takes $\bigo{n^3}$ time, but is typically performed as a one-type pre-computation during training since $K_{\bX \bX}$ does not depend on the test data.
+At test time, all covariance calculations will then cost $\bigo{n^2}$.
+In what follows, we build a significantly faster method for (co-)variance computations, mirroring this \emph{pre-compute phase} and \emph{test phase} structure.
+
+\subsection{A first $\bigo{m^2}$ approach with KISS-GP}
+It is possible to obtain some computational savings when using inducing point methods.
+For example, we can replace $\bk_{X \! \bx^*_i}$ and $K_{X \! X}$ with their corresponding KISS-GP approximations,
+$\tilde{\bk}_{X \! \bx^*_i}$ and $\tilde{K}_{X \! X}$, which we restate here:
+%
+%
+\begin{align*}
+  \tilde{\bk}_{\bX \bx^*_i} = W^\top_{\bX} \bK_{U \! U} \bw_{\bx^*_i},
+  \: \: \: & \: \: \:
+  \tilde{K}_{\bX \bX} = W^\top_{\bX} \bK_{U \! U} W_{\bX}.
+\end{align*}
+$W_\bX$ is the sparse interpolation matrix for training points $X$.
+$\bw_{\bx^{*}_i}$ and $\bw_{\bx^{*}_j}$ are the sparse interpolations for $\bx^{*}_i$ and $\bx^{*}_j$ respectively.
+Substituting these into \eqref{eq:pred_covar} results in the following approximation to the predictive covariance:
+%
+\begin{align}
+  k_{\!f\mid\dset}(\bx^*_i, \bx^*_j) &\approx k_{\bx^{*}_i \! \bx^{*}_j} - \tilde{\bk}_{\bX \! \bx^{*}_i}^\top (\tilde{K}_{\bX\!\bX} + \sigma^2 \bI)^{-1} \tilde{\bk}_{\bX \! \bx^{*}_j}.
+    \label{eq:pred_covar_approx}
+\end{align}
+%
+By fully expanding the second term in \eqref{eq:pred_covar_approx}, we obtain
+%
+\begin{equation}
+  \bw_{\bx^*_i}^{\top} {\color{blue}\underbrace{{\bK_{U \! U} W_{\bX} (\tilde{K}_{\bX\!\bX} + \sigma^2 \bI)^{-1} W^\top_{\bX} \bK_{U \! U}}}_{\blue C}} \bw_{\bx^*_j}
+  \label{eq:pred_covar_ski_cache}
+\end{equation}
+%
+
+
+\paragraph{Precomputation phase.}
+$\blue C$, the braced portion of \eqref{eq:pred_covar_ski_cache}, does not depend on the test points $\bx^{*}_{i}$, $\bx^{*}_{j}$ and therefore can be pre-computed during training.
+The covariance becomes:
+%
+\begin{align}
+  k_{f\mid\dset}(\bx^*_i, \bx^*_j) &\approx k_{\bx^{*}_i \bx^{*}_j} - \bw_{\bx^{*}_i}^\top \: \blue C \: \bw_{\bx^{*}_j}
+    \label{eq:pred_covar_ski_naive}
+\end{align}
+%
+In \eqref{eq:pred_covar_ski_cache}, we see that primary cost of computing $\blue C$ is the $m$ solves with $\tilde{K}_{\bX\!\bX} + \sigma^2 \bI$: one for each column vector in $W^{\top}_{\bX} \bK_{U \! U}$.
+Since $\tilde \bK_{\bX\!\bX}$ is a KISS-GP approximation, each solve is $\bigo{n + m\log m}$ time with CG \cite{wilson2015kernel}.
+The total time for $m$ solves is $\bigo{mn + m^2 \log m}$.
+%Computing the right hand sides takes $\bigo{nm}$ time total because $W^{\top}_{\bX}$ is an $n \times m$ matrix with four non-zero elements per row.
+
+\paragraph{Test phase.}
+%In the \emph{test phase} we can compute individual predictive variances in $\bigo{m}$ time.
+As $\bw^{*}_{i}$ contains only four nonzero elements,
+the inner product of $\bw^{*}_{i}$ with a vector takes $\bigo{1}$ time,
+and the multiplication $\bw^{*\top}_{i}\blue C$ requires $\bigo{m}$ time during testing.
+
+\paragraph{Limitations.}
+Although this technique offers computational savings over non-inducing point methods, the quadratic dependence on $m$ in the pre-computation phase is a computational bottleneck.
+In contrast, all other operations with KISS-GP require at most linear storage and near-linear time.
+Indeed, one of the hallmarks of KISS-GP is the ability to use a very large number of inducing points $m = \Theta(n)$ so that kernel computations are nearly exact.
+Therefore, in practice a quadratic dependence on $m$ is infeasible and so no terms are pre-computed.\footnote{
+  \citet{wilson2015thoughts} (Section 5.1.2) describe an alternative procedure that approximates $\blue C$ as a diagonal matrix
+  for fast variances, but typically incurs much greater (e.g., more than 20\%) error, which is dominated by the number of terms in
+  a stochastic expansion, compared to the number of inducing points.}
+Variances are instead computed using \eqref{eq:pred_covar_approx}, computing each term in the equation from scratch.
+Using CG, this has a cost of $\bigo{k n + k m \log m}$ for \emph{each} (co-)variance computation, where $k$ is the number of CG iterations.
+This dependence on $n$ and $m$ may be cumbersome when performing many variance computations.
+
+\subsection{Fast predictive (co-)variances with LOVE{}}
+We propose to overcome these limitations through an altered pre-computation step.
+In particular, we approximate $\blue C$ in \eqref{eq:pred_covar_ski_naive} as a low rank matrix.
+Letting $\blue R$ and $\blue{R'}$ be $k \times m$ matrices such that $\blue R^\top \blue{R'} \approx \blue C$, we rewrite \eqref{eq:pred_covar_ski_naive} as:
+%
+% \begin{align}
+%   k_{f\mid\dset}(\bx^*_i, \bx^*_j) &\approx k_{\bx^{*}_i \bx^{*}_j} - \bw_{\bx^{*^\top}_i} \blue R^{\top}\blue{R'} \: \bw_{\bx^{*}_j}.\nonumber \\
+%                                  &\approx k_{\bx^{*}_i \bx^{*}_j} - (\blue R \bw_{\bx^{*}_i})^\top (\blue{R'} \: \bw_{\bx^{*}_j}).
+%     \label{eq:pred_covar_ski_fast}
+% \end{align}
+\begin{align}
+  k_{f\mid\dset}(\bx^*_i, \bx^*_j) &\approx k_{\bx^{*}_i \bx^{*}_j} - (\blue R\bw^{*}_i )^{\top}\blue{R'} \: \bw^{*}_j.
+    \label{eq:pred_covar_ski_fast}
+\end{align}
+%
+Variance computations with \eqref{eq:pred_covar_ski_fast} take $\bigo{k}$ time
+due to the sparsity of $\bw_{\bx^{*}_i}$ and $\bw_{\bx^{*}_j}$.
+Recalling the Lanczos approximation
+$
+    (\tilde{K}_{\bX\bX} + \sigma^2 \bI)^{-1}\bb \approx Q_{k}T^{-1}_{k}Q_{k}^{\top}\bb
+$
+from \autoref{subsec:lanczos}, we can efficiently derive forms for $\blue R$ and $\blue{R'}$:
+\begin{align*}
+  \blue C &= \bK_{U \! U} W_{\bX} \underbrace{(\tilde{K}_{\bX\!\bX} + \sigma^2 \bI)^{-1}}_{\text{Apply Lanczos}} W^\top_{\bX} \bK_{U \! U} \\
+         &\approx \bK_{UU} W_X (Q_k T_k^{-1} Q_k^\top) W_X^\top K_{UU} \\
+         &= \underbrace{K_{UU} W_X Q_k}_{\blue R^\top} \underbrace{T_k^{-1} Q_k^\top W_X^\top \bK_{UU}}_{\blue{R'}}
+\end{align*}
+To compute $\blue R$ and $\blue{R'}$, we perform $k$ iterations of Lanczos to achieve $(\tilde{K}_{\bX\bX} + \sigma^2\bI)  \approx Q_{k}T_{k}Q_{k}^{\top}$ using the average column vector $\mathbf{b}=\frac{1}{m}W_X^\top \bK_{UU}\mathbf{1}$ as a probe vector.
+This partial Lanczos decomposition requires $k$ MVMs with $(\tilde \bK_{XX} + \sigma^2 \bI)$ for a total of $\bigo{k n + k m \log m}$ time (because of the KISS-GP approximation).
+$\blue R$ and $\blue{R'}$ are $m \times k$ matrices, and thus require $\bigo{mk}$ storage.
+
+\paragraph{To compute $\blue R$,} we first multiply $W_{\bX}Q_{k}$, which takes $\bigo{kn}$ time due sparsity of $W_\bX$.
+The result is a $m \times k$ matrix.
+Since $\bK_{UU}$ has Toeplitz structure, the multiplication $\bK_{U\!U} (W_{\bX}Q_{k})$ takes $\bigo{km \log m}$ time \cite{saatcci2012scalable}.
+Therefore, computing $\blue R$ takes $\bigo{kn + km\log m}$ total time.
+
+\paragraph{To compute $\blue {R'}$,} note that $\blue{R'} = T^{-1}_{k}\blue R^{\top}$.
+Since $\tilde \bK_{X\!X}$ is positive definite, $T$ is as well (by properties of the Lanczos algorithm).
+We thus compute $T^{-1}_k \blue R^\top$ using the Cholesky decomposition of $T$.
+Computing/using this decomposition takes $\bigo{km}$ time since $T$ is tridiagonal \cite{loan1999introduction}.
+
+In total, the entire pre-computation phase takes only $\bigo{kn + km \log m}$ time.
+This is the same amount of time of a single marginal likelihood computation.
+We perform the pre-computation as part of the training procedure since none of the terms depend on test data.
+Therefore, during test time all predictive variances can be computed in $\bigo{k}$ time using \eqref{eq:pred_covar_ski_fast}.
+As stated in \autoref{subsec:lanczos}, $k$ depends on the conditioning of the matrix and not its size \cite{golub2012matrix}.
+$k\leq100$ is sufficient for most matrices in practice \cite{golub2012matrix}, and therefore $k$ can be considered to be constant.
+Running times are summarized in \autoref{tab:running_times}.
+
+\subsection{Predictive distribution sampling with LOVE{}}
+\label{sec:sampling_method}
+
+LOVE{} can also be used to compute predictive \emph{covariances} and operations involving the predictive covariance matrix.
+Let $\bXtest = [\bxtest_1, \ldots, \bxtest_t]$ be a test set of $t$ points.
+%In many applications \eqref{eq:pred_covar} will be used only to compute the predictive variance terms for each $\bx^*_i$,  i.e. $k_{f \mid \dset} (\bx^*_i, \bx^*_i)$.
+To draw samples from $\bfntest \! \mid \! \dset$ --- the predictive function evaluated on $\bx^*_1, \ldots, \bx^*_t$, the cross-covariance terms (i.e. $k_{f \mid \dset} (\bx^*_i, \bx^*_j)$) are necessary in addition to the variance terms ($k_{f \mid \dset} (\bx^*_i, \bx^*_i)$).
+Sampling GP posterior functions is a common operation.
+In Bayesian optimization for example, several popular acquisition functions -- such as predictive entropy search \cite{hernandez2014predictive}, max-value entropy search \cite{wang2017max}, and knowledge gradient \cite{frazier2009knowledge} -- require posterior sampling.
+
+However, posterior sampling is an expensive operation when querying at many test points.
+The predictive distribution $\bfntest \! \mid \! \dset$ is multivariate normal with mean $\mu_{f \mid \dset} (\bX^*) \in \reals^t$ and covariance $k_{f \mid \dset} (\bX^*, \bX^*) \in \reals^{t \times t}$.
+We sample $\bfntest \! \mid \! \dset$ by reparametrizing Gaussian noise samples $\mathbf{v} \sim \normaldist{0}{\bI{}^{t\!\times \!t}}$:
+%
+\begin{equation}
+  \mu_{f \mid \dset} (\bX^*) + S \mathbf{v},
+  \label{eq:sample}
+\end{equation}
+%
+where $S$ is a matrix such that $S S^\top = k_{f \mid \dset} (\bX^*, \bX^*)$.
+Typically $S S^\top$ is taken to be the Cholesky decomposition of $k_{f \mid \dset} (\bX^*, \bX^*)$.
+Computing this decomposition incurs a $\bigo{t^3}$ cost on top of the $\bigo{t^2}$ covariance evaluations.
+This may be costly, even with constant-time covariance computations.
+Parametric approximations are often used instead of exact sampling \cite{deisenroth2011pilco}.
+
+\paragraph{A Fast Low-Rank Sampling Matrix.} We use LOVE{} and KISS-GP to rewrite \eqref{eq:pred_covar_ski_fast} as
+%
+\begin{align}
+  k_{f \mid \dset} (\bX^*, \bX^*)
+  &\approx \bW^\top_{X^*} \blue{K_{UU}} W_{X^*} - (\blue \bR \bW_{X^*})^\top (\blue{\bR'} \bW_{\bXtest})
+    \notag \\
+    &= \bW^\top_{\bX^*} \blue{\left( \bK_{UU} - \bR^\top \bR' \right)} \bW_{X^*}.
+    \label{eq:pred_covar_ski_interp_form12}
+\end{align}
+%
+where $W_{X^*} = [\bw_{x^*_1}, \ldots, \bw_{x^*_n}]$ is the interpolation matrix for test points.
+We have reduced the full covariance matrix to a test-independent term ($\blue{ K_{UU} - R^\top R' }$) that can be pre-computed.
+We apply the Lanczos algorithm on this term during pre-computation to obtain a rank-$k$ approximation:
+%
+\begin{align}
+  \blue{K_{UU} - R^\top R' \approx Q'_k T'_k Q_k^{\prime\top} }.
+  \label{eqn: lancapprox}
+\end{align}
+%
+This Lanczos decomposition requires $k$ matrix vector multiplies with $\blue{ K_{UU} - R^{\top}R' }$, each of which requires $\bigo{m \log m}$ time.
+Substituting \eqref{eqn: lancapprox} into \eqref{eq:pred_covar_ski_interp_form12}, we get:
+%
+\begin{align}
+  k_{f \mid \dset} (\bX^*, \bX^*) = W^\top_{X^*} \blue{Q'_{k}T'_{k}Q_{k}^{\prime\top}} W_{X^*}.
+  \label{eq:sampling_pre_cholesky}
+\end{align}
+If we take the Cholesky decomposition of $T'_k = \!L L^\top$ (a $\bigo{k}$ operation since $T'_{k}$ is tridiagonal), we rewrite \eqref{eq:sampling_pre_cholesky} as
+%
+\begin{align}
+  k_{f \mid \dset} (\bX^*, \bX^*)
+  &\approx  W^\top_{X^*} \blue{\underbrace{Q'_k L}_{S}} \blue{\underbrace{L^\top Q_k^{\prime\top}}_{S^\top}} W_{X^*}.
+    \label{eq:pred_covar_ski_interp_form}
+\end{align}
+%
+Setting $\blue{ S= Q'_k L_{T_k} }$, we see that $k_{f \mid \dset} (\bX^*, \bX^*) = (W_X^\top \blue S)(W_X^\top \blue S)^{\top}$.
+$\blue S \! \in \! \reals^{m \times k}$ can be precomputed and cached since it does not depend on test data.
+In total, this pre-computation takes $\bigo{k m \log m + m k^2}$ time in addition to what is required for fast variances.
+To sample from the predictive distribution, we need to evaluate \eqref{eq:sample}, which involves multiplying $W^\top_{X^*} S \mathbf{v}$.
+Multiplying $\mathbf{v}$ by $S$ requires $\bigo{mk}$ time, and finally multiplying by $W^{\top}_{X^{*}}$ takes $\bigo{tk}$ time.
+Therefore, drawing $s$ samples (corresponding to $s$ different values of $\mathbf{v}$) takes $\bigo{sk(t + m)}$ time total during the testing phase (see \autoref{tab:running_times}) -- a \emph{linear} dependence on $t$.
+
+\begin{algorithm2e}[t]
+  \SetAlgoLined
+  \SetKwInOut{Input}{Input}
+  \SetKwInOut{Output}{Output}
+  \newlength\inputlen
+  \newcommand\NextInput[1]{%
+    \settowidth\inputlen{\Input{}}%
+    \setlength\hangindent{1.5\inputlen}%
+    \hspace*{\inputlen}#1\\
+  }
+  \newcommand\graycomment[1]{\footnotesize\ttfamily\textcolor{gray}{#1}}
+  \SetCommentSty{graycomment}
+  \SetKwFunction{mvmkxx}{mvm\_K\textsubscript{XX}}
+  \SetKwFunction{mvmkux}{mvm\_K\textsubscript{UX}}
+  \SetKwFunction{lanczos}{lanczos\textsubscript{k}}
+  \SetKwFunction{sparsemm}{sparse\_mm}
+  \SetKwFunction{choleskyfactor}{cholesky\_factor}
+  \SetKwFunction{choleskysolve}{cholesky\_solve}
+  \caption{LOVE{} for fast predictive variances.}
+  \label{alg:fast_pred_var}
+    \Input{$\bw_{x^*_i}$, $\bw_{x^*_j}$ -- interpolation vectors for $\bx^*_i$, $\bx^*_j$}
+    \NextInput{$k_{\bxtest_i, \bxtest_j}$ -- prior covariance between $\bx^*_i$, $\bx^*_j$}
+    \NextInput{$\bb=\frac{1}{m}W_X^\top K_{UU}\mathbf{1}$ -- average col. of $W_X^\top K_{UU}$}
+    \NextInput{\mvmkxx{}: func. that performs MVMs with $(W^\top_{X} K_{UU} W_X + \sigma^2 \bI) \approx \widehat K_{X\!X}$}
+    \NextInput{\mvmkux{}: func. that performs MVMs with $(K_{UU} W_{X}) \approx K_{U\!X}$}
+    \Output{Approximate predictive variance $k_{f \mid \dset} ( \bx^{*}_i, \bx^{*}_j )$.}
+    \BlankLine
+    \If{$\blue R, \blue{R'}$ have not previously been computed}{
+      $Q_k, T_k$ $\leftarrow$ \lanczos{ \mvmkxx, $\bb$ } \\
+      \qquad \tcp{k iter. of Lanczos w/}
+      \qquad \tcp{matrix $\widehat K_{\bX\bX}$ and probe vec. $\!\!\!\bb$ }
+      $L_{T_k}$ $\leftarrow$ \choleskyfactor{ $T_k$ } \\
+      $\blue R$ $\leftarrow$ $($ \mvmkux{ $Q_k$ } $)^\top$
+      \tcp*{$R = Q_k^\top W^\top_X K_{UU}$  }
+      $\blue{R'}$ $\leftarrow$ \choleskysolve{$\blue R$, $L_{T_k}$} \\
+      \qquad \tcp{$R' = T_k^{-1} Q_k^\top W^\top_X K_{UU}$  }
+    }
+    $\bu$ $\leftarrow$ \sparsemm{ $\blue R$, $\bw_{x^*_i}$ } \\
+    $\bv$ $\leftarrow$ \sparsemm{ $\blue{R'}$, $\bw_{x^*_j}$ } \\
+    \Return{ $k_{\bx^{*}_i, \bx^{*}_j} - \bu^T \bv$ } \\
+\end{algorithm2e}
+
+\subsection{Extension to additive kernel compositions}
+LOVE{} is applicable even when the KISS-GP approximation is used with an additive composition of kernels,
+%
+\begin{equation}
+  \tilde{k}(\bx_i, \bx_j) =
+  \bw^{(1)\top}_{\bx_i} K^{(1)}_{U \! U} \bw^{(1)}_{\bx_j} + \ldots + \bw^{(d)\top}_{\bx_i} K^{(d)}_{U \! U} \bw^{(d)}_{\bx_j}.
+  \notag
+\end{equation}
+Additive structure has recently been a focus in several Bayesian optimization settings, since the cumulative regret of additive models depends linearly on the number of dimensions
+\cite{kandasamy2015high,wang2017batched,gardner2017discovering,wang2017max}.
+Additionally, deep kernel learning GPs \citep{wilson2016stochastic,wilson2016deep} typically uses sums of one-dimensional kernel functions.
+To apply LOVE{}, we note that additive composition can be re-written as
+%
+\begin{equation}
+  \tilde{k}(\bx_i, \bx_j) =
+  \begin{bmatrix}
+    \bw^{(1)}_{\bx_i} \\
+    \vdots \\
+    \bw^{(d)}_{\bx_i}
+  \end{bmatrix}^\top
+  \!
+  \begin{bmatrix}
+    K^{(1)}_{U \! U} & \!\! \ldots \!\! & 0 \\
+    \vdots & \!\! \ddots \!\! & \vdots \\
+    0 & \!\! \ldots \!\! & K^{(d)}_{U \! U}
+  \end{bmatrix}
+  \!
+  \begin{bmatrix}
+    \bw^{(1)}_{\bx_j} \\
+    \vdots \\
+    \bw^{(d)}_{\bx_j}
+  \end{bmatrix}.
+  \label{eq:multi_dimensional_kernel_block}
+\end{equation}
+%
+The block matrices in \eqref{eq:multi_dimensional_kernel_block} are analogs of their 1-dimensional counterparts in \eqref{eq:ski}.
+Therefore, we can directly apply \autoref{alg:fast_pred_var}, replacing $W_X$, $\bw_{\bx^*_i}$, $\bw_{\bx^*_j}$, and $K_{UU}$ with their block forms.
+The block $\bw$ vectors are $\bigo{d}$-sparse, and therefore interpolation takes $\bigo{d}$ time.
+MVMs with the block $K_{UU}$ matrix take $\bigo{dm\log m}$ time by exploiting the block-diagonal structure. With $d$ additive components, predictive variance computations cost only a factor $\bigo{d}$ more than their 1-dimensional counterparts.
