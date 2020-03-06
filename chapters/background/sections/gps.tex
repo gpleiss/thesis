@@ -247,9 +247,9 @@ Of the three objects that define a Gaussian process---the prior mean function, t
 While the parameters of any particular kernel function can most often be learned through gradient descent, the practitioner must first choose the class of covariance functions to optimize over.
 Choosing the right covariance function class will largely determine how the Gaussian process generalizes to unseen data points.
 This is especially crucial in the small-data regime, where the predictive distribution closely follows the prior distribution.
-If the covariance function encodes prior information about the function's properties, then the model can generalize well even when there are few training points.
+If the covariance function properly encodes prior information about the function's properties, then the model can generalize well even when there are few training points.
 
-In the running example of predicting a child's weight, there are several known functional properties that we can encode.
+In the running example of predicting a child's weight, there are several known functional properties that we can encode a priori.
 For example, a child's weight will (in many cases) be roughly monotonic with respect to time.
 Additionally, children who grow up in similar socioeconomic conditions will be more likely to have similar weights.
 We will discuss how both of these properties can be encoded by choosing the appropriate kernel function.
@@ -262,21 +262,98 @@ We will describe their functional form and their properties:
   \item The {\bf Radial Basis Function (RBF)} kernel, or squared exponential kernel is one of the most commonly-used covariance functions.
     It's functional form is given by
     %
-    \[ k_\text{RBF}(\bx, \bx') = o^2 \exp \left( \sum_{d=1}^D \frac{\left( x_d - x_d' \right)^2}{\ell_d}  \right) \]
+    \[ k_\text{RBF}(\bx, \bx') = o^2 \exp \left( \sum_{d=1}^D \frac{\left( x_d - x_d' \right)^2}{\ell_d^2}  \right) \]
     %
     where $o^2$ is referred to as the \emph{outputscale} parameter and the $\ell_1, \ldots, \ell_D$ are the \emph{lengthscales} for each dimension $d \in [1, D]$.
-    This kernel is commonly considered to be a ``general'' kernel, since it is able to universally approximate any function given enough training data \cite{micchelli2006universal}.
-		However, functions drawn from $f \sim \gp{\mu}{k_\text{RBF}}$ are infinitely differentiable, which may impose an unreasonable smoothness constraint in some applications.
-
+    When the $\ell_d$ parameter is different across all dimensions, the kernel is referred to as the {\bf RBF-ARD } kernel, where ARD stands for \emph{ automatic relevance determination }.
     To reduce the number of learned parameters, it is sometimes common to share the same $\ell$ parameter across all dimensions.
-    When each dimension uses a different $\ell_d$ parameter, the kernel is referred to as the {\bf RBF-ARD } kernel, where ARD stands for \emph{ automatic relevance determination }.
+
+    The RBF kernel is commonly considered to be a ``general'' kernel, since it is able to universally approximate any function given enough training data \cite{micchelli2006universal}.
+		However, functions drawn from $f \sim \GP{\mu}{k_\text{RBF}}$ are infinitely differentiable, which may impose an unreasonable smoothness constraint in some applications \cite{stein2012interpolation}.
+
+	\item The {\bf Mat\'{e}rn} kernel is another popular kernel which is arguably as general as the RBF kernel yet without the strict smoothness properties.
+		The kernel introduces a parameter $\nu$ that determines how differentiable its sampled functions are.
+		More concretely, the covariance between any two points is given as:
+    %
+    \[
+			k_{\text{Mat}-\nu} (\bx, \bx') = o^2 \frac{2^{1 - \nu}}{\gamma(\nu)}
+			\left( \sqrt{2 \nu} \sum_{d=1}^D \frac{\vert x_d - x_d' \vert}{\ell_d}  \right)^\nu
+			K_\nu \left( \sqrt{2 \nu} \sum_{d=1}^D \frac{\vert x_d - x_d' \vert}{\ell_d}  \right),
+		\]
+		%
+    where $o^2$ and $\ell_d$ are analogous to the parameters from the RBF kernel, and where $K_\nu$ is a modified Bessel function \cite{rasmussen2006gaussian}.
+    Functions sampled from $f \sim \GP{\mu}{k_{\text{mat}-\nu}}$ are $\lceil \nu \rceil - 1$-times differentiable.
+    As $\nu \rightarrow \infty$ we recover the RBF kernel.
+
+    Typically, $o^2$ and $\ell_d$ are learned through gradient descent whereas $\nu$ is pre-selected and fixed.
+    Common values for $\nu$ and $3/2$ and $5/2$, both of which have more succinct closed-form expressions.
+
+  \item The {\bf Linear} kernel is one of the least expressive kernels, as it only has support for linear functions.
+    However, it is commonly used as a building block for more complex kernels, as we will discuss shortly.
+    It is given by:
+    %
+    \[ k_\text{Lin} ( \bx, \bx' ) = b^2 + o^2 (\bx - \bc)^\top (\bx - \bc), \]
+    %
+    where $b$, $\bc$, and $o$ are learnable parameters.
 \end{itemize}
 
+There are many other kernels that can encode different types of functional structure such as periodicity (using the periodic kernel), multiple lengthscales (using the rational quadratic kernel), or erratic/noisy dynamics (using Ornstein-Uhlenbeck kernel).
+See \cite{rasmussen2006gaussian} for more discussion on basic kernel types.
+
 \paragraph{Composing kernels.}
+Kernels can be composed together to combine the functional properties.
+The two most common methods for composition are addition: $k(\bx, \bx') = k_1(\bx, \bx') + k_2(\bx, \bx')$
+and multiplication: $k(\bx, \bx') = k_1(\bx, \bx') k_2(\bx, \bx')$.
+The sub-kernels $k_1$ and $k_2$ can operate on any subset of the dimensions of $\bx$.
+In our running example, we may wish to model our data with the kernel
+%
+\[ k(\bx, \bx') = k_\text{Lin}( \bx_\text{time}, \bx_\text{time}' ) + k_\text{RBF}( \bx_\text{econ}, \bx_\text{econ}' ) \]
+%
+where $\bx_\text{time}$ and $\bx_\text{econ}$ are the time and socioeconomic features of $\bx$ respectively.
+This would encode our first prior assumption (a child's weight increases near-monotonically with time)
+and our second prior assumption (children from a similar socioeconomic background should have similar development).
+
 
 \paragraph{Stationary kernels.}
+The RBF and Mat\'ern kernels belong to an important class of kernels known as \emph{stationary kernels}.
+This class more generally includes all kernels that are simply a function of the distance between two points:
+\begin{equation}
+  k_\text{stationary} (\bx, \bx') = \phi( \vert \bx - \bx' \vert ),
+  \label{eqn:stationary}
+\end{equation}
+for some function $\phi$.\footnote{
+  Note that the linear kernel cannot be written in this way and is therefore non-stationary.
+}
+This class of kernels has many important properties; see \citep[e.g.][]{rasmussen2006gaussian,wilson2013gaussian} for more details.
+For the purpose of this thesis, we draw attention to stationary kernels as they allow for potential computational savings.
+For example, the computational complexity of GPs with stationary kernels is reduced when the data lie on a regularly-spaced grid \cite{cunningham2008fast,saatcci2012scalable} or can be approximated by grid points \cite{wilson2014thesis,wilson2015kernel}.
+
 
 \paragraph{Spectral and Deep kernels.}
+For datasets with well-understood properties, it can be advantageous to hand-choose or construct kernels that best encode prior knowledge.
+With more complex datasets, it may be too difficult to manually encode a specific functional structure.
+In such settings, it is better to automatically learn functional structure directly from the data using a highly-parametric kernel, such as the {\bf spectral-mixture} kernel \cite{wilson2013gaussian} or a {\bf deep kernel} \cite{wilson2016deep}.
+At a high level, these kernels learn the $\phi$ function in \cref{eqn:stationary} using a mixture model or a neural network.
+Though such learning often requires larger datasets, it can result in kernel functions that more accurately model the data.
+
+The spectral-mixture kernel (in one dimension) is defined by a mixture of $Q$ functions:
+%
+\[
+  k_\text{SM} (x, x') = \sum_{q=1}^Q w_q
+    \exp \left( -2 \pi^2 (x - x')^2 v_q \right)
+    \cos \left( -2 \pi (x - x')^2 \mu_q \right),
+\]
+%
+where $w_q$, $v_q$, and $\mu_q$ are learnable parameters.
+It is well-suited for interpolation and extrapolation tasks of time series or spatial data \cite{wilson2013gaussian}.
+Deep kernels \cite{wilson2016deep} \gp{one more} are kernels where the inputs $\bx$, $\bx'$ are first transformed using a deep neural network $\phi$:
+%
+\[
+  k_\text{deep} (x, x') = k_\text{base} \left( \phi(\bx), \phi(\bx') \right),
+\]
+where $k_\text{base}(\cdot, \cdot)$ is a simpler base kernel (usually the RBF kernel).
+The parameters of $\phi$ are learned by optimizing the marginal log likelihood in \cref{eqn:log_lik} \cite{wilson2016deep}.
+It is well suited to high-dimensional datasets or datasets with complex features.
 
 
 
