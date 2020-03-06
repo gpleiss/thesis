@@ -13,10 +13,10 @@ In particular, we assume the observational noise follows some Gaussian distribut
 At a high level, the goal of supervised regression is to find a function $f(\bx)$ (or a distribution of functions) that fits the available training data $\dset_\text{train} = \{(\bx_1, y_1), \ldots, (\bx_n, y_n)\}$ and makes accurate predictions on new data points $( \bxtest, \ytest )$ at test time.
 
 This setup is one of the most studied problems in machine learning, and there are numerous different approaches to tackling this problem.
-In this thesis we concern ourselves with the approach of \emph{Gaussian process regression}, which is a {\bf non-parametric} and {\bf fully-Bayesian} approach to regression.
+In this thesis we concern ourselves with the approach of \emph{Gaussian process regression}, which is a {\bf non-parametric} and {\bf Bayesian} approach to regression.
 It is non-parametric because the class of possible functions $f(\cdot)$ is defined through relationships between pairs of training data pointsl
 rather than through some prescribed functional form (e.g. linear functions, quadratic functions, neural networks, etc.)
-It is fully Bayesian because its predictions come from the \emph{distribution} of all possible functions $f(\cdot)$.
+It is Bayesian because its predictions come from the \emph{distribution} of all possible functions $f(\cdot)$.
 In other words, the choice of $f(\cdot)$ is marginalized out.
 
 \section{Gaussian Process Regression}
@@ -266,7 +266,7 @@ A common mechanism for scalable methods is to introduce a set of pseudo-inputs, 
 The kernel function for \emph{real}-inputs $\bx$, $\bx'$ is approximated by interpolating against the kernel matrix for the \emph{pseudo}-inputs $\bZ = [\bz_1, \ldots, \bz_M]$.
 %
 \begin{align}
-	\widetilde k(\bx, \bx') &\approx \:\:
+  k(\bx, \bx') \approx \widetilde k(\bx, \bx') &= \:\:
 		\overbracket{ \left( \bk_{\bZ\bx}^\top \bK_{\bZ\bZ}^{-1} \right) }^{\text{interpolation}} \:\: \bK_{\bZ\bZ} \:\:
 		\overbracket{ \left( \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx'} 		 \right) }^{\text{interpolation}}
 	\nonumber{} \\
@@ -288,60 +288,117 @@ However, under these interpretations it is less straightforward to derive connec
 \paragraph{Variants.}
 The basic formula of \cref{eqn:inducing_interpolation} can be extended to create a variety of approximate Gaussian process regression methods.
 We briefly present three common variants here---all of which use $M \ll N$ inducing points and learn their locations through gradient descent of \cref{eqn:log_lik}.
-In the next section we will discuss a fourth variant---Structured Kernel Interpolation \cite{wilson2015kernel}---which is a notably unique method that utilizes inducing points in a different way.
+In the next section we will discuss a fourth variant---Kernel Interpolation for Scalable Structured GPs (KISS-GP) \cite{wilson2015kernel}---which utilizes inducing points in a unique way.
 
 \begin{itemize}
 	\item {\bf Subset of Regressors (SoR)} \cite{silverman1985some,smola2001sparse} is arguably the most standard variant.
-	Here, the kernel matrix $\bK_{\bX\bX}$ and all kernel vectors $\bk_{\bX\bxtest}$ are replaced with their approximate variants:
-	\[ \widetilde \bK_{\bX\bX} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bX}, \quad
-		 \widetilde \bk_{\bX\bxtest} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bk_{\bX\bxtest}. \]
+    Here, the kernel matrix $\bK_{\bX\bX}$ and all kernel vectors $\bk_{\bX\bxtest}$ are replaced with their approximate variants:
+    \[ \widetilde \bK_{\bX\bX} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bX}, \quad
+       \widetilde \bk_{\bX\bxtest} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bk_{\bX\bxtest}. \]
 
 	\item {\bf Fully Independent Training Conditional (FITC) } \cite{snelson2006sparse} can be interpreted as an extension of SoR
 		where the approximate training kernel matrix has a diagonal correction term $\bLambda$.
-	\[ \widetilde \bK_{\bX\bX} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bX} + \bLambda, \quad
-		 \Lambda^{(i,i)} = k(\bx_i, \bx_i) - \bk_{\bZ\bx_i}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx_i}. \]
-	The diagonal correction term is motivated through a connection to approximate inference.
+    \[ \widetilde \bK_{\bX\bX} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bX} + \bLambda, \quad
+       \Lambda^{(i,i)} = k(\bx_i, \bx_i) - \bk_{\bZ\bx_i}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx_i}. \]
+    The diagonal correction term is motivated through a connection to approximate inference.
 
 	\item {\bf Sparse Gaussian Process Regression (SGPR) } \cite{titsias2009variational} uses the same kernel approximations as SoR.
 		However, when learning the inducing point locations and other parameters, SGPR uses an alternative objective function:
 		the marginal log likelihood of \cref{eqn:log_lik} augmented with a diagonal correction term:
-    \[ \loglik(\by \mid \bX, \theta) = -\log p(\by \mid \bX, \theta) + \sum_{i=1}^N \left( k(\bx_i, \bx_i) - \bk_{\bZ\bx_i}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx_i} \right). \]
-  The diagonal correction term can be derived by applying variational inference to the function values at inducing point locations.
+    \[ \loglik(\by \mid \bX, \btheta) = -\log p(\by \mid \bX, \btheta) + \sum_{i=1}^N \left( k(\bx_i, \bx_i) - \bk_{\bZ\bx_i}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx_i} \right). \]
+    The diagonal correction term can be derived by optimizing a variational lower bound on the function values at inducing point locations.
 \end{itemize}
+%
+We will discuss how to exploit this low-rank kernel matrix structure for faster inference in the next chapter.
 
-\subsection{Structured Kernel Interpolation (SKI)}
+\subsection{Kernel Interpolation for Scalable Structured Gaussian Processes (KISS-GP)}
+Kernel Interpolation for Scalable Structured Gaussian Processes (KISS-GP) \cite{wilson2015kernel} utilizes inducing points in a fundamentally different way.
+While other methods tend to use $M \ll N$ inducing points, \citet{wilson2015kernel} demonstrate that it is possible to set $M \gg N$ by making the following restrictions:
+\begin{enumerate}
+  \item the interpolation terms in \cref{eqn:inducing_interpolation} are approximated by a \emph{sparse interpolation vector} $\bw_\bx \approx \bK^{-1}_{\bZ\bZ} \bk_{\bZ\bx};$
+  \item the inducing points $\bZ = [\bz_1, \ldots, \bz_M]$ must lie on a \emph{regularly-spaced grid};
+  \item the kernel function is \emph{stationary} (e.g. RBF, Mat\'ern, etc.).
+\end{enumerate}
+The resulting approximate kernel matrix has nice algebraic structure that can be exploited for efficient storage and fast computations.
+In particular, the approximate kernel matrix $\widetilde \bK_{\bX\bX}$ affords fast \emph{matrix-vector multiplications} (MVMs), which will translate to fast Gaussian process training and inference (using the methods described in \cref{chapter:bbmm,chapter:love}).
+
+In more detail, KISS-GP assumes that a data point $\bx$ is well-approximated as a \emph{local interpolation} of $\bZ$.
+Using cubic interpolation \cite{keys1981cubic}, $\bx$ is expressed in terms of its 4 closest inducing points, and the interpolation weights are captured in the sparse vector $\bw_\bx$.
+The $\bw_\bx$ vectors approximate the training kernel matrix $\bK_{\bX\bX} \approx \tilde \bK_{\bX\bX}$ via \cref{eqn:inducing_interpolation}:
+%
+\begin{align}
+  \widetilde \bK_{\bX\bX} &= \:\:
+    \left( \overbracket{ \bK_{\bZ\bX}^\top \bK_{\bZ\bZ}^{-1} }^{ \approx \bW_{\bX}^\top} \right)
+    \bK_{\bZ\bZ}
+    \left( \overbracket{ \bK_{\bZ\bX}^{-1} \bK_{\bZ\bX} }^{ \approx \bW_{\bX}} \right)
+  \nonumber{} \\
+  &\approx \:\: \bW_{\bX}^\top \: \bK_{\bZ\bZ} \: \bW_{\bX}.
+  \label{eqn:ski}
+\end{align}
+%
+Here, $\bW_{\bX} = [\bw_{\bx_1}, \ldots, \bw_{\bx_n}]$ contains the interpolation vectors for all $\bx_i$.
+Performing a matrix-vector multiplication with $\widetilde \bK_{\bX\bX}$ (i.e. $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bv$ for any vector $\bv$) takes \emph{near-linear} time.
+To see why, a MVM with the matrix $\bW_\bX$ require $\bigo{N}$ time due to the $\bigo{N}$ sparsity of $\bW_\bX$.
+Moreover, restrictions 2 and 3 (stationary kernel/grided inducing points) endow the inducing kernel matrix $\bK_{\bZ\bZ}$ with Toeplitz structure (or Kronecker/Toeplitz structure if the inputs $\bx_i$ are multi-dimensional).
+By exploiting this structure, $\bK_{\bZ\bZ}$ requires $\bigo{m}$ storage and MVMs with $\bK_{\bZ\bZ}$ require $\bigo{m \log m}$ time \citep[see][for details]{cunningham2008fast,saatcci2012scalable}.
+Thus, if we perform $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bv$ from right-to-left, the entire multiplication takes $\bigo{N + M \log M}$ time.
+As we will demonstrate in the next section, exploiting these fasts MVMs results in a near-linear training time complexity for KISS-GP.
+
+%
+\paragraph{Computing predictive means.}
+One advantage of KISS-GP's structure is the ability to perform constant time predictive mean calculations \cite{wilson2015thoughts}.
+Substituting the KISS-GP approximate kernel into \cref{eqn:predictive_mean} and assuming a prior mean of 0 for notational brevity, the predictive mean is given by
+\begin{equation}
+  \meantest{\bxtest} = \bw_{\bxtest}^\top {\blue{\underbracket{\bK_{\bZ\bZ} \bW_{\bX}(\bW_{\bX}^{\top}\bK_{\bZ\bZ}\bW_{\bX} + \sigma_\text{obs}^{2} \bI)^{-1} \by}_{\ba}}}.
+  \label{eq:pred_mean_ski}
+\end{equation}
+(Here {\color{blue} blue} highlights computations that don't depend on test data.)
+Because $\bw_{\bx^{*}}$ is the only term in \eqref{eq:pred_mean_ski} that depends on $\bx^{*}$, the remainder of the equation (denoted as $\blue\ba$) can be pre-computed: $\meantest{\bxtest} = \bw_{\bxtest}^\top \blue \ba$.
+After pre-computing $\blue \ba$, the multiplication $\bw_{\bx^{*}}^\top \blue \ba$ requires $\bigo{1}$ time, as $\bw_{\bx^{*}}$ is sparse and has only four nonzero elements.
 
 \section{Summary of Notation}
 
 \begin{table}[h!]
-  \centering
+  \centerfloat
   \caption{Summary of Notation}
-  \resizebox{\textwidth}{!}{%
-    \begin{tabular}{ ccc }
-      \toprule
-      {\bf Notation} & {\bf Domain} & {\bf Description} \\
-      \midrule
-      \midrule
-      $\numdata$ & $\ints$ & Number of training data points \\
-      $\numdim$ & $\ints$ & Dimensionality of inputs \\
-      $\numinduc$ & $\ints$ & Number of inducing data points \\
-      \midrule
-      $\bX$ & $\reals^{\numdata \times \numdim}$ & Training features \\
-      $\by$ & $\reals^{\numdata}$ & Training targets \\
-      $\bxtest$ & $\reals^{\numdim}$ & Features of a test data point \\
-      $\ytest$ & $\reals$ & Target of a test data point \\
-      \midrule
-      $\mu( \cdot )$ & $\reals^\numdim \rightarrow \reals$ & The GP (prior) mean function \\
-      $k( \cdot, \cdot )$ & $\reals^\numdim \times \reals^\numdim \rightarrow \reals$ & The GP (prior) covariance/kernel function \\
-      $\sigma_\text{obs}^2$ & $\reals$ & Observational variance of the Gaussian likelihood \\
-      \midrule
-      $\bmu_\bX$ & $\reals^\numdata$ & (Prior) mean vector for training data $\bX$ \\
-      $\bK_{\bX\bX}$ & $\reals^{\numdata \times \numdata}$ & (Prior) kernel matrix for training data $\bX$ \\
-      $\trainK$ & $\reals^{\numdata \times \numdata}$ & (Prior) kernel matrix $\bK_{\bX\bX}$ plus observational noise $\sigma^2_\text{obs} \bI$ \\
-      \midrule
-      $\meantest{ \cdot }$ & $\reals^\numdim \rightarrow \reals$ & Predictive mean function of the GP model \\
-      $\covtest{ \cdot }$ & $\reals^\numdim \rightarrow \reals$ & Predictive variance function of the GP model\\
-      \bottomrule
-    \end{tabular}
-  }
+	\resizebox{1.2\textwidth}{!}{%
+		\begin{tabular}{ ccc }
+			\toprule
+			{\bf Notation} & {\bf Domain} & {\bf Description} \\
+			\midrule
+			\midrule
+			$\numdata$ & $\ints$ & Number of training data points \\
+			$\numdim$ & $\ints$ & Dimensionality of inputs \\
+			$\numinduc$ & $\ints$ & Number of inducing data points \\
+			\midrule
+			$\bX$ & $\reals^{\numdata \times \numdim}$ & Training features \\
+			$\by$ & $\reals^{\numdata}$ & Training targets \\
+			$\bxtest$ & $\reals^{\numdim}$ & Features of a test data point \\
+			$\ytest$ & $\reals$ & Target of a test data point \\
+			\midrule
+			$\mu( \cdot )$ & $\reals^\numdim \rightarrow \reals$ & The GP (prior) mean function \\
+			$k( \cdot, \cdot )$ & $\reals^\numdim \times \reals^\numdim \rightarrow \reals$ & The GP (prior) covariance/kernel function \\
+			$\sigma_\text{obs}^2$ & $\reals$ & Observational variance of the Gaussian likelihood \\
+			$f( \cdot )$ & $\reals^\numdim \rightarrow \reals$ & Latent function (modelled with a GP prior) \\
+			\midrule
+			$\bmu_\bX$ & $\reals^\numdata$ & (Prior) mean vector for training data $\bX$ \\
+			$\bK_{\bX\bX}$ & $\reals^{\numdata \times \numdata}$ & (Prior) kernel matrix for training data $\bX$ \\
+			$\trainK$ & $\reals^{\numdata \times \numdata}$ & (Prior) kernel matrix $\bK_{\bX\bX}$ plus observational noise $\sigma^2_\text{obs} \bI$ \\
+			$\bk_{\bX\bxtest}$ & $\reals^{\numdata}$ & Prior covariance between training data $\bX$ and point $\bxtest$\\
+			$\bfn$ & $\reals^\numdata$ & Latent function evaluated on training data $\bX$ \\
+			\midrule
+			$\bZ$ & $\reals^{\numinduc \times \numdim}$ & Locations of inducing points \\
+			$\bK_{\bZ\bZ}$ & $\reals^{\numinduc \times \numinduc}$ & (Prior) kernel matrix for inducing points $\bZ$ \\
+			$\bk_{\bZ\bx}$ & $\reals^{\numinduc}$ & Prior covariance between inducing points $\bZ$ and point $\bx$ \\
+			$\bW_{\bX}$ & $\reals^{\numdata \times \numinduc}$ & Sparse inducing-interpolation matrix for training data $\bX$ (using \cref{eqn:ski}) \\
+			$\bw_{\bx}$ & $\reals^{\numinduc}$ & Sparse inducing-interpolation vector for point $\bx$ (using \cref{eqn:ski}) \\
+			\midrule
+			$\widetilde k(\cdot, \cdot)$ & $\reals^\numdata \times \reals^\numdata \rightarrow \reals$ & Approximate kernel function (using \cref{eqn:inducing_interpolation}) \\
+			$\widetilde \bK_{\bX\bX}$ & $\reals^{\numdata \times \numdata}$ & Approximate training kernel matrix (using \cref{eqn:inducing_interpolation}) \\
+			\midrule
+			$\meantest{ \cdot }$ & $\reals^\numdim \rightarrow \reals$ & Predictive mean function of the GP model \\
+			$\covtest{ \cdot }$ & $\reals^\numdim \rightarrow \reals$ & Predictive variance function of the GP model\\
+			\bottomrule
+		\end{tabular}
+	}
 \end{table}

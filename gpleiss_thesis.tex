@@ -39,6 +39,17 @@
 \tolerance=9999
 
 
+%%%%%%%%%%%%% For too large figures/tables
+% https://tex.stackexchange.com/questions/16582/center-figure-that-is-wider-than-textwidth
+\makeatletter
+\newcommand*{\centerfloat}{%
+  \parindent \z@
+  \leftskip \z@ \@plus 1fil \@minus \textwidth
+  \rightskip\leftskip
+  \parfillskip \z@skip}
+\makeatother
+
+
 %%%%%%%%%%%%%% Theorems, observations, etc.
 \newtheorem{observation}{Observation}
 \newtheorem{theorem}{Theorem}
