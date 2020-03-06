@@ -4,6 +4,7 @@
 \DeclareMathOperator*{\variance}{Var}
 \DeclareMathOperator*{\covariance}{Cov}
 \DeclareMathOperator*{\trace}{Tr}
+\DeclareMathOperator*{\kltext}{KL}
 
 % Probability
 \newcommand{\bigo}[1]{\ensuremath{\mathchoice{\mathcal O \! \left( #1 \right)}}{\mathcal O ( #1 )}{}{}}
@@ -19,6 +20,7 @@
 \newcommand{\Varover}[2]{\ensuremath{\variance_{#1} \left[ #2 \right]}}
 \newcommand{\Cov}[1]{\ensuremath{\covariance \left[ #1 \right]}}
 \newcommand{\Covover}[2]{\ensuremath{\covariance_{#1} \left[ #2 \right]}}
+\newcommand{\kl}[2]{\ensuremath{\kltext \left[ \: #1 \Vert #2 \: \right]}}
 \newcommand{\given}{\mid}
 
 % Other matrix/math operators
@@ -66,6 +68,7 @@
 \newcommand{\bP}{\ensuremath{\boldmatrix{P}}}
 \newcommand{\bQ}{\ensuremath{\boldmatrix{Q}}}
 \newcommand{\bR}{\ensuremath{\boldmatrix{R}}}
+\newcommand{\bS}{\ensuremath{\boldmatrix{S}}}
 \newcommand{\bSigma}{\ensuremath{\boldsymbol{\Sigma}}}
 \newcommand{\bT}{\ensuremath{\boldmatrix{T}}}
 \newcommand{\bU}{\ensuremath{\boldmatrix{U}}}
@@ -92,6 +95,8 @@
 \newcommand{\bmeantest}[1]{\ensuremath{\bmu^* \left( #1 \right)}}
 \newcommand{\covtest}[1]{\ensuremath{\sigma^* \left( #1 \right)}}
 \newcommand{\Covtest}[1]{\ensuremath{\bSigma^* \left( #1 \right)}}
+\newcommand{\ameantest}[1]{\ensuremath{\mu^*_\text{aprx} \left( #1 \right)}}
+\newcommand{\acovtest}[1]{\ensuremath{\sigma^*_\text{aprx} \left( #1 \right)}}
 \newcommand{\dset}{\ensuremath{\mathcal D}}
 \newcommand{\model}{\ensuremath{\mathcal M}}
 \newcommand{\loglik}{\ensuremath{\mathcal L}}
