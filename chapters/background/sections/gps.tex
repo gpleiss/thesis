@@ -9,7 +9,10 @@ However, for clarity in this section we will distinguish when ``Gaussian process
 
 \subsection{Gaussian Process Distributions}
 A \emph{Gaussian process distribution} $f(\cdot) \sim \mathcal{GP}$ extends the multivariate-Gaussian distribution from finite-dimensional vectors to (infinite-dimensional) functions.
-It is defined by a \emph{mean function} $\mu(\cdot)$ and a \emph{covariance function} or \emph{kernel function} $k(\cdot, \cdot)$.
+It is defined by a \emph{mean function} $\mu(\cdot)$ and a \emph{covariance function} or \emph{kernel function} $k(\cdot, \cdot)$.\footnote{
+
+  Throughout this thesis we will use the two terms interchangeably.
+}
 %It can only be realized by applying $f$ to some finite set of points.
 Given $N$ data points $\bX = [ \bx_1, \ldots, \bx_N ] \in \reals^{\numdata \times \numdim}$ (e.g. the $D$-dimensional features of $N$ different children in our running example),
 the distribution over $\bfn = [ f(\bx_1), \ldots, f(\bx_N) ] \in \reals^\numdata$ is a multivariate Normal distribution:
@@ -231,8 +234,55 @@ We will discuss how to efficiently compute these terms in \cref{chapter:bbmm}.
   %\label{eqn:ml_exact}
 %\end{equation}
 
+
+
+
+
+
+
 \subsection{Common Covariance Functions}
 \label{sec:common_kernels}
+
+Of the three objects that define a Gaussian process---the prior mean function, the prior covariance function, and the observed noise parameter---the covariance function arguably has the largest impact on the properties of the predictive distribution.
+While the parameters of any particular kernel function can most often be learned through gradient descent, the practitioner must first choose the class of covariance functions to optimize over.
+Choosing the right covariance function class will largely determine how the Gaussian process generalizes to unseen data points.
+This is especially crucial in the small-data regime, where the predictive distribution closely follows the prior distribution.
+If the covariance function encodes prior information about the function's properties, then the model can generalize well even when there are few training points.
+
+In the running example of predicting a child's weight, there are several known functional properties that we can encode.
+For example, a child's weight will (in many cases) be roughly monotonic with respect to time.
+Additionally, children who grow up in similar socioeconomic conditions will be more likely to have similar weights.
+We will discuss how both of these properties can be encoded by choosing the appropriate kernel function.
+
+\paragraph{Common kernel functions.}
+Here we list some common and simple kernel functions that will be used throughout this thesis.
+We will describe their functional form and their properties:
+%
+\begin{itemize}
+  \item The {\bf Radial Basis Function (RBF)} kernel, or squared exponential kernel is one of the most commonly-used covariance functions.
+    It's functional form is given by
+    %
+    \[ k_\text{RBF}(\bx, \bx') = o^2 \exp \left( \sum_{d=1}^D \frac{\left( x_d - x_d' \right)^2}{\ell_d}  \right) \]
+    %
+    where $o^2$ is referred to as the \emph{outputscale} parameter and the $\ell_1, \ldots, \ell_D$ are the \emph{lengthscales} for each dimension $d \in [1, D]$.
+    This kernel is commonly considered to be a ``general'' kernel, since it is able to universally approximate any function given enough training data \cite{micchelli2006universal}.
+		However, functions drawn from $f \sim \gp{\mu}{k_\text{RBF}}$ are infinitely differentiable, which may impose an unreasonable smoothness constraint in some applications.
+
+    To reduce the number of learned parameters, it is sometimes common to share the same $\ell$ parameter across all dimensions.
+    When each dimension uses a different $\ell_d$ parameter, the kernel is referred to as the {\bf RBF-ARD } kernel, where ARD stands for \emph{ automatic relevance determination }.
+\end{itemize}
+
+\paragraph{Composing kernels.}
+
+\paragraph{Stationary kernels.}
+
+\paragraph{Spectral and Deep kernels.}
+
+
+
+
+
+
 
 \subsection{Approximate Gaussian Processes}
 
