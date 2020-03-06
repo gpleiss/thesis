@@ -1,24 +1,3 @@
-\chapter{Background}
-
-For a majority of this thesis we will assume that we are building predictive models for supervised regression problems.
-As a running example, imagine that we wish to predict a child's future weight $y \in \reals$ from some features about the child $\bx \in \reals^\numdim$---such as the their current weight, their mother's income level, etc.
-We assume that the child's height $y$ can be explained by 1) some latent function $f(\bx)$ of the features and 2) some observational noise $\epsilon$:
-%
-\begin{equation}
-  y = f \left( \bx \right) + \epsilon, \quad \epsilon \sim \normaldist{0}{\sigma_\text{obs}^2}.
-  \label{eqn:regression}
-\end{equation}
-%
-In particular, we assume the observational noise follows some Gaussian distribution with variance $\sigma_\text{obs}^2$.
-At a high level, the goal of supervised regression is to find a function $f(\bx)$ (or a distribution of functions) that fits the available training data $\dset_\text{train} = \{(\bx_1, y_1), \ldots, (\bx_n, y_n)\}$ and makes accurate predictions on new data points $( \bxtest, \ytest )$ at test time.
-
-This setup is one of the most studied problems in machine learning, and there are numerous different approaches to tackling this problem.
-In this thesis we concern ourselves with the approach of \emph{Gaussian process regression}, which is a {\bf non-parametric} and {\bf Bayesian} approach to regression.
-It is non-parametric because the class of possible functions $f(\cdot)$ is defined through relationships between pairs of training data pointsl
-rather than through some prescribed functional form (e.g. linear functions, quadratic functions, neural networks, etc.)
-It is Bayesian because its predictions come from the \emph{distribution} of all possible functions $f(\cdot)$.
-In other words, the choice of $f(\cdot)$ is marginalized out.
-
 \section{Gaussian Process Regression}
 
 %For someone without much prior knowledge (pun intended) about Gaussian processes, the terminology can appear confusing and overloaded.
@@ -356,11 +335,14 @@ Substituting the KISS-GP approximate kernel into \cref{eqn:predictive_mean} and 
 Because $\bw_{\bx^{*}}$ is the only term in \eqref{eq:pred_mean_ski} that depends on $\bx^{*}$, the remainder of the equation (denoted as $\blue\ba$) can be pre-computed: $\meantest{\bxtest} = \bw_{\bxtest}^\top \blue \ba$.
 After pre-computing $\blue \ba$, the multiplication $\bw_{\bx^{*}}^\top \blue \ba$ requires $\bigo{1}$ time, as $\bw_{\bx^{*}}$ is sparse and has only four nonzero elements.
 
-\section{Summary of Notation}
+\subsection{Summary of Notation}
+All the notation of this section is summarized in \cref{tab:gp_notation}.
+It will be used throughout the remaining chapters.
 
 \begin{table}[h!]
   \centerfloat
-  \caption{Summary of Notation}
+  \caption{Summary of Gaussian process notation.}
+  \label{tab:gp_notation}
 	\resizebox{1.2\textwidth}{!}{%
 		\begin{tabular}{ ccc }
 			\toprule
