@@ -1,6 +1,72 @@
 \chapter{Introduction}
 \label{chapt:introduction}
 
+%Machine learning hype <- success in many different areas.
+%Success in many different areas <- advances in algorithms.
+%Advances of algorithms <- both in terms of raw potential and in terms of the practical.
+%The best algorithms are ones that offer both potential and practicality.
+%No one algorithm is perfect <- we need a quiver of different possible algorithms.
+
+%Don't talk about advances.
+%Find a lead in to discuss algorithms.
+
+%At this point in machine learning we have several sets of algorithms.
+
+%Questions we need to answer:
+%- Why is it important to have multiple algorithms?
+%- What kind of algorithms are we looking for?
+
+%Of course, no one algorithm is good at every possible task.
+%For example, on many computer vision tasks it is commonly assumed there will be some sort of convolutional layers.
+%On many Kaggle competitions, a majority of winning submissions utilize random forests.
+%Therefore, it is arguably good to have a variety of possible algorithms.
+
+
+
+%Neural networks.
+
+Rapid advances in machine learning methods have led to its numerous empirical successes and its wide-scale adoption in many application areas.
+\gp{Maybe give some examples?}
+At a high level, we can divide these advances into two categories.
+\gp{Finish}
+%Perhaps most no
+%Firstly,
+%Such advances make it possible to apply machine learning to difficult problems.
+%Equally important however are the {\bf practical advances}.
+
+For any given algorithm, there is often a tension between its potential predictive power and its practical considerations.
+Arguably, the most highly-adopted algorithms---which can be credited with many notable recent successes---are able to offer both predictive potential and practicality.
+Deep neural networks perhaps best exemplify this trend.
+Recent innovations in
+network architecture \citep[e.g.][]{krizhevsky2012imagenet,he2016deep,vaswani2017attention,devlin2018bert,huang2019convolutional},
+optimization \citep[e.g.][]{hochreiter1997flat,bottou2010large,ioffe2015batch,izmailov2018averaging},
+and theoretical understanding \citep[e.g.][]{keskar2016large,zhang2016understanding,}
+have led to massive performance improvements on increasingly complex vision and natural language tasks.
+However, these innovations have been complemented by
+the effective use of specialty compute hardware (such as GPUs and TPUs),
+the introduction of automatic differentiation \citep[e.g.][]{paszke2017automatic},
+and the development of of several easy-to-use software implementations~\citep[e.g.][]{jia2014caffe,chen2015mxnet,abadi2016tensorflow,paszke2019pytorch}.
+These practical advances make it easy for practitioners to experiment with and rapidly prototype new deep learning models, which has undoubtedly contributed to research innovations and its wide-spread adoption \cite{goodfellow2016deep}.
+
+Gradient-boosted decision trees are another algorithm class with a similar powerful-yet-practical story.
+Since its inception \cite{friedman2001greedy,friedman2002stochastic}, gradient tree boosting has excelled in many applications \citep[e.g.][]{richardson2007predicting,burges2010ranknet,li2010robust}, especially for datasets with heterogenous or incomplete features.
+These empirical successes have been coupled with strategic approximations and algorithms designed for parallel compute hardware \citep[e.g.][]{panda2009planet,tyree2011parallel,chen2015mxnet,ke2017lightgbm}.
+Consequentially, gradient-boosted decision trees have been able to meet the challenges posed by ever-increasing dataset sizes.
+
+and modular software implementations such as
+Moreover, the advantages of modern software frameworks for deep learning include rapid prototyping, easy access to specialty compute hardware (such as GPUs), and blackbox optimization through automatic differentiation.
+Equally important however are the development of
+rapid proto
+
+
+This progress has involved innovations in network designs~,
+but it also has benefited vastly from improvements in optimization~\cite{bottou2010large},
+and excellent software implementations such as PyTorch, MXNet, TensorFlow and Caffe
+\citep{bottou2010large, krizhevsky2012imagenet, chaudhari2016entropy, hochreiter1997flat, keskar2016large, izmailov2018averaging}, effectively trading off unnecessary exactness for speed and in some cases regularization.
+
+Similarly, Gaussian process research has undergone significant innovations in recent years~\cite{titsias2009variational,hensman2013gaussian,wilson2014thesis,wilson2015kernel,wilson2015thoughts,cunningham2008fast} --- in particular to improve scalability to large data sets. However,
+the tools most commonly used for GP inference do not effectively utilize modern hardware, and new models require significant implementation efforts. Often, in fact, the \emph{model} and the \emph{inference engine} are tightly coupled and consequently many complex models like multi-output GPs and scalable GP approximations require custom inference procedures \cite{hensman2015scalable,bonilla2008multi}. This entanglement of model specification and inference procedure impedes rapid prototyping of different model types, and obstructs innovation in the field.
+
 % How does a machine learning practicioner choose one class of models over another?
 % That's good, but its daunting
 
@@ -8,7 +74,7 @@
 % What are its properties - ability to learn function well?
 % Often practicioners may be enticed by other factors - computational speed, ease of rapid prototyping, and easy-to-modify hyperparameters
 
-Gaussian processes are a class of machine learning models that perhaps most exemplify this tension.
+Gaussian processes are a class of machine learning models that exemplify this tension.
 
 % Even as Moore's law runs out, specialty hardware
 
