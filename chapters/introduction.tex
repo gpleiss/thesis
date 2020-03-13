@@ -25,56 +25,46 @@
 
 %Neural networks.
 
-Rapid advances in machine learning methods have led to its numerous empirical successes and its wide-scale adoption in many application areas.
-\gp{Maybe give some examples?}
-At a high level, we can divide these advances into two categories.
-\gp{Finish}
-%Perhaps most no
-%Firstly,
-%Such advances make it possible to apply machine learning to difficult problems.
-%Equally important however are the {\bf practical advances}.
+Rapid advances in machine learning have led to numerous empirical successes and wide-scale adoption in many application domains.
+From a research perspective, we highlight two broad categories of methodological innovation that have contributed to this surge.
+Firstly, researchers have improved the {\bf predictive capabilities} of machine learning models.
+Algorithms are now able to achieve superhuman performance on complex tasks like object recognition \cite{} and strategy game-playing \cite{}.
+There have also been important strides making these predictions more risk-aware \cite{}, interpretable \cite{}, and societally equitable \cite{}.
+Secondly, the machine learning community has addressed many {\bf pragmatic concerns} around computational efficiency and easy-of-use.
+Models which used to require several weeks of training can now be trained in under an hour \cite{}.
+Transfer learning techniques \cite{} and high-quality software frameworks have additionally made it easier for practitioners to rapidly-prototype new models.
+While the ever-increasing predictive capabilities have opened up new possibilities, the pragmatic improvements have accelerated the rate of innovation and adoption.
 
-For any given algorithm, there is often a tension between its potential predictive power and its practical considerations.
-Arguably, the most highly-adopted algorithms---which can be credited with many notable recent successes---are able to offer both predictive potential and practicality.
+Arguably, the algorithms which have had the broadest impact are the ones that seamlessly offer \emph{both} predictive potential and practicality.
 Deep neural networks perhaps best exemplify this trend.
 Recent innovations in
 network architecture \citep[e.g.][]{krizhevsky2012imagenet,he2016deep,vaswani2017attention,devlin2018bert,huang2019convolutional},
 optimization \citep[e.g.][]{hochreiter1997flat,bottou2010large,ioffe2015batch,izmailov2018averaging},
 and theoretical understanding \citep[e.g.][]{keskar2016large,zhang2016understanding,}
 have led to massive performance improvements on increasingly complex vision and natural language tasks.
-However, these innovations have been complemented by
+Moreover, these innovations have been complemented by
 the effective use of specialty compute hardware (such as GPUs and TPUs),
 the introduction of automatic differentiation \citep[e.g.][]{paszke2017automatic},
 and the development of of several easy-to-use software implementations~\citep[e.g.][]{jia2014caffe,chen2015mxnet,abadi2016tensorflow,paszke2019pytorch}.
 These practical advances make it easy for practitioners to experiment with and rapidly prototype new deep learning models, which has undoubtedly contributed to research innovations and its wide-spread adoption \cite{goodfellow2016deep}.
 
-Gradient-boosted decision trees are another algorithm class with a similar powerful-yet-practical story.
-Since its inception \cite{friedman2001greedy,friedman2002stochastic}, gradient tree boosting has excelled in many applications \citep[e.g.][]{richardson2007predicting,burges2010ranknet,li2010robust}, especially for datasets with heterogenous or incomplete features.
-These empirical successes have been coupled with strategic approximations and algorithms designed for parallel compute hardware \citep[e.g.][]{panda2009planet,tyree2011parallel,chen2015mxnet,ke2017lightgbm}.
-Consequentially, gradient-boosted decision trees have been able to meet the challenges posed by ever-increasing dataset sizes.
+Gradient-boosted trees are another algorithm class with a similar powerful-yet-practical story.
+Since their inception \cite{friedman2001greedy,friedman2002stochastic}, gradient boosted trees have excelled in many applications \citep[e.g.][]{richardson2007predicting,burges2010ranknet,li2010robust}.
+The predictive power of these models is a product of several key attributes: for example, their remarkable generalization properties \citep{freund1997decision,schapire2013boosting} and their ability to handle incomplete features \cite{friedman2001greedy}.
+Equally important, these models can be simple and computational efficient, in large part due to specialty parallel algorithms \citep[e.g.][]{panda2009planet,tyree2011parallel,ke2017lightgbm} and easy-to-use software implementations such as XGBoost \cite{chen2016xgboost}.
+These advantages have made gradient-boosted decision trees a workhorse algorithm for many practitioners in a wide variety of application domains.
+According to the most recent survey collected by Kaggle \cite{kaggle2019kaggle}, $75\%$ of the responding data scientists regularly use gradient-boosted decision trees and the XGBoost software.
 
-and modular software implementations such as
-Moreover, the advantages of modern software frameworks for deep learning include rapid prototyping, easy access to specialty compute hardware (such as GPUs), and blackbox optimization through automatic differentiation.
-Equally important however are the development of
-rapid proto
-
-
-This progress has involved innovations in network designs~,
-but it also has benefited vastly from improvements in optimization~\cite{bottou2010large},
-and excellent software implementations such as PyTorch, MXNet, TensorFlow and Caffe
-\citep{bottou2010large, krizhevsky2012imagenet, chaudhari2016entropy, hochreiter1997flat, keskar2016large, izmailov2018averaging}, effectively trading off unnecessary exactness for speed and in some cases regularization.
-
-Similarly, Gaussian process research has undergone significant innovations in recent years~\cite{titsias2009variational,hensman2013gaussian,wilson2014thesis,wilson2015kernel,wilson2015thoughts,cunningham2008fast} --- in particular to improve scalability to large data sets. However,
-the tools most commonly used for GP inference do not effectively utilize modern hardware, and new models require significant implementation efforts. Often, in fact, the \emph{model} and the \emph{inference engine} are tightly coupled and consequently many complex models like multi-output GPs and scalable GP approximations require custom inference procedures \cite{hensman2015scalable,bonilla2008multi}. This entanglement of model specification and inference procedure impedes rapid prototyping of different model types, and obstructs innovation in the field.
-
-% How does a machine learning practicioner choose one class of models over another?
-% That's good, but its daunting
-
-% In choosing a machine learning algorithm - look at what type of functions it models well
-% What are its properties - ability to learn function well?
-% Often practicioners may be enticed by other factors - computational speed, ease of rapid prototyping, and easy-to-modify hyperparameters
-
-Gaussian processes are a class of machine learning models that exemplify this tension.
+However, in many cases there is still a trade-off between an algorithm's predictive potential and its practical limitations.
+The focus of this thesis is {\bf Gaussian process models} (GPs), which perhaps best exemplify this tension.
+Within the machine learning community, GPs have been well-regarded as a powerful model class with many desirable properties---fully-probabilistic predictions, calibrated uncertainty estimates, and interpretable model priors (to name a few).
+They are an invaluable model class in domains such as blackbox optimization \cite{}, robotics \cite{}, and health care \cite{}.
+Recent work on hierarchical modelling \cite{} and scalability \cite{} have furthered their applicability to increasingly complex datasets.
+At the same time, Gaussian processes have historically not scaled well to large datasets, and the tools most commonly used for inference do not effectively utilize modern compute hardware.
+Scalable approximations can remedy these concerns to some extent, yet such approximations can sometimes bias the model's predictions \cite{}.
+Finally, new models require significant implementation, as simple modifications like an additional output dimension might require different learning and inference procedures.
+These practical considerations hinder the adoption of GP models, while also limiting researchers' abilities to rapidly-prototype and develop new innovations.
+This thesis aims to address these limitations so that Gaussian processes can be powerful-\emph{and}-practical models.
 
 % Even as Moore's law runs out, specialty hardware
 
@@ -82,10 +72,13 @@ Gaussian processes are a class of machine learning models that exemplify this te
 
 \section{Practical Concerns regarding Gaussian Processes Models}
 
-\paragraph{Aside: how we overcame the scalability, programmability, and complexity concerns of deep learning.}
-% In fact, we are not simply going to take inspiration from Neural networks, we are going to directly exploit those tools
-
 \section{Outline of Contributions}
+
+This thesis proposes several methods to alleviate these issues without sacrificing the predictive power or desirable properties of Gaussian processes.
+At the heart of these methods is a unified learning/inference framework that better utilizes modern compute hardware and simplifies implementation efforts.
+Taking inspiration from neural networks, we restrict our computational procedures to matrix multiplication and element-wise operations, finding opportunities to unify or batch operations wherever possible.
+\gp{CONTINUE}
+% In fact, we are not simply going to take inspiration from Neural networks, we are going to directly exploit those tools
 
 %\paragraph{Preventing catastrophic failure.}
 
