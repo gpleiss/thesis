@@ -100,6 +100,7 @@ from \autoref{subsec:lanczos}, we can efficiently derive forms for $\blue R$ and
          &\approx \bK_{UU} W_X (Q_k T_k^{-1} Q_k^\top) W_X^\top K_{UU} \\
          &= \underbrace{K_{UU} W_X Q_k}_{\blue R^\top} \underbrace{T_k^{-1} Q_k^\top W_X^\top \bK_{UU}}_{\blue{R'}}
 \end{align*}
+\gp{Reference lanczos stuff}
 To compute $\blue R$ and $\blue{R'}$, we perform $k$ iterations of Lanczos to achieve $(\tilde{K}_{\bX\bX} + \sigma^2\bI)  \approx Q_{k}T_{k}Q_{k}^{\top}$ using the average column vector $\mathbf{b}=\frac{1}{m}W_X^\top \bK_{UU}\mathbf{1}$ as a probe vector.
 This partial Lanczos decomposition requires $k$ MVMs with $(\tilde \bK_{XX} + \sigma^2 \bI)$ for a total of $\bigo{k n + k m \log m}$ time (because of the KISS-GP approximation).
 $\blue R$ and $\blue{R'}$ are $m \times k$ matrices, and thus require $\bigo{mk}$ storage.

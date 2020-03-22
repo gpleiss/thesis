@@ -1,2 +1,250 @@
 %\section{Computing $\trainK^{-1} \bb$ and $\log \vert \trainK \vert$ with Matrix Multiplication}
-\section{Krylov Subspace Methods for Non-Linear Matrix Operations}
+\section{Matrix-Vector Multiplication (MVM) Algorithms for Computing Linear Solves and Other Matrix Functions}
+
+Gaussian process training and inference requires expensive computations involving the kernel matrix $\trainK$.
+For example, in \cref{eqn:log_lik} we must compute the linear solve $\trainK \by$ and the log determinant $\log \vert \trainK \vert$.
+Since $\trainK$ is positive definite, both of these operations can computed using the Cholesky factorization:
+%
+\[
+  \bL \bL^\top = \trainK, \quad
+  \trainK^{-1} \by = \bL^{-\top} \bL^{-1} \by, \quad
+  \log \vert \trainK \vert = 2 \sum_{i=1}^N \log L_{[i,i]}
+\]
+%
+where $\bL$ is the lower-triangular Cholesky factor of $\trainK$.
+Though this the most common way to compute these terms, there are many drawbacks to this approach:
+%
+\begin{enumerate*}
+  \item its $\bigo{N^3}$ asymptotic complexity,
+  \item its $\bigo{N^2}$ storage requirement, and
+  \item its minimal use of GPU acceleration.
+\end{enumerate*}
+%
+We will expand on these drawbacks in the next few chapters.
+
+A primary focus of this thesis is alternatives for GP learning and inference.
+We will instead compute the $\trainK \by$ and $\log \vert \trainK \vert$ terms (and other non-linear terms) through \emph{matrix-vector multiplication} ({\bf MVMs}).
+This approach, as we will demonstrate, has several advantages:
+%
+\begin{enumerate*}
+  \item it effectively uses GPU acceleration,
+  \item it reduces memory requirements, and
+  \item it simplifies the implementation of specialty models.
+\end{enumerate*}
+%
+We will utilize a family of iterative algorithms known as {\bf Krylov subspace methods}, which were originally developed for large linear algebra problems involving sparse matrices \citep[e.g.][]{saad2003iterative,van2003iterative}.
+These algorithms can compute matrix solves, log determinants, and other operations \emph{without explicitly computing computing the matrix} $\trainK$.
+Instead, these methods only access $\trainK$ through MVMs.
+
+The next two chapters propose GP-specific Krylov subspace methods for training and inference.
+In this remainder of this section, we introduce algorithms that we use as building blocks: {\bf Lanczos tridiagonalization} and {\bf linear conjugate gradients} (CG).
+We begin with a high-level motivation of how MVMs can be used to compute non-linear matrix operations.
+
+\paragraph{Intuition.}
+At first glance, it may not be obvious how a matrix-vector multiplications---a linear operation---could compute non-linear operations like $\trainK^{-1} \bv$ or $\log \vert \trainK \vert$.
+To motivate the use of MVM-based algorithms, we will begin by reformulating the matrix solve and log determinant operations to make their MVM connection obvious.
+First, we will reformulate $\trainK^{-1} \by$ through an optimization lens.
+Since $\trainK^{-1}$ is positive definite, we note that any matrix solve is the solution to the following convex problem:
+%
+\begin{equation}
+  \trainK^{-1} \by = \argmin_{\bc \in \reals^{N}} \Bigl[ \frac{1}{2} \: \bc^\top (\trainK) \: \bc - \bc^\top \by \Bigr],
+  \label{eqn:solve_as_optim}
+\end{equation}
+%
+where the gradient of the objective function is $(\trainK) \: \bc - \by$.
+Thus, we can compute $\trainK^{-1} \by$ with a gradient descent method, and each gradient step only accesses $\trainK$ through an MVM with the current solution $\bc$.
+Though iterations of vanilla gradient descent can be used here, we will instead turn to conjugate gradient descent as it converges in much fewer iterations (see \cref{sec:cg}).
+
+The connection between log determinants and MVMs is less straightforward.
+As a high-level intuition, we note that the eigenvalues of $\trainK$ can be found through MVM iterations.
+For example, the \emph{power method} computes the largest eigenvector by running the iteration $\bc_{j+1} = (\trainK) \bc_{j}$ until convergence.\footnote{
+  Let $e_i, \bv_i$ be the $i^\text{th}$ eigenvalue/vector of $\trainK$.
+  If we write the initial vector as a linear combination of the eigenvectors $\bc_{0} = \sum_{i=1}^N w_i \bv_i$, then the iterations simply scale the weights $w_i$ by a factor $e_i$:
+  $\bc_{j} = \sum_{i=1}^N w_i e_i^j \bv_i$.
+  After enough iterations, $e_1^j$ will dominate all other eigenvalues and so $\bv_{j} \approx w_1 e_1^j \bv_1$.
+  In other words, $\bc_{j} / \vert \bc_{j} \vert_2 \approx \bv_1$.
+  See \citep[e.g.][Ch. 8]{golub2012matrix} for more details.
+}
+In practice computing a complete eigendecomposition of $\trainK$ through the power iteration would be a highly inefficient way to compute log determinants.
+We will instead compute log determinants through stochastic Lanczos quadrature \citep{ubaru2017fast} which similarly uses MVMs but avoids a full eigendecomposition.
+
+With these intuitions in place, we will now introduce Lanczos tridiagonalization and linear conjugate gradients.
+These methods expand upon the simple iterative procedures we outline above, yet converge to the true solutions in many fewer iterations.
+
+
+
+%\subsection{Overview}
+
+%Given an $N \times N$ matrix $\bA$ and a vector $\bb$, {\bf Krylov subspace methods} are a broad family of \emph{iterative} algorithms for computing $\bF(\bA) \bb$, where $\bF(\cdot)$ is a matrix function.
+%For example $\bF (\cdot)$ could be the matrix inverse (i.e. $\bA^{-1} \bb$) or the matrix logarithm (i.e. $\log ( \bA ) \bb$).
+%%Importantly, Krylove these problems \emph{without explicitly computing the matrix $\bA$}.
+%%Each iteration only requires a \emph{matrix-vector multiplication} (MVM)---i.e. $\bA \bv$ for some vector $\bv$---plus a few additional vector operations.
+%Krylov subspace methods are desirable for two primary reasons.
+%Firstly, these methods compute $\bF(\bA) \bb$ \emph{without explicitly computing the matrix $\bA$}.
+%Instead, the methods simply access the matrix $\bA$ through a {\bf matrix-vector multiplication (MVM)} routine (i.e. $\bA \bv$ for some vector $\bv$),
+%which is especially beneficial for sparse or structured matrices that afford efficient MVM routines.
+%Secondly, Krylov subspace methods tend to converge rapidly.
+%Though exact solutions to $\bF(\bA)\bb$ typically require $N$ iterations (and therefore $N$ MVMs), machine precision is often achieved in $\ll N$ iterations.
+%The exact convergence rate depends on the conditioning of $\bA$ or the structure of its eigenvalues.
+
+%In this thesis we will make use of two Krylov algorithms:
+%The former can be applied to any symmetric matrix, whereas the latter is only for positive definite matrices.
+%We will briefly introduce these two methods in this section and draw a connection between them.
+
+
+\subsection{Lanczos Tridiagonalization}
+
+The Lanczos algorithm iteratively produces a partial tridiagonalization of a symmetric matrix $\bA \in \reals^{N \times N}$.
+At iteration $J$, $\bA$ is factorized as
+%
+\begin{equation}
+  \bA \bQ_J = \bQ_J \bT_J + \br_J \be_J^\top,
+  \label{eqn:lanczos}
+\end{equation}
+%
+where $\bQ_J \in \reals^{N \times J}$ has orthonormal columns, $\bT_J \in \reals^{J \times J}$ is symmetric tridiagonal, and $(\br_J \be_J^\top) \in \reals^{N \times J}$ is a residual term involving the unit vector $\be_J$.
+After $N$ iterations, the residual term will be zero and we recover the complete tridiagonalization $\bA = \bQ_N \bT_N \bQ^\top_N$.
+In practice however, the complete tridiagonalization is almost never computed, and the matrices $\bQ_J, \bT_J$ after $J \ll N$ iterations can approximate functions involving $\bA$ with high degrees of accuracy.
+We will discuss how $\bQ_J$ and $\bT_J$ can approximate log determinants and matrix solves after briefly describing the algorithm itself.
+
+\paragraph{The algorithm.}
+Given an initial vector $\bb$, $J$ iterations of the Lanczos algorithm form an orthonormal basis of the following subspace:
+%
+\begin{equation}
+  \mathcal{K}_J (\bA, \bb) = \left\{ \bb, \:\: \bA \bb, \:\: \bA^2 \bb, \:\: \ldots, \:\: \bA^{J-1} \bb \right\}.
+  \label{eqn:krylov}
+\end{equation}
+%
+$\mathcal{K}_J (\bA, \bb)$ is known as the $J^\text{th}$ \emph{Krylov Subspace} of $\bA$ and $\bb$ (hence why this algorithm is classified as a ``Krylov Subspace Method''---see \citep{saad2003iterative} for more details).
+Applying Gram-Schmidt orthogonalization to $\left[ \bb, \:\: \bA \bb, \:\: \ldots, \:\: \bA^{J-1} \bb \right]$ produces the columns of $\bQ_J = \left[ \bb/\Vert \bb \Vert, \:\: \bq_2, \:\: \ldots, \:\: \bq_J \right]$, and the orthogonalization coefficients are collected into $\bT_J$.
+Because $\bA$ is symmetric, each vector needs only be orthogonalized against the two preceding vectors, which results in the tridiagonal structure of $\bT$ \cite{golub2012matrix}.
+In practice, the columns of $\bQ_J$ and the sub-diagonal/diagonal entries of $T_j$ can be computed using a simple iterative procedure:
+%
+\begin{algorithm2e}
+  \label{alg:lanczos}
+  \gp{TODO}
+\end{algorithm2e}
+%
+Note that each iteration produces a new column of $\bQ_J$ and requires only a single MVM with $\bA$.
+In total $J$ iterations requires $J$ MVMs.
+
+In practice, \cref{alg:lanczos} can be numerically unstable after many iterations of $J$ (e.g. $J > 50$).
+This is because the columns of $\bQ_J$ lose orthogonality due to round-off errors.
+We list some solutions to overcome these numerical instabilities in \cref{sec:love_discussion}.
+
+
+%Before introducing the algorithms, we will fist define Krylov subspaces.
+%Formally, given an $n \times n$ matrix $\bA \in \reals^{n \times n}$ and a vector $\bb \in \reals^{n}$, the $J^\text{th}$ \emph{Krylov subspace} is defined as:
+%\[
+  %\mathcal{K}_{J}(\bA,\bb) = \text{span}\left\{ \bb, \:\: \bA \bb, \:\: \bA^2 \bb, \:\: \ldots, \:\: \bA^{J-1} \bb \right\}.
+%\]
+%Importantly, note that we can compute the $(J + 1)^\text{th}$ subspace from the $J^\text{th}$ subspace simply by performing an additional matrix-vector multiplication with $\bA$.
+%If $\bA$ is full-rank and $\bb$ is not an eigenvector of $\bA$, then the $n^\text{th}$ Krylov subspace will span the entire vector space $\mathcal{K}_{n}(\bA,\bb) = \reals^n$.
+
+%If $\bA$ is a symmetric matrix, the {\bf Lanczos algorithm} provides an efficient way to compute an orthonormal basis of $\mathcal{K}_J$: %%
+%\[
+  %\bQ_J = \begin{bmatrix} \bq_1, & \bq_2, & \cdots, & \bq_J \end{bmatrix}, \quad
+  %\bq_1 = \bb / \Vert \bb \Vert^2, \quad
+  %\text{span} \left\{ \bQ_J \right\} = \mathcal{K}_{J}(\bA, \bb).
+%\]
+%%
+%The columns of $\bQ_J \in \reals^{N \times J}$ are computed by applying Gram-Schmidt orthogonalization to the MVMs $\{ \bb, \:\: \bA \bb, \:\: \cdots, \:\: \bA^{J-1} \bb \}$.
+%Let $\bT_J$ be a $J \times J$ matrix where each column $\bt_i$ contains the orthogonalization coefficients necessary for computing $\bq_{i + 1}$.
+%Because $\bA$ is symmetric, each vector $\bq_i$ needs only be orthogonalized against the two preceding vectors ($\bq_{i-1}$ and $\bq_{i-2}$), which results in $\bT_J$ having tridiagonal structure \cite{golub2012matrix}.
+%Moreover, this orthogonalization process can be summarized through the following relation of $\bA$, $\bQ_J$, and $\bT_J$:
+%%
+%\begin{equation}
+  %\bA \bQ_J = \bQ_J \bT_J + \br_J \be_J^\top,
+  %\label{eqn:lanczos}
+%\end{equation}
+%%
+%where $\br_J \in \reals^J$ is a residual vector given by $\br_J = (\bA - T_{[J,J]} \bI) \bq_J - (T_{[J,J-1]} \bq_{J-1})$
+%and $\be_J \in \reals^J$ is the unit vector $[ 0, 0, \ldots, 1 ]$.
+%If $J=N$, then $\bQ_N$ and $\bT_N$ form a complete tridiagonalization $\bA = \bQ_N \bT_N \bQ_N^\top$.
+
+%The Lanczos matrices $\bQ_J$ and $\bT_J$ can be used to estimate a wide variety of matrix functions.
+%We will first discuss these applications of the Lanczos algorithm before outlining how to compute it in practice.
+
+\paragraph{Using Lanczos to estimate $\bF (\bA) \bb$.}
+Lanczos tridiagonalization is an extremely versatile algorithm, as it can be used to compute a general-purpose approximation for any $\bF(\bA) \bb$, where $\bF( \cdot )$ is a matrix function (i.e. matrix inverse or matrix logarithm).
+First, we note that, if $\bQ_N \bT_N \bQ_N^\top = \bA$ is a complete tridiagonalization, then $\bT_N$ and $\bA$ are similar matrices and therefore:
+\begin{equation}
+  \bF ( \bA ) = \bQ_N \bigl[ \bF ( \bT_N ) \bigr] \bQ_N^\top.
+  \label{eqn:f_tridiagonal}
+\end{equation}
+%
+%This can be a computationally advantageous way to compute $\bF(\bA)$ since we can often exploit the tridiagonal structure of $\bF (\bT_N)$.
+%For example, consider $\bF(\cdot) = (\cdot)^{-1}$.
+%We can invert tridiagonal matrices in $\bigo{N}$ time rather than $\bigo{N^3}$ time for general matrices.
+%
+Typically, the Lanczos algorithm is used to only compute a \emph{partial} tridiagonalization $\bQ_J$, $\bT_J$ with $J \ll N$.
+However, this partial tridiagonalization can be used to approximate $\bF ( \bA )$ applied to the vector $\bb$:
+%
+\begin{align}
+  \bF ( \bA ) \bb
+  &\approx \Bigl( \bQ_J \bigl[ \bF ( \bT_J ) \bigr] \bQ_J^\top \Bigr) \bb.
+  \nonumber \\
+  &= \Vert \bb \Vert_2 \Bigl( \bQ_J \bigl[ \bF ( \bT_J ) \bigr] \Bigr) \be_1
+  \triangleq \bc_J,
+  \label{eqn:f_lanczos}
+\end{align}
+%
+where the second line holds because $\bq_1 = \bb / \vert \bb \vert$.
+The estimate $\bc_J$ tend to converge exponentially as $J$ increases, though the rate of convergence depends on the conditioning of $\bA$.
+Moreover, the computational complexity of \cref{eqn:f_lanczos} is quite small since we can take advantage of the tridiagonal structure of $\bT_J$.
+
+For many functions of interest, there are special variants of \cref{eqn:f_lanczos} that offer more efficient computation.
+We now outline two special cases that can be applied to Gaussian process inference.
+
+\paragraph{Estimating log determinants.}
+
+\citet{ubaru2017fast} introduce a method to produce unbiased estimates log determinants using Lanczos tridiagonalization, and \emph{stochastic trace estimation} \cite{hutchinson1990stochastic,avron2011randomized,fitzsimons2016improved}.
+%First, given i.i.d random variables $\bz_1, \ldots, \bz_t$ with $\Ev{\bz_i} = 0$ and $\Ev{\bz_i \bz_i}^\top = \bI$ (e.g. $\bz_i \sim \normaldist{0}{\bI})$, note that the trace operation can be written as $\tr{ \cdot} = \Ev{ \bz_i^\top \left( \cdot \right) \bz_i^\top }.$
+They note that the log determinant can be re-written as:
+%
+\begin{align}
+  \log \vert \bA \vert &= \tr{ \log \bA }
+  \nonumber \\
+  &\approx \frac{1}{T} \sum_{i=1}^T \bz_i^\top \left( \log \bA \right) \bz_i.
+  \label{eqn:logdet_sta}
+\end{align}
+%
+where $\log \bA$ denotes the matrix logarithm, and $\bz_i$ are i.i.d random variables with zero mean and unit covariance (e.g. $\bz_i \sim \normaldist{0}{\bI}$).
+It can be seen with a little mathematical manipulation that the second line is an unbiased estimate of the trace operator \cite{hutchinson1990stochastic}.
+
+To compute each of the $\bz_i \left( \log \bA \right) \bz_i$ terms, we turn to \cref{eqn:f_tridiagonal}.
+Let $\bQ_J^{(i)}$, $\bT_J^{(i)}$ correspond to the Lanczos matrices with initial vector $\bq^{(i)}_1 = \bz_i / \vert \bz_i \vert$.
+Then,
+%
+\begin{align}
+  \bz_i\top \left( \log \bA \right) \bz_i
+  &\approx \bz_i^\top \Bigl( \bQ^{(i)}_J \bigl[ \log \bT^{(i)}_J \bigr] \bQ^{(i)\top}_J \Bigr) \bz_i
+  \nonumber
+  \\
+  &= \Vert \bz_i \Vert^2_2 \: \Bigl( \be_1^\top \bigl[ \log \bT^{(i)}_J \bigr] \be_i \Bigr).
+  \label{eqn:slq}
+\end{align}
+%
+Combining \cref{eqn:logdet_sta} and \cref{eqn:slq} gives us an unbiased estimate of $\log \vert \bA \vert$.
+\citet{ubaru2017fast} demonstrate that this estimate converges exponentially in $J$ (the number of Lanczos iterations).
+
+\paragraph{Computing matrix solves.}
+Another common application of Lanczos tridiagonalization is computing $\bA^{-1} \bb$.
+Let $\bQ_J$ and $\bT_J$ be the Lanczos matrices using $\bb$ as the initial vector (i.e. $\bq_1 = \bb / \vert \bb \vert$).
+We can approximate the matrix solve as:
+%
+\begin{equation}
+  \bA^{-1} \bb \approx \vert \bb \vert \bQ_J \bT_J^{-1} \be_1
+  \label{eqn:lanczos_solves}
+\end{equation}
+%
+where again $\be_1 \in \reals^J$ is the first unit vector $[1, 0, 0, \ldots, 0]$.
+These estimates tend to be very accurate after $J \ll N$ iterations, though again the exact convergence depends on the conditioning of $\bA$.
+
+In practice, \cref{eqn:lanczos_solves} is not commonly used to compute matrix solves.
+This is because there is a far more efficient algorithm---linear conjugate gradients---which arrives at the same solution through a more numerically stable and memory efficient procedure.
+
+
+\subsection{Linear Conjugate Gradients}
+\label{sec:cg}
+\gp{TODO}

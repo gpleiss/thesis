@@ -43,6 +43,7 @@ $\trainK^{-1}\by$ is equal to $\bu_{0}$ in~\eqref{eq:mod_cg_call}, directly retu
 
 \paragraph{Estimating $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \theta} }$}
 from CG relies on \emph{stochastic trace estimation} \cite{avron2011randomized,fitzsimons2016improved,hutchinson1990stochastic}, which allows us to treat this term as a sum of linear solves.
+\gp{Reference background}
 Given i.i.d. random variables $\bz_1, \ldots, \bz_t$ so that $\Ev{\bz_i}=0$ and $\Ev{\bz_i \bz_i^{\top}}=I,
 $ (e.g., $\bz_{i} \sim \mathcal{N}(0, I)$)
 the matrix trace $\tr{\bA}$ can be written as
@@ -61,6 +62,7 @@ the mBCG call returns the solves $\trainK^{-1}[\bz_1 \ldots \bz_t]$, which yield
 \eqref{eq:trace_deriv_estimate}.
 
 \paragraph{Estimating $\log \vert \trainK \vert$}
+\gp{Reference background}
 can be accomplished using the $\bT_{1},...,\bT_{t}$ matrices from mBCG. If $\trainK=\bQ\bT\bQ^{\top}$, with $\bQ$ orthonormal, then because $\trainK$ and $\bT$ have the same eigenvalues:
 \begin{equation}
   \log \vert \trainK \vert = \tr{\log \bT}  = \Ev{\bz_i^\top (\log \bT)\bz_i} \approx \sum_{i=1}^{t}\bz_{i}^\top \left( \log \bT \right) \bz_{i}\label{eq:logdetKQ}
