@@ -23,32 +23,33 @@
     \tcp{Current column of $\bQ_J$}
     $\bv$ $\gets$ \mvmkxx{ $\bq_{1}$ }
     \tcp{Buffer for MVM output}
-    $\alpha_1$ $\gets$ $\bq_1^\top \bv$
+    $d_1$ $\gets$ $\bq_1^\top \bv$
     \tcp{Current main diagonal entry of $\bT_J$}
-    $\bv$ $\gets$ $\bv - \alpha_1 \bq_1$
+    $\bv$ $\gets$ $\bv - d_1 \bq_1$
     \\
-    $\beta_1$ $\gets$ $\Vert \bv \Vert$
+    $s_1$ $\gets$ $\Vert \bv \Vert$
     \tcp{Current sub-diagonal entry of $\bT_J$}
     \BlankLine
     \For{$j \gets 2$ \KwTo J}{
       \tcp{Run Gram-Schmidt orth. against previous two $\bQ_J$ vectors}
-      $\bq_j$ $\gets$ $\bv / \beta_{j-1}$
+      $\bq_j$ $\gets$ $\bv / s_{j-1}$
       \\
-      $\bv$ $\gets$ \mvmkxx{ $\bq_j$ } $ - \beta_{j-1} \bq_{j-1} $
+      $\bv$ $\gets$ \mvmkxx{ $\bq_j$ } $ - s_{j-1} \bq_{j-1} $
       \\
-      $\alpha_j$ $\gets$ $\bq_j^\top \bv$
+      $d_j$ $\gets$ $\bq_j^\top \bv$
       \\
-      $\bv$ $\gets$ $\bv - \alpha_j \bq_j$
+      $\bv$ $\gets$ $\bv - d_j \bq_j$
       \\
-      $\beta_j$ $\gets$ $\Vert \bv \Vert$
+      $s_j$ $\gets$ $\Vert \bv \Vert$
     }
-    \tcp{Collect orthonormal columns $\bq_j$ and tridiagonal entries $\alpha_j$, $\beta_j$}
+    \tcp{Collect orthonormal columns $\bq_j$ and tridiagonal entries $d_j$, $s_j$}
     $\bQ_J$ $\gets$ $\begin{bmatrix} \bq_1,& \ldots,& \bq_J \end{bmatrix}$
     \\
-    $\forall j \in [1, J]$ \: $T_{J[j,j]}$ $\gets$ $\alpha_j$
+    $\forall j \in [1, J]$ \: $T_{J[j,j]}$ $\gets$ $d_j$
     \\
-    $\forall j \in [1, J-1]$ \: $T_{J[j,j-1]}$ $\gets$ $\beta_j$,
-      $T_{J[j-1,j]}$ $\gets$ $\beta_j$
+    $\forall j \in [1, J-1]$ \: $T_{J[j,j-1]}$ $\gets$ $s_j$
+    \\
+    $\forall j \in [1, J-1]$ \: $T_{J[j-1,j]}$ $\gets$ $s_j$
     \BlankLine
     \Return{$\bQ_J$, $\bT_J$}
 \end{algorithm2e}

@@ -161,7 +161,7 @@ Since the Krylov subspace contains powers of $\bA$ applied to $\bb$, we can inte
 \end{align*}
 %
 ($\text{poly}_J(\bA)$ is a $J^\text{th}$-degree polynomial with coefficients $w_0, \ldots, w_{J+1}$.)
-This perspective of CG leads to its famous (though arguably loose) convergence bound:
+From this perspective, one can derive CG's famous (though loose) convergence bound (see \citep{shewchuk1994introduction} for a derivation):
 %
 \begin{theorem}[Convergence of CG]
   \label{thm:cg_convergence}
@@ -199,11 +199,11 @@ See \autoref{alg:std_pcg} for details.
 Choosing a preconditioner $\bP^{-1}$ is a trade-off between computational efficiency and effectiveness.
 Trivially, the most effective preconditioner is $\bP^{-1} = \bA^{-1}$ which would reduce the condition number in \cref{thm:cg_convergence} to $\kappa = 1$.
 However this is obviously not a practical choice---if we already had a way to efficiently compute $\bA^{-1}$ there would be no need to run CG!
-The most effective preconditioners have simple-to-compute inverses (e.g. diagonal matrices, low rank matrices, etc.), yet closely approximate $\bA^{-1}$.
-For example, a common (though often ineffective) preconditioner is the \emph{Jacobi preconditioner}, which is simply the diagonal of $\bA$ (i.e. $\bP = \text{diag}(\bA)$.
+The most effective preconditioners have simple-to-compute inverses (e.g. diagonal matrices, low rank matrices, etc.), yet are able to closely approximate $\bA^{-1}$.
+A common (though often ineffective) choice of $\bP$ is the \emph{Jacobi preconditioner}, which is simply the diagonal of $\bA$ (i.e. $\bP = \text{diag}(\bA)$).
 
-The design of effective preconditioners is an active area of research, and far too extensive to adequately review here.
-We refer the reader to \cite{saad2003iterative} who devotes two chapters to different preconditioning methods.
+The design of effective preconditioners is an active area of research and is too extensive to adequately review here.
+We refer the reader to \cite{saad2003iterative} which devotes two chapters to different preconditioning methods.
 
 %\subsection{Overview}
 
@@ -240,14 +240,15 @@ In practice however, the complete tridiagonalization is almost never computed, a
 We will discuss how $\bQ_J$ and $\bT_J$ can approximate log determinants and matrix solves after briefly describing the algorithm itself.
 
 \paragraph{The algorithm.}
-Given an initial vector $\bb$, $J$ iterations of the Lanczos algorithm form an orthonormal basis of the following subspace:
-%
-\begin{equation}
-  \mathcal{K}_J (\bA, \bb) = \left\{ \bb, \:\: \bA \bb, \:\: \bA^2 \bb, \:\: \ldots, \:\: \bA^{J-1} \bb \right\}.
-  \label{eqn:krylov}
-\end{equation}
-%
-$\mathcal{K}_J (\bA, \bb)$ is known as the $J^\text{th}$ \emph{Krylov Subspace} of $\bA$ and $\bb$ (hence why this algorithm is classified as a ``Krylov Subspace Method''---see \citep{saad2003iterative} for more details).
+Given an initial vector $\bb$, $J$ iterations of the Lanczos algorithm form an orthonormal basis of the $J^\text{th}$ Krylov subspace, given by \cref{eqn:krylov}.
+%$\mathcal{K}_J (\bA, \bb) = \left\{ \bb, \:\: \bA \bb, \:\: \bA^2 \bb, \:\: \ldots, \:\: \bA^{J-1} \bb \right\}.$
+%%
+%\begin{equation}
+  %\mathcal{K}_J (\bA, \bb) = \left\{ \bb, \:\: \bA \bb, \:\: \bA^2 \bb, \:\: \ldots, \:\: \bA^{J-1} \bb \right\}.
+  %\label{eqn:krylov}
+%\end{equation}
+%%
+%$\mathcal{K}_J (\bA, \bb)$ is known as the $J^\text{th}$ \emph{Krylov Subspace} of $\bA$ and $\bb$ (hence why this algorithm is classified as a ``Krylov Subspace Method''---see \citep{saad2003iterative} for more details).
 Applying Gram-Schmidt orthogonalization to $\left[ \bb, \:\: \bA \bb, \:\: \ldots, \:\: \bA^{J-1} \bb \right]$ produces the columns of $\bQ_J = \left[ \bb/\Vert \bb \Vert, \:\: \bq_2, \:\: \ldots, \:\: \bq_J \right]$, and the orthogonalization coefficients are collected into $\bT_J$.
 Because $\bA$ is symmetric, each vector needs only be orthogonalized against the two preceding vectors, which results in the tridiagonal structure of $\bT$ \cite{golub2012matrix}.
 In practice, the columns of $\bQ_J$ and the sub-diagonal/diagonal entries of $T_j$ can be computed using a simple iterative procedure (\cref{alg:lanczos}).
@@ -343,10 +344,10 @@ It can be seen with a little mathematical manipulation that the second line is a
 
 To compute each of the $\bz_i \left( \log \bA \right) \bz_i$ terms, we turn to \cref{eqn:f_tridiagonal}.
 Let $\bQ_J^{(i)}$, $\bT_J^{(i)}$ correspond to the Lanczos matrices with initial vector $\bq^{(i)}_1 = \bz_i / \vert \bz_i \vert$.
-Then,
+Then we apply \cref{eqn:f_lanczos}:
 %
 \begin{align}
-  \bz_i\top \left( \log \bA \right) \bz_i
+  \bz_i^\top \left( \log \bA \right) \bz_i
   &\approx \bz_i^\top \Bigl( \bQ^{(i)}_J \bigl[ \log \bT^{(i)}_J \bigr] \bQ^{(i)\top}_J \Bigr) \bz_i
   \nonumber
   \\
@@ -368,10 +369,60 @@ We can approximate the matrix solve using \cref{eqn:f_lanczos}:
 \end{equation}
 %
 where again $\be_1 \in \reals^J$ is the first unit vector $[1, 0, 0, \ldots, 0]$.
-These estimates tend to be very accurate after $J \ll N$ iterations, though again the exact convergence depends on the conditioning of $\bA$.
 
-In practice, there is a far more efficient algorithm---linear conjugate gradients---which arrives at the same solution through a more numerically stable procedure.
-We will first introduce this algorithm, and then compare and contrast the two
 
-In fact, one can derive the conjugate gradients algorithm from \cref{eqn:lanczos_solves}, where the $\bu$, $\br$, and $\bd$ vectors
-\gp{Finish and fix.}
+
+
+\subsection{Connection between CG and Lanczos}
+\label{sec:cg_lanczos_connection}
+
+The Lanczos and CG algorithms are very closely related, as they are both Krylov subspace methods.
+Here we show that the two algorithms can essentially be derived from one another.
+We will exploit this fact in the next two chapters.
+
+\paragraph{Deriving CG from Lanczos.}
+It can be shown that, if $\bA$ is positive definite, then the solution in \cref{eqn:lanczos_solves} is \emph{exactly} the same as the CG solution after $J$ iterations.
+In fact, one way to derive \cref{alg:cg} is from Lanczos tridiagonalization and showing that \cref{eqn:lanczos_solves} can be reduced to the three-term CG recurrence.
+
+In practice, the CG algorithm tends to be preferred over \cref{eqn:lanczos_solves} for computing $\bA^{-1} \bb$.
+The advantages of CG are
+\begin{enumerate}
+  \item CG only stores 3 vectors at any given iteration, whereas \cref{eqn:lanczos_solves} requires storing the $\bQ_J \! \in \! \reals^{N \times J}$ matrix;
+  \item CG is numerically stable, whereas the Lanczos vectors lose orthogonality (after say $J > 50$ iterations); and
+  \item CG is more easily preconditioned.
+\end{enumerate}
+However, one advantage of Lanczos is that the $\bQ_J$ and $\bT_J$ matrices can be used to jump-start subsequent solves $\bA^{-1} \bb'$.
+\citet{parlett1980new}, \citet{saad1987lanczos}, and \citet{schneider2001krylov} argue that subsequent solves can be approximated as
+%
+\begin{equation}
+  \bA^{-1} \bb' \approx \left( \bQ_J \bT_J^{-1} \bQ_J^\top \right) \bb',
+  \label{eq:lanczos_solve}
+\end{equation}
+%
+where $\bQ_J$ and $\bT_J$ come from a previous solve $\bA^{-1} \bb$.
+
+\paragraph{Deriving Lanczos from CG.}
+Additionally, one can recover part of the Lanczos tridiagonalization from conjugate gradients.
+\citet{saad2003iterative} and others show that it is possible to recover the $\bT_J$ tridigonal Lanczos matrix by \emph{reusing coefficients} generated in CG iterations.
+In particular, we will store the $\alpha_j$ and $\beta_j$ coefficients from \autoref{alg:std_pcg}.
+%
+\begin{observation}[Recovering Lanczos tridiagonl matrices from standard PCG \cite{saad2003iterative}]
+  Assume we use $p$ iterations of standard preconditioned conjugate gradients to solve $\bA^{-1} \bb$ with preconditioner $\bP$.
+  Let $\alpha_1, \ldots, \alpha_p$ and $\beta_1, \ldots, \beta_p$ be the scalar coefficients from each iteration (defined in \autoref{alg:std_pcg}).
+  The matrix
+  %
+  \begin{equation}
+    \left[\begin{array}{ccccc}
+      \frac{1}{\alpha_1} & \frac{\sqrt{\beta_1}}{\alpha_1} &  & & 0 \\
+      \frac{\sqrt{\beta_1}}{\alpha_1} & \frac{1}{\alpha_2} + \frac{\beta_1}{\alpha_1} & \frac{\sqrt{\beta_2}}{\alpha_2} &  &  \\
+      & \frac{\sqrt{\beta_2}}{\alpha_2} & \frac{1}{\alpha_3} + \frac{\beta_2}{\alpha_2} & \frac{\sqrt{\beta_3}}{\alpha_3} &  \\
+      &       & \ddots & \ddots & \frac{\sqrt{\beta_{m-1}}}{\alpha_{m-1}} \\
+      0 &       &        & \frac{\sqrt{\beta_{m-1}}}{\alpha_{m-1}} & \frac{1}{\alpha_m} + \frac{\beta_{m-1}}{\alpha_{m-1}}
+    \end{array}\right]
+  \end{equation}
+  %
+  is equal to the Lanczos tridiagonal matrix $\bT_J$, formed by running $J$ iterations of Lanczos to achieve $\left( \bP^{-1} \bA \right) \bQ_J = \bQ_J \bT_J + \br \be_J^\top$) with probe vector $\bb$.
+\end{observation}
+(See \cite{saad2003iterative}, Section 6.7.3.)
+In other words, we can recover the Lanczos tridiagonal matrix $\bT_J$ simply by running CG.
+However, the orthonormal matrix $\bQ_J$ cannot be as easily derived as a CG byproduct.
