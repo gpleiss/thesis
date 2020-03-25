@@ -1,0 +1,40 @@
+\begin{algorithm2e}[t]
+  \SetAlgoLined
+  \SetKwInOut{Input}{Input}
+  \SetKwInOut{Output}{Output}
+  \newcommand\NextInput[1]{%
+    \settowidth\inputlen{\Input{}}%
+    \setlength\hangindent{1.5\inputlen}%
+    \hspace*{\inputlen}#1\\
+  }
+  \newcommand\graycomment[1]{\footnotesize\ttfamily\textcolor{gray}{#1}}
+  \SetCommentSty{graycomment}
+  \SetKwFunction{mvmkxx}{mvm\_K\textsubscript{XX}}
+  \SetKwFunction{mvmkux}{mvm\_K\textsubscript{UX}}
+  \SetKwFunction{lanczos}{lanczos\textsubscript{k}}
+  \SetKwFunction{sparsemm}{sparse\_mm}
+  \SetKwFunction{choleskyfactor}{cholesky\_factor}
+  \SetKwFunction{choleskysolve}{cholesky\_solve}
+  \caption{LOVE{} for fast predictive variances.}
+  \label{alg:fast_pred_var}
+    \Input{$\bw_{x^*_i}$, $\bw_{x^*_j}$ -- interpolation vectors for $\bx^*_i$, $\bx^*_j$}
+    \NextInput{$k_{\bxtest_i, \bxtest_j}$ -- prior covariance between $\bx^*_i$, $\bx^*_j$}
+    \NextInput{$\bb=\frac{1}{m}W_X^\top K_{UU}\mathbf{1}$ -- average col. of $W_X^\top K_{UU}$}
+    \NextInput{\mvmkxx{}: func. that performs MVMs with $(W^\top_{X} K_{UU} W_X + \sigma^2 \bI) \approx \widehat K_{X\!X}$}
+    \NextInput{\mvmkux{}: func. that performs MVMs with $(K_{UU} W_{X}) \approx K_{U\!X}$}
+    \Output{Approximate predictive variance $k_{f \mid \dset} ( \bx^{*}_i, \bx^{*}_j )$.}
+    \BlankLine
+    \If{$\blue R, \blue{R'}$ have not previously been computed}{
+      $Q_k, T_k$ $\leftarrow$ \lanczos{ \mvmkxx, $\bb$ } \\
+      \qquad \tcp{k iter. of Lanczos w/}
+      \qquad \tcp{matrix $\widehat K_{\bX\bX}$ and probe vec. $\!\!\!\bb$ }
+      $L_{T_k}$ $\leftarrow$ \choleskyfactor{ $T_k$ } \\
+      $\blue R$ $\leftarrow$ $($ \mvmkux{ $Q_k$ } $)^\top$
+      \tcp*{$R = Q_k^\top W^\top_X K_{UU}$  }
+      $\blue{R'}$ $\leftarrow$ \choleskysolve{$\blue R$, $L_{T_k}$} \\
+      \qquad \tcp{$R' = T_k^{-1} Q_k^\top W^\top_X K_{UU}$  }
+    }
+    $\bu$ $\leftarrow$ \sparsemm{ $\blue R$, $\bw_{x^*_i}$ } \\
+    $\bv$ $\leftarrow$ \sparsemm{ $\blue{R'}$, $\bw_{x^*_j}$ } \\
+    \Return{ $k_{\bx^{*}_i, \bx^{*}_j} - \bu^T \bv$ } \\
+\end{algorithm2e}

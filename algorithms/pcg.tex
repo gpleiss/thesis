@@ -1,0 +1,55 @@
+\newcommand{\colorpcg}{violet}
+
+\begin{algorithm2e}[t!]
+  \SetAlgoLined
+  \SetKwInOut{Input}{Input}
+  \SetKwInOut{Output}{Output}
+  \newcommand\NextInput[1]{%
+    \settowidth\inputlen{\Input{}}%
+    \setlength\hangindent{1.5\inputlen}%
+    \hspace*{\inputlen}#1\\
+  }
+  \newcommand\graycomment[1]{\footnotesize\ttfamily\textcolor{gray}{#1}}
+  \SetCommentSty{graycomment}
+  \SetKw{Break}{break}
+  \SetKwData{tol}{tolerance}
+  \SetKwFunction{mvmkxx}{mvm\_$\bA$}
+  \SetKwFunction{mvmprec}{$\color{\colorpcg} \bP^{-1}$}
+  \SetKwFunction{size}{size}
+  \caption{Preconditioned conjugate gradients (PCG). Terms in {\color{\colorpcg} \colorpcg} differ from standard CG (\cref{alg:cg}).}
+  \label{alg:std_pcg}
+    \Input{\mvmkxx{} -- function for matrix-vector multiplication (MVM) with matrix $\bA$}
+    \NextInput{$\bb$ -- vector to solve against}
+    \NextInput{\mvmprec{} -- function for preconditioner}
+    \Output{$\bc = \bA^{-1} \bb$.}
+    \BlankLine
+	  $\bc_0$ $\gets$ $\mathbf 0$
+    \tcp{Current solution}
+    $\br_0$ $\gets$ \mvmkxx{$\bc_0$} - \bb
+    \tcp{Current residual}
+    $\color{\colorpcg} \bz_0$ $\color{\colorpcg} \gets$ \mvmprec{$\color{\colorpcg} \br_0$}
+    \tcp{Preconditioned residual}
+    $\bd_0$ $\gets$ {$\color{\colorpcg} \bz_0$}
+    \tcp{``Descent'' direction for next solution}
+    \BlankLine
+    \For{$j \gets 0$ \KwTo J}{
+      $\bv_{j}$ $\gets$ \mvmkxx{ $\bd_{j-1}$ }
+      \\
+      $\alpha_j$ $\gets$ $( \br_{j-1}^\top {\color{\colorpcg} \bz_{j-1}} ) / ( \bd_{j-1}^\top \bv_{j} )$
+      \\
+      $\bc_j$ $\gets$ $\bc_{j-1} + \alpha_{j} \bd_{j-1}$
+      \\
+      $\br_j$ $\gets$ $\br_{j-1} - \alpha_{j} \bv_{j}$
+      \\
+      \lIf{$\left\Vert \br_{j} \right\Vert_2$ $<$ \tol}{
+        \Return{$\bc_j$}
+      }
+      $\color{\colorpcg} \bz_{j}$ $\color{\colorpcg} \gets$ \mvmprec{ $\color{\colorpcg} \br_{j}$ }
+      \\
+      $\beta_j$ $\gets$ $\color{\colorpcg} ( \bz_{j}^\top \bz_{j} ) / ( \bz_{j-1}^\top \bz_{j-1} )$
+      \\
+      $\bd_{j}$ $\gets$ ${\color{\colorpcg} \bz_{j}} - \beta_j \bd_{j-1}$
+    }
+    \BlankLine
+    \Return{$\bc_{j+1}$}
+\end{algorithm2e}

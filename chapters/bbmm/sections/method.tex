@@ -40,6 +40,8 @@ where $\tilde{\bT}_{1},\ldots,\tilde{\bT}_{t}$ are partial Lanczos tridiagonaliz
 In what follows, we show how to use a single call to mBCG to compute the three GP inference terms: $\trainK^{-1} \by$, $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \theta} }$, and $\log \vert \trainK \vert$.
 %
 $\trainK^{-1}\by$ is equal to $\bu_{0}$ in~\eqref{eq:mod_cg_call}, directly returned from mBCG. We describe the other two terms below.
+%
+\input algorithms/mbcg
 
 \paragraph{Estimating $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \theta} }$}
 from CG relies on \emph{stochastic trace estimation} \cite{avron2011randomized,fitzsimons2016improved,hutchinson1990stochastic}, which allows us to treat this term as a sum of linear solves.

@@ -1,0 +1,49 @@
+\begin{algorithm2e}[t!]
+  \SetAlgoLined
+  \SetKwInOut{Input}{Input}
+  \SetKwInOut{Output}{Output}
+  \newlength\inputlen
+  \newcommand\NextInput[1]{%
+    \settowidth\inputlen{\Input{}}%
+    \setlength\hangindent{1.5\inputlen}%
+    \hspace*{\inputlen}#1\\
+  }
+  \newcommand\graycomment[1]{\footnotesize\ttfamily\textcolor{gray}{#1}}
+  \SetCommentSty{graycomment}
+  \SetKw{Break}{break}
+  \SetKwData{tol}{tolerance}
+  \SetKwFunction{mvmkxx}{mvm\_$\bA$}
+  \SetKwFunction{mvmprec}{$\bP^{-1}$}
+  \SetKwFunction{size}{size}
+  \caption{Standard conjugate gradients (CG).}
+  \label{alg:cg}
+    \Input{\mvmkxx{} -- function for matrix-vector multiplication (MVM) with matrix $\bA$}
+    \NextInput{$\bb$ -- vector to solve against}
+    \Output{$\bc = \bA^{-1} \bb$.}
+    \BlankLine
+	  $\bc_0$ $\gets$ $\mathbf 0$
+    \tcp{Current solution}
+    $\br_0$ $\gets$ \mvmkxx{$\bc_0$} - \bb
+    \tcp{Current residual}
+    $\bd_0$ $\gets$ {$\br_0$}
+    \tcp{``Descent'' direction for next solution}
+    \BlankLine
+    \For{$j \gets 0$ \KwTo J}{
+      $\bv_{j}$ $\gets$ \mvmkxx{ $\bd_{j-1}$ }
+      \\
+      $\alpha_j$ $\gets$ $( \br_{j-1}^\top \br_{j-1} ) / ( \bd_{j-1}^\top \bv_{j} )$
+      \\
+      $\bc_j$ $\gets$ $\bc_{j-1} + \alpha_{j} \bd_{j-1}$
+      \\
+      $\br_j$ $\gets$ $\br_{j-1} - \alpha_{j} \bv_{j}$
+      \\
+      \lIf{$\left\Vert \br_{j} \right\Vert_2$ $<$ \tol}{
+        \Return{$\bc_j$}
+      }
+      $\beta_j$ $\gets$ $( \br_{j}^\top \br_{j} ) / ( \br_{j-1}^\top \br_{j-1} )$
+      \\
+      $\bd_{j}$ $\gets$ $\br_{j} - \beta_j \bd_{j-1}$
+    }
+    \BlankLine
+    \Return{$\bc_{j+1}$}
+\end{algorithm2e}
