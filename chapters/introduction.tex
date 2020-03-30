@@ -26,16 +26,17 @@
 %Neural networks.
 
 Rapid advances in machine learning have led to numerous empirical successes and wide-scale adoption in many application domains.
-From a research perspective, we highlight two broad categories of methodological innovation that have contributed to this surge.
-Firstly, researchers have improved the {\bf predictive capabilities} of machine learning models.
+%Here we will highlight two broad categories of methodological innovation that have contributed to this surge.
+Researchers have improved the {\bf predictive capabilities} of machine learning models.
 Algorithms are now able to achieve superhuman performance on complex tasks like object recognition \cite{} and strategy game-playing \cite{}.
 There have also been important strides making these predictions more risk-aware \cite{}, interpretable \cite{}, and societally equitable \cite{}.
-Secondly, the machine learning community has addressed many {\bf pragmatic concerns} around computational efficiency and easy-of-use.
+At the same time, the machine learning community has addressed many {\bf pragmatic concerns} around computational efficiency and easy-of-use.
 Models which used to require several weeks of training can now be trained in under an hour \cite{}.
 Transfer learning techniques \cite{} and high-quality software frameworks have additionally made it easier for practitioners to rapidly-prototype new models.
-While the ever-increasing predictive capabilities have opened up new possibilities, the pragmatic improvements have accelerated the rate of innovation and adoption.
+While many other factors have contributed to the machine learning surge, we will limit our focus to these two categories.
+Ever-increasing predictive capabilities have opened up new possibilities, while pragmatic improvements have accelerated the rate of innovation and adoption.
 
-Arguably, the algorithms which have had the broadest impact are the ones that seamlessly offer \emph{both} predictive potential and practicality.
+Arguably, the machine learning algorithms which have had the broadest impact are the ones that seamlessly offer \emph{both} predictive potential and practicality.
 Deep neural networks perhaps best exemplify this trend.
 Recent innovations in
 network architecture \citep[e.g.][]{krizhevsky2012imagenet,he2016deep,vaswani2017attention,devlin2018bert,huang2019convolutional},
@@ -48,27 +49,60 @@ the introduction of automatic differentiation \citep[e.g.][]{paszke2017automatic
 and the development of of several easy-to-use software implementations~\citep[e.g.][]{jia2014caffe,chen2015mxnet,abadi2016tensorflow,paszke2019pytorch}.
 These practical advances make it easy for practitioners to experiment with and rapidly prototype new deep learning models, which has undoubtedly contributed to research innovations and its wide-spread adoption \cite{goodfellow2016deep}.
 
-Gradient-boosted trees are another algorithm class with a similar powerful-yet-practical story.
+Gradient-boosted trees are another algorithm class with a similar powerful-and-practical story.
 Since their inception \cite{friedman2001greedy,friedman2002stochastic}, gradient boosted trees have excelled in many applications \citep[e.g.][]{richardson2007predicting,burges2010ranknet,li2010robust}.
 The predictive power of these models is a product of several key attributes: for example, their remarkable generalization properties \citep{freund1997decision,schapire2013boosting} and their ability to handle incomplete features \cite{friedman2001greedy}.
 Equally important, these models can be simple and computational efficient, in large part due to specialty parallel algorithms \citep[e.g.][]{panda2009planet,tyree2011parallel,ke2017lightgbm} and easy-to-use software implementations such as XGBoost \cite{chen2016xgboost}.
 These advantages have made gradient-boosted decision trees a workhorse algorithm for many practitioners in a wide variety of application domains.
 According to the most recent survey collected by Kaggle \cite{kaggle2019kaggle}, $75\%$ of the responding data scientists regularly use gradient-boosted decision trees and the XGBoost software.
 
-However, in many cases there is still a trade-off between an algorithm's predictive potential and its practical limitations.
+However, for many machine learning algorithms there is still a trade-off between predictive potential and its practical limitations.
 The focus of this thesis is {\bf Gaussian process models} (GPs), which perhaps best exemplify this tension.
-Within the machine learning community, GPs have been well-regarded as a powerful model class with many desirable properties---fully-probabilistic predictions, calibrated uncertainty estimates, and interpretable model priors (to name a few).
-They are an invaluable model class in domains such as blackbox optimization \cite{}, robotics \cite{}, and health care \cite{}.
-Recent work on hierarchical modelling \cite{} and scalability \cite{} have furthered their applicability to increasingly complex datasets.
-At the same time, Gaussian processes have historically not scaled well to large datasets, and the tools most commonly used for inference do not effectively utilize modern compute hardware.
-Scalable approximations can remedy these concerns to some extent, yet such approximations can sometimes bias the model's predictions \cite{}.
+Within the machine learning community, GPs have been well-regarded as a powerful model class with many desirable properties---such as calibrated uncertainty estimates and interpretable model priors.
+Recent work on hierarchical modelling \citep[e.g.][]{damianou2013deep} and scalability \citep[e.g.][]{wilson2015kernel} have furthered their applicability to increasingly complex datasets.
+However, Gaussian processes have historically not scaled well to large datasets, and the tools most commonly used for inference do not effectively utilize modern compute hardware.
+Scalable approximations can remedy these concerns to some extent, yet such approximations can sometimes bias the model's predictions \cite{turner2011two,bauer2016understanding}.
 Finally, new models require significant implementation, as simple modifications like an additional output dimension might require different learning and inference procedures.
-These practical considerations hinder the adoption of GP models, while also limiting researchers' abilities to rapidly-prototype and develop new innovations.
+These practical considerations hinder the adoption of GP models, while also limiting researchers' abilities to rapidly-prototype and make new developments.
 This thesis aims to address these limitations so that Gaussian processes can be powerful-\emph{and}-practical models.
 
 % Even as Moore's law runs out, specialty hardware
 
-\section{Benefits of Gaussian Processes Models}
+\section{Benefits and Use Cases of Gaussian Processes Models}
+
+Before addressing these issues, it is worth discussing why Gaussian processes are an invaluable model class in domains such as blackbox optimization \cite{snoek2012practical}, robotics \cite{deisenroth2011pilco}, and health care \cite{schulam2015framework}:
+\begin{enumerate}
+  \item {\bf Closed-form marginalization over hypotheses.}
+    Many predictive machine learning algorithms (such as neural networks) construct a single predictive model by optimizing over thousands or millions of parameters.
+    Gaussian processes on the other hand marginalize over all possible predictive models $f(\cdot)$:
+    \[
+      p_\text{GP} ( y \mid \bx ) = \int_{f(\cdot)} p( y \mid \bx, f(\cdot)) \: p(f(\cdot)) \: \intd f(\cdot).
+    \]
+    (See \cref{sec:gps} for more details).
+    As a result, the predictions incorporate modelling uncertainty are are less prone to overfitting \cite{rasmussen2006gaussian}.
+
+  \item {\bf Well-calibrated uncertainty estimates.}
+    The output of a Gaussian process is a predictive \emph{distribution}, which incorporates both modelling uncertainty (e.g. how many different models could fit the data) and data uncertainty (e.g. how noisy are the training data).
+    Consequentially, the predictive uncertainties tend to be very well calibrated to the data distribution.
+
+  \item {\bf A flexible language for encoding prior knowledge.}
+    A Gaussian process' generalization to unseen data is almost entirely determined by its modelling priors.
+    Crucially, the modelling priors of GP directly encode functional properties---such as smoothness, periodicity, or monotonicity---rather than beliefs about certain parameters.
+    These functional properties are determined by the choice of \emph{kernel function}, which can be easily composed to express complex priors (see \cref{sec:common_kernels}).
+    With the appropriate choice of prior, it is possible to generalize on datasets with as few as 10 observations \citep[e.g.]{rasmussen2006gaussian,gardner2017discovering}.
+    Several recent works have simplified the task of constructing appropriate kernels, either through composition \citep{duvenaud2013structure} or through differentiable learning \citep{wilson2013gaussian}.
+
+  \item {\bf Interpretable predictions.}
+    The predictions from Gaussian processes (see \cref{eqn:predictive_mean,eqn:predictive_var}) are not only expressive and powerful; they are also very intuitive.
+    If we view the GP's kernel function as a similarity/distance measure between two points, then the prediction at a given point $\bx$ is simply an interpolation of nearby training points.
+    The prediction's confidence interval is tight when $\bx$ is close to training dataset points, and large when $\bx$ is too far from points for accurate interpolation.
+\end{enumerate}
+
+The benefits listed above are obviously applicable to the ``small data'' regime, where priors and marginalization are critical for meaningful predictive performance.
+However, it is worth noting that many of these desirable properties also apply to large data regimes as well.
+Gaussian processes (with certain kernels) are universal approximators \cite{micchelli2006universal}, and their modelling capacity increases with the amount of available training data.
+Larger datasets make it possible to use more powerful families of covariance functions \citep{wilson2013gaussian,wilson2016deep,benton2019function}, which is especially useful for extrapolating on complex spatial-temporal data.
+Moreover, using Gaussian processes within hierarchical models \cite{wilson2016deep,salimbeni2017doubly,jankowiak2020deep}
 
 \section{Practical Concerns regarding Gaussian Processes Models}
 

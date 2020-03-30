@@ -32,10 +32,10 @@
 }
 
 
-%% Deep learning: Bayesian
+%% Deep learning: {B}ayesian
 
 @article{mackay1992practical,
-  title={A practical Bayesian framework for backpropagation networks},
+  title={A practical {B}ayesian framework for backpropagation networks},
   author={MacKay, David JC},
   journal={Neural computation},
   volume={4},
@@ -46,14 +46,14 @@
 }
 
 @inproceedings{gal2015dropout,
-	title={Dropout as a Bayesian approximation: Representing model uncertainty in deep learning},
+	title={Dropout as a {B}ayesian approximation: Representing model uncertainty in deep learning},
 	author={Gal, Yarin and Ghahramani, Zoubin},
 	booktitle={ICML},
 	year={2016}
 }
 
 @inproceedings{kendall2017uncertainties,
-  title={What Uncertainties Do We Need in Bayesian Deep Learning for Computer Vision?},
+  title={What Uncertainties Do We Need in {B}ayesian Deep Learning for Computer Vision?},
   author={Kendall, Alex and Gal, Yarin},
   booktitle={NeurIPS},
   year={2017}
@@ -399,7 +399,61 @@
 }
 
 
-%% GPs: DKL
+%% GPs: Applications
+
+@article{vasudevan2009gaussian,
+  title={Gaussian process modeling of large-scale terrain},
+  author={Vasudevan, Shrihari and Ramos, Fabio and Nettleton, Eric and Durrant-Whyte, Hugh},
+  journal={Journal of Field Robotics},
+  volume={26},
+  number={10},
+  pages={812--840},
+  year={2009},
+  publisher={Wiley Online Library}
+}
+
+@inproceedings{snoek2012practical,
+  title={Practical {B}ayesian optimization of machine learning algorithms},
+  author={Snoek, Jasper and Larochelle, Hugo and Adams, Ryan P},
+  booktitle={NeurIPS},
+  pages={2951--2959},
+  year={2012}
+}
+
+@inproceedings{deisenroth2011pilco,
+  title={{PILCO}: A model-based and data-efficient approach to policy search},
+  author={Deisenroth, Marc and Rasmussen, Carl E},
+  booktitle={ICML},
+  pages={465--472},
+  year={2011}
+}
+
+@inproceedings{schulam2015framework,
+  title={A framework for individualizing predictions of disease trajectories by exploiting multi-resolution structure},
+  author={Schulam, Peter and Saria, Suchi},
+  booktitle={NeurIPS},
+  pages={748--756},
+  year={2015}
+}
+
+@inproceedings{gardner2015psychophysical,
+  title={Psychophysical Detection Testing with Bayesian Active Learning.},
+  author={Gardner, Jacob R and Song, Xinyu and Weinberger, Kilian Q and Barbour, Dennis L and Cunningham, John P},
+  booktitle={UAI},
+  pages={286--295},
+  year={2015}
+}
+
+
+%% GPs: Deep
+
+@inproceedings{damianou2013deep,
+  title={Deep gaussian processes},
+  author={Damianou, Andreas and Lawrence, Neil},
+  booktitle={AISTATS},
+  pages={207--215},
+  year={2013}
+}
 
 @inproceedings{wilson2016deep,
   title={Deep kernel learning},
@@ -413,6 +467,21 @@
   author={Wilson, Andrew Gordon and Hu, Zhiting and Salakhutdinov, Ruslan R and Xing, Eric P},
   booktitle={NeurIPS},
   year={2016}
+}
+
+@inproceedings{salimbeni2017doubly,
+  title={Doubly stochastic variational inference for deep {G}aussian processes},
+  author={Salimbeni, Hugh and Deisenroth, Marc},
+  booktitle={NeurIPS},
+  pages={4588--4599},
+  year={2017}
+}
+
+@article{jankowiak2020deep,
+  title={Deep Sigma Point Processes},
+  author={Jankowiak, Martin and Pleiss, Geoff and Gardner, Jacob R},
+  journal={arXiv preprint arXiv:2002.09112},
+  year={2020}
 }
 
 
@@ -433,6 +502,13 @@
   year={2008}
 }
 
+@phdthesis{gardner2018discovering,
+  title={Discovering and Exploiting Structure for Gaussian Processes},
+  author={Gardner, Jacob R.},
+  year={2018},
+  school={Cornell University}
+}
+
 
 %% GPs: Fast
 
@@ -448,7 +524,7 @@
 }
 
 @inproceedings{smola2001sparse,
-  title={Sparse greedy Gaussian process regression},
+  title={Sparse greedy {G}aussian process regression},
   author={Smola, Alex J and Bartlett, Peter L},
   booktitle={NeurIPS},
   pages={619--625},
@@ -492,6 +568,18 @@
   author={Murray, Iain},
   booktitle={ICML Workshop on Numerical Mathematics in Machine Learning},
   year={2009}
+}
+
+@InCollection{turner2011two,
+  author = 	 {R. E. Turner and M. Sahani},
+  title = 	 {Two problems with variational expectation
+                  maximisation for time-series models},
+  booktitle = 	 {Bayesian Time series models},
+  pages = 	 {109--130},
+  publisher = {Cambridge University Press},
+  year = 	 2011,
+  editor = 	 {D. Barber and T. Cemgil and S. Chiappa},
+  chapter = 	 5
 }
 
 @phdthesis{saatcci2012scalable,
@@ -543,6 +631,14 @@
   year={2018}
 }
 
+@article{liu2020gaussian,
+  title={When Gaussian process meets big data: A review of scalable GPs},
+  author={Liu, Haitao and Ong, Yew-Soon and Shen, Xiaobo and Cai, Jianfei},
+  journal={IEEE Transactions on Neural Networks and Learning Systems},
+  year={2020},
+  publisher={IEEE}
+}
+
 
 %% GPs: Kernels
 
@@ -564,11 +660,34 @@
 }
 
 @inproceedings{wilson2013gaussian,
-  title={Gaussian process kernels for pattern discovery and extrapolation},
+  title={{G}aussian process kernels for pattern discovery and extrapolation},
   author={Wilson, Andrew Gordon and Adams, Ryan},
   booktitle={ICML},
   pages={1067--1075},
   year={2013}
+}
+
+@inproceedings{duvenaud2013structure,
+  title={Structure discovery in nonparametric regression through compositional kernel search},
+  author={Duvenaud, David and Lloyd, James Robert and Grosse, Roger and Tenenbaum, Joshua B and Ghahramani, Zoubin},
+  booktitle={ICML},
+  year={2013}
+}
+
+@inproceedings{gardner2017discovering,
+  title={Discovering and exploiting additive structure for {B}ayesian optimization},
+  author={Gardner, Jacob and Guo, Chuan and Weinberger, Kilian and Garnett, Roman and Grosse, Roger},
+  booktitle={AISTATS},
+  pages={1311--1319},
+  year={2017}
+}
+
+@inproceedings{benton2019function,
+  title={Function-Space Distributions over Kernels},
+  author={Benton, Gregory and Maddox, Wesley J and Salkey, Jayson and Albinati, Julio and Wilson, Andrew Gordon},
+  booktitle={NeurIPS},
+  pages={14939--14950},
+  year={2019}
 }
 
 
@@ -596,6 +715,14 @@
   year={2015}
 }
 
+@inproceedings{bauer2016understanding,
+  title={Understanding probabilistic sparse {G}aussian process approximations},
+  author={Bauer, Matthias and van der Wilk, Mark and Rasmussen, Carl Edward},
+  booktitle={NeurIPS},
+  pages={1533--1541},
+  year={2016}
+}
+
 @inproceedings{cheng2017variational,
   title={Variational inference for gaussian process models with linear complexity},
   author={Cheng, Ching-An and Boots, Byron},
@@ -605,14 +732,14 @@
 }
 
 @phdthesis{matthews2017scalable,
-  title={Scalable Gaussian process inference using variational methods},
+  title={Scalable {G}aussian process inference using variational methods},
   author={Matthews, Alexander G de G},
   year={2017},
   school={University of Cambridge}
 }
 
 @inproceedings{salimbeni2018orthogonally,
-  title={Orthogonally decoupled variational Gaussian processes},
+  title={Orthogonally decoupled variational {G}aussian processes},
   author={Salimbeni, Hugh and Cheng, Ching-An and Boots, Byron and Deisenroth, Marc},
   booktitle={NeurIPS},
   pages={8711--8720},
@@ -620,7 +747,7 @@
 }
 
 @article{jankowiak2020parametric,
-  title={Parametric Gaussian Process Regressors},
+  title={Parametric {G}aussian Process Regressors},
   author={Jankowiak, Martin and Pleiss, Geoff and Gardner, Jacob R},
   journal={arXiv preprint arXiv:1910.07123},
   year={2020}
