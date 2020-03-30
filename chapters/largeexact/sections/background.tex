@@ -1,0 +1,63 @@
+%!TEX root=../main.tex
+\section{Background}
+\paragraph{Gaussian processes} (GPs) are non-parametric machine learning models that place a distribution over functions $f \sim \mathcal{GP}$.
+The function distribution is defined by a \emph{prior mean function} $\mu: \reals^d \to \reals$, a \emph{prior covariance function} or \emph{kernel} $k: \reals^D \times \reals^D \to \reals$, and observed (training) data $(\bX, \by)$.
+The choice of $\mu(\cdot)$ and $k(\cdot, \cdot)$ encode prior information about the data.
+$\mu(\cdot)$ is typically chosen to be a constant function.
+Popular kernels include the RBF kernel and the Mat\'ern kernels \citep{rasmussen2006gaussian}.
+
+\emph{Notation:} Throughout this paper we will use the following notation:
+given training inputs $\bX \in \reals^{n \times d}$, $\bK_{\bX \! \bX}$ is the $n \times n$ kernel matrix containing covariance terms for all pairs of entries.
+The vector $\bk_{\bX \bx^*}$ is a vector formed by evaluating the kernel between a test point $\bx^*$ and all training points.
+$\widehat \bK_{\bX \! \bX}$ is a kernel matrix with added Gaussian observational noise (i.e. $\widehat \bK_{\bX \! \bX} = \bK_{\bX \! \bX} + \sigma^2 I$).
+
+\emph{Training:} Most kernels include hyperparameters $\theta$, such as the lengthscale, which must be fit to the training data.
+In regression, $\theta$ are typically learned by maximizing the GP's \emph{log marginal likelihood} with gradient descent:
+%
+\begin{align}
+	\mathcal L &= \log p(\by \! \mid \! X, \theta) \propto - \by^\top {\widehat \bK_{\bX \! \bX}}^{-1} \by - \log \vert \widehat K_{\bX \! \bX} \vert,
+  \label{eq:gp_mll}
+  \\
+	\frac{\partial \mathcal L}{\partial \theta} \! &\propto \! \by^\top \! \widehat \bK_{\bX \! \bX} \frac{\partial {\widehat \bK_{\bX \! \bX}}^{-1}}{\partial \theta} \widehat \bK_{\bX \! \bX} \by \! - \! \tr{ \widehat \bK_{\bX \! \bX}^{-1} \frac{\partial \widehat \bK_{\bX \! \bX}}{\partial \theta}}.
+  \label{eq:gp_mll_deriv}
+\end{align}
+%
+A typical GP has very few hyperparameters to optimize and therefore requires fewer iterations of training than most parametric models.
+
+\emph{Predictions:}
+For a test point $\bx^*$, the GP predictive posterior distribution $p( f(\bx^*) \mid X, \by )$ with a Gaussian likelihood is Gaussian with moments:
+%
+\begin{align}
+  \Ev{f(\bx^*) \! \mid \! \bX, \by} &= \mu(\bx^*) + \bk_{\bX\bxtest}^\top \trainK^{-1}\by
+  \label{eq:pred_mean}
+  \\
+  \Var{f(\bx^*) \! \mid \! \bX, \by} &= k(\bxtest, \! \bxtest) - \bk_{\bX\bxtest}^\top \trainK^{-1}\bk_{\bX\bxtest}
+  \label{eq:pred_var}
+\end{align}
+%
+Portions of these equations can be precomputed as part of training to reduce the test-time computation.
+In particular, \eqref{eq:pred_mean} is reduced to an $\bigo{n}$ matrix-vector multiplication once $\widehat \bK_{\bX \! \bX}^{-1}\by$ is computed and cached.
+Similar caching techniques can reduce the asymptotic time complexity of \eqref{eq:pred_var} as well \cite{pleiss2018constant}.
+
+\paragraph{The Cholesky decomposition} is used in many GP implementations to compute $\widehat \bK_{\bX \! \bX}^{-1} \by$, $\log \vert \widehat \bK_{\bX \! \bX} \vert$, and $\tr{ \widehat \bK_{\bX \! \bX}^{-1} \left( \partial \widehat \bK_{\bX \! \bX} / \partial \theta \right) }$ in \eqref{eq:gp_mll} and \eqref{eq:gp_mll_deriv}.
+The positive definite kernel matrix $\widehat \bK_{\bX \! \bX}$ can be factorized
+into $\bL \bL^\top$, where $\bL$ is lower triangular.
+Computing $\bL$ requires $\bigo{n^3}$ time and $\bigo{n^2}$ memory.
+After computing this factorization, matrix solves and log determinants take $\bigo{n^2}$ and $\bigo{n}$ time respectively.
+The columns of $\bL = \begin{bmatrix} \mathbf{l}^{(1)} & \ldots & \mathbf{l}^{(k)} \end{bmatrix}$ are computed recursively \citep{golub2012matrix}.
+Although concurrent work by \citep{nguyen2019exact} used the Cholesky
+decomposition for large scale GP inference through distributed computing, it
+requires quadratic communication costs and quadratic memory. Furthermore, its
+recursive nature makes the Cholesky algorithm less amenable to GPU acceleration since
+GPUs are designed to parallelize matrix-vector multiplications.
+
+\paragraph{Conjugate gradients} (CG) is an alternative method for computing $\widehat \bK_{\bX \! \bX}^{-1} \by$.
+CG frames $\widehat \bK_{\bX \! \bX}^{-1} \by$ as the solution to an optimization problem: $\bv^{*} =\argmin_{\bv} \frac 1 2 \bv^\top \widehat \bK_{\bX \! \bX} \bv - \bv^\top \by$, which is convex by the positive-definiteness of $\widehat \bK_{\bX \! \bX}$.
+The optimization is performed iteratively, with each step requiring a matrix-vector multiplication with $\widehat \bK_{\bX \! \bX}$.
+For a specified tolerance $\epsilon$ of the relative residual norm ${\Vert \widehat \bK_{\bX \! \bX} \bv^{*} - \by \Vert}/{\Vert \by \Vert}$, the solution can be found in $t_\epsilon$ iterations.
+The exact number of iterations depends on the conditioning and eigenvalue
+distribution of $\widehat \bK_{\bX \! \bX}$, but $t_\epsilon \ll n$ for reasonable values of $\epsilon$.
+A \emph{preconditioner} is commonly used to accelerate convergence
+\cite{golub2012matrix}. In this paper, we refer to preconditioned CG as PCG. \citet{gardner2018gpytorch} demonstrate that a modified version of PCG can be used to compute all terms in \eqref{eq:gp_mll} and \eqref{eq:gp_mll_deriv} simultaneously.
+This results in an algorithm for training and predicting with GPs that requires only a routine for performing matrix-vector products with the kernel matrix.
+

@@ -1,0 +1,36 @@
+%!TEX root=../main.tex
+\section{Introduction}
+Gaussian processes (GPs) have seen great success in many machine learning settings, such as black-box optimization \citep{snoek2012practical}, reinforcement learning \cite{deisenroth2011pilco,deisenroth2015gaussian}, and time-series forecasting \cite{roberts2013gaussian}.
+These models offer several advantages -- principled uncertainty representations, model priors that require little expert intervention, and the ability to adapt to any dataset size \citep{rasmussen2001occam,rasmussen2006gaussian}.
+GPs are not only ideal for problems with few observations; they also have great
+promise to exploit the available information in increasingly large datasets,
+especially when combined with expressive kernels \cite{wilson2013gaussian} or
+hierarchical structure \cite{wilson2012gaussian, damianou2013deep,wilson2016deep,salimbeni2017doubly}.
+
+In practice, however, exact GP inference can be intractable for large datasets, as it na\"ively requires $\mathcal{O}(n^3)$ computations and $\mathcal{O}(n^2)$ storage for $n$ training points \cite{rasmussen2006gaussian}.
+Many approximate methods have been introduced to improve scalability, relying on mixture-of-experts models \cite{deisenroth2015distributed}, inducing points \citep{snelson2006sparse,titsias2009variational,wilson2015kernel,gardner2018product},
+random feature expansions \cite{rahimi2008random,le2013fastfood,yang2015carte},
+or stochastic variational optimization \citep{hensman2013gaussian,hensman2015scalable,wilson2016stochastic,cheng2017variational,salimbeni2018orthogonally}.
+However, due to the historical intractability of training exact GPs on large datasets, it
+has been an open question how approximate methods compare to an exact approach when much more data is available.
+
+In this paper, we develop a methodology to scale exact GP inference well beyond what has previously been achieved:
+we train a Gaussian process \emph{on over a million data points}, performing predictions \emph{without approximations}.
+Such a result would be intractable with standard implementations which rely on the Cholesky decomposition.
+The scalability we demonstrate is made feasible by the recent Blackbox Matrix-Matrix multiplication (BBMM) inference procedure of \citet{gardner2018gpytorch}, which uses conjugate gradients and related methods to reduce GP inference to iterations of matrix multiplication. 
+\citet{gardner2018gpytorch} show that this procedure (1) achieves exponential convergence using a pivoted Cholesky preconditioner under certain conditions, (2) requires relatively few number of conjugate gradient steps to convergence for typical datasets, and (3) can more accurately solve linear systems than Cholesky-based approaches. Using BBMM, our approach is generally applicable without constraints to input grids or specific kernel families. 
+
+By partitioning and distributing kernel matrix multiplications across GPUs, we
+reduce the memory requirement for GP training to $\mathcal{O}(n)$ \emph{on an individual GPU}, permitting scaling beyond $n\approx 10^4$ samples.
+Additionally, we introduce a number of practical heuristics to accelerate training and maximally utilize parallelization.
+With $8$ GPUs, GPs can be trained in seconds for $n \approx 10^4$, hours for $n \approx 10^5$, and a few days for $n \approx 10^6$. In addition, we show that the training time can be further reduced by using better hyperparameter initializations.
+Nevertheless, all trained models can \emph{make exact GP predictions in less than 1 second on 1 GPU} using a simple caching strategy.
+
+We benchmark on regression datasets from the UCI repository
+\citep{asuncion2007uci}. We find exact GPs offer notably better performance on
+these datasets, often exceeding a two-fold reduction in root-mean-squared error.
+The results show how non-parametric representations continue to significantly benefit from the addition of new training points, a valuable conceptual finding in favor of non-parametric approaches.
+These results clarify the relative performance of popular GP approximations
+against exact GPs in an unexplored data size regime and enable future
+comparisons against other GP approximations. Further, they serve as a signpost to
+practitioners using GPs on big data and set the stage for theorists to propose better approximations to address this gap in performance.
