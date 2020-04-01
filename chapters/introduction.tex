@@ -31,8 +31,8 @@ Researchers have improved the {\bf predictive capabilities} of machine learning 
 Algorithms are now able to achieve superhuman performance on complex tasks like object recognition \cite{} and strategy game-playing \cite{}.
 There have also been important strides making these predictions more risk-aware \cite{}, interpretable \cite{}, and societally equitable \cite{}.
 At the same time, the machine learning community has addressed many {\bf pragmatic concerns} around computational efficiency and easy-of-use.
-Models which used to require several weeks of training can now be trained in under an hour \cite{}.
-Transfer learning techniques \cite{} and high-quality software frameworks have additionally made it easier for practitioners to rapidly-prototype new models.
+Models which used to require several weeks of training can now be trained in under an hour \cite{goyal2017accurate}.
+Transfer learning techniques and high-quality software frameworks have additionally made it easier for practitioners to rapidly-prototype new models.
 While many other factors have contributed to the machine learning surge, we will limit our focus to these two categories.
 Ever-increasing predictive capabilities have opened up new possibilities, while pragmatic improvements have accelerated the rate of innovation and adoption.
 
@@ -40,8 +40,8 @@ Arguably, the machine learning algorithms which have had the broadest impact are
 Deep neural networks perhaps best exemplify this trend.
 Recent innovations in
 network architecture \citep[e.g.][]{krizhevsky2012imagenet,he2016deep,vaswani2017attention,devlin2018bert,huang2019convolutional},
-optimization \citep[e.g.][]{hochreiter1997flat,bottou2010large,ioffe2015batch,izmailov2018averaging},
-and theoretical understanding \citep[e.g.][]{keskar2016large,zhang2016understanding,}
+optimization \citep[e.g.][]{hochreiter1997flat,ioffe2015batch,izmailov2018averaging},
+and theoretical understanding \citep[e.g.][]{keskar2016large,jacot2018neural,arora2019fine}
 have led to massive performance improvements on increasingly complex vision and natural language tasks.
 Moreover, these innovations have been complemented by
 the effective use of specialty compute hardware (such as GPUs and TPUs),
@@ -68,7 +68,7 @@ This thesis aims to address these limitations so that Gaussian processes can be 
 
 % Even as Moore's law runs out, specialty hardware
 
-\section{Benefits and Use Cases of Gaussian Processes Models}
+\section{Predictive Power of Gaussian Processes Models}
 
 Before addressing these issues, it is worth discussing why Gaussian processes are an invaluable model class in domains such as blackbox optimization \cite{snoek2012practical}, robotics \cite{deisenroth2011pilco}, and health care \cite{schulam2015framework}:
 \begin{enumerate}
@@ -102,9 +102,68 @@ The benefits listed above are obviously applicable to the ``small data'' regime,
 However, it is worth noting that many of these desirable properties also apply to large data regimes as well.
 Gaussian processes (with certain kernels) are universal approximators \cite{micchelli2006universal}, and their modelling capacity increases with the amount of available training data.
 Larger datasets make it possible to use more powerful families of covariance functions \citep{wilson2013gaussian,wilson2016deep,benton2019function}, which is especially useful for extrapolating on complex spatial-temporal data.
-Moreover, using Gaussian processes within hierarchical models \cite{wilson2016deep,salimbeni2017doubly,jankowiak2020deep}
+Moreover, using Gaussian processes in conjunction with hierarchical modelling \cite{wilson2016deep,salimbeni2017doubly,jankowiak2020deep} can learn powerful models for complex datasets.
 
-\section{Practical Concerns regarding Gaussian Processes Models}
+
+\section{Practical Concerns with Gaussian Processes Models}
+
+While Gaussian processes offer great potential several compelling benefits, there are several issues which hinder their usability.
+Most of these issues are especially pertinent to larger and more complex datasets.
+
+\subsection{Computational Complexity and Memory Requirements}
+Given $N$ training data points, Gaussian process models require $\bigo{N^3}$ computation and $\bigo{N^2}$ storage.
+This complexity comes from computing a $N \times N$ covariance matrix of all training data and computing several non-linear operations with it (see \cref{sec:gp_models}).
+Historically, this has limited exact Gaussian process inference to datasets with fewer than $1,\!000$ data points \cite{hensman2013gaussian,wilson2014thesis}.
+
+\subsection{Use of Modern Compute Hardware}
+It is worth noting that this $\bigo{N^3}$ computational complexity is not insurmountable given the available computational hardware.
+For example, some deep learning models require as many floating point operations (FLOPs) as similarly-sized Gaussian process models.
+A 264-layer DenseNet model \cite{huang2017densely}, common on many computer vision tasks, requires $2.4 \times 10^{18}$ FLOPs to train $1.2$ million images.
+This is essentially a cubic computational requirement, and would be wholly impractical if it were not for specialty compute hardware like GPUs.
+Such a model would probably require months to train on standard CPUs, yet can be trained on 8 GPUs in a matter of hours \cite{howard2018training}.
+
+Given the effectiveness of GPU acceleration on large neural networks, one might expect similar computational performance from large-scale Gaussian processes.
+Unfortunately, many GP implementations rely on the Cholesky factorization (see \cref{sec:gp_models}), which does not benefit as readily from modern compute hardware.
+GPUs are specially designed for massively-parallelizable operations such as matrix-multiplication---the primary building block of neural network training/inference.
+For example, a matrix multiply between two $1,\!000 \times 1,\!000$ matrices is $10,\!000$ times faster on a GPU than on a CPU,\footnote{
+	As measured on a NVIDIA 1080-TI GPU verses an 8-core Intel i7 CPU.
+}, which is why large neural networks are practical to train.
+On the other hand, the Cholesky factorization is an inherently sequential algorithm that affords minimal parallelization.
+More concretely, computing the Cholesky factorization of a $1,\!000 \times 1,\!000$ matrix is only $10$ times faster on a GPU than on a CPU.
+This is why we cannot expect neural-network-level speedups for Cholesky-based GPs.
+
+Moreover, computing and using the Cholesky factorization requires $\bigo{N^2}$ storage.
+This amounts to a terabyte of memory for $N=1,\!000,\!000$---well beyond the capacity of most GPU clusters.
+
+\subsection{Choosing Appropriate Approximations}
+To reduce the computational and memory burden, researchers have proposed numerous methods that approximate Gaussian processes with simpler models.
+Such models employ low-rank or structured approximations of the $N \times N$ matrices (see \cref{sec:approx_gps}).
+Numerous advances have made these approximate methods more powerful while retaining compelling asymptotic complexities.
+
+However, choosing a suitable scalable approximation involves many design choices that depend on the particular dataset.
+Firstly, each methods makes a unique set of trade-offs which may not be well suited to certain datasets.
+Variational approaches \cite{titsias2009variational}---which are a popular general-purpose approximation---tend to overestimate the observational noise which results in worse predictive uncertainties \cite{turner2011two,bauer2016understanding}.
+Structured interpolation methods \cite{wilson2015kernel} alleviate these biases, yet such methods are limited to low-dimensional problems with specific covariance matrices.
+Additionally, all approximate methods introduces additional hyperparameters that control the speed/accuracy trade-off.
+While some theoretical guarantees can guide these design decisions \cite{wilson2015thoughts,burt2019rates}, a good approximate model typically relies on a large hyperparameter sweep and expert knowledge.
+
+
+\subsection{Implementation and Programmability}
+One compelling advantage of neural networks is the modularity of their architectures.
+While creating novel architectures requires significant thought and experimentation, \emph{implementing} these architectures requires very little software engineering effort.
+Seemingly complex models like DenseNets \cite{huang2017densely} and Transformers \cite{vaswani2017attention} take no more than 300 lines of code using libraries of compositional layers and sub-routines.
+Small modifications, such as adding an additional output dimension, often require only a single additional line of code.
+
+Gaussian processes models on the other hand often require significant implementation effort.
+Often, the \emph{model} and the \emph{learning/inference procedures} are tightly coupled.
+As an example, consider converting a standard Gaussian process into a Gaussian process over multiple output dimensions \cite{bonilla2008multi}.
+While this is seemingly a simple modelling change, it may require a completely different implementation.
+This is because the additional output dimension adds Kronecker-product structure to the prior covariance matrix (see \cref{sec:advantages}), which modifies the equations used for efficient inference.
+In the popular GPy software package,\footnote{
+	Available at \url{https://github.com/SheffieldML/GPy}
+} multi-output GPs and standard GPs are implemented as separate models, with multi-output GPs requiring 100 lines of additional code.
+Compared to the one-line change required for multi-output neural networks, Gaussian processes are significantly more difficult to rapidly prototype.
+
 
 \section{Outline of Contributions}
 

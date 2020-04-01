@@ -57,7 +57,7 @@ Note that the only learnable parameters of this model are $\sigma_\text{obs}^2$ 
 In many supervised regression paradigms (e.g. neural networks, ridge regression, etc.), it is common to learn a single latent function $f^*(\cdot)$ that best fits the training data $\dset_\text{train}$.
 Under such a setup, the predictive distribution for a test point $(\bxtest, \ytest)$ is given by
 $ p(\ytest \vert f^*(\bxtest)) = \normaldist{ \ytest; f^*(\bxtest) }{ \sigma^2_\text{obs} }. $
-However, for Gaussian process regression models, it is most common to utilize full Bayesian inference and \emph{marginalize out} the choice of $f(\cdot)$.
+However, Gaussian process regression models \emph{marginalize out} the choice of $f(\cdot)$.
 Under this setup, the predictive distribution is given by:
 \begin{equation*}
   p \left( \ytest \mid \bxtest, \dset_\text{train} \right)
@@ -67,7 +67,7 @@ Under this setup, the predictive distribution is given by:
 \end{equation*}
 %
 This predictive distribution happens to be computable in closed form.\footnote{
-  Note that this is rare; in general, full Bayesian inference is intractable for most ``interesting'' machine learning models.
+  Note that this is rare; in general, exact Bayesian inference is intractable for most ``interesting'' machine learning models.
 }
 Given the Gaussian process prior on $f(\cdot)$ and the Gaussian noise observation model for $p(\ytest \vert f(\bxtest))$, the prediction $p(\ytest \vert \bxtest, \dset_\text{train})$ for a new child's future weight is given by a Gaussian distribution:
 %
@@ -100,8 +100,8 @@ Note that, under \cref{eqn:predictive_mean,eqn:predictive_var}, the Gaussian pro
 We will discuss a framework for efficiently computing the predictive distribution in \cref{chapter:bbmm,chapter:love}.
 
 \paragraph{Short derivation of the predictive distribution.}
-To understand where \cref{eqn:predictive_mean} and \cref{eqn:predictive_var} come from, we start by writing the joint prior distribution for $[\bfn, f(\bxtest)]$ using \cref{eqn:prior_finite}.
-Under the Gaussian process prior of $f(\cdot)$, this joint distribution will be a multivariate-Gaussian.
+To understand where \cref{eqn:predictive_mean} and \cref{eqn:predictive_var} come from, we start by writing the joint prior distribution for $[\bfn, f(\bxtest)]$.
+Under the Gaussian process prior of $f(\cdot)$ and \cref{eqn:prior_finite}, this joint distribution will be a multivariate-Gaussian.
 %
 \begin{align*}
   p \left(
@@ -363,6 +363,7 @@ It is well suited to high-dimensional datasets or datasets with complex features
 
 
 \subsection{Approximate Gaussian Processes}
+\label{sec:approx_gps}
 
 As we will discuss in detail in the next chapters, computing the marginal log likelihood (\cref{eqn:log_lik}) and the predictive distribution (\cref{eqn:predictive_mean,eqn:predictive_var}) has historically been computationally prohibitive for large datasets.
 This has motivated the development of several approximate Gaussian process regression methods \citep[e.g.][]{quinonero2005unifying,snelson2006sparse,rahimi2008random,titsias2009variational,hensman2013gaussian,wilson2015kernel,gardner2018product,evans2018scalable} that trade off exactness for computational scalability.
