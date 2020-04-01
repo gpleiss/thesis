@@ -52,7 +52,7 @@ Since $\trainK^{-1}$ is positive definite, we note that any matrix solve is the 
 %
 where the gradient of the objective function is $(\trainK) \: \bc - \by$.
 Thus, one could compute $\trainK^{-1} \by$ with gradient descent, and each gradient step only accesses $\trainK$ through an MVM with the current solution $\bc$.
-Rather than using gradient descent however, we will instead use conjugate gradient as it converges in much fewer iterations (see \cref{sec:cg}).
+Rather than using vanilla gradient descent however, we will instead use a decent method (conjugate gradients) that carefully chooses its updates for faster convergence.
 
 The connection between log determinants and MVMs is less straightforward.
 At a high-level, we note that the eigenvalues of $\trainK$ can be found through MVM iterations.
@@ -406,7 +406,7 @@ Additionally, one can recover part of the Lanczos tridiagonalization from conjug
 \citet{saad2003iterative} and others show that it is possible to recover the $\bT_J$ tridigonal Lanczos matrix by \emph{reusing coefficients} generated in CG iterations.
 In particular, we will store the $\alpha_j$ and $\beta_j$ coefficients from \autoref{alg:std_pcg}.
 %
-\begin{observation}[Recovering Lanczos tridiagonl matrices from standard PCG \cite{saad2003iterative}]
+\begin{observation}[Recovering Lanczos tridiagonal matrices from PCG \cite{saad2003iterative}]
   Assume we use $p$ iterations of standard preconditioned conjugate gradients to solve $\bA^{-1} \bb$ with preconditioner $\bP$.
   Let $\alpha_1, \ldots, \alpha_p$ and $\beta_1, \ldots, \beta_p$ be the scalar coefficients from each iteration (defined in \autoref{alg:std_pcg}).
   The matrix
