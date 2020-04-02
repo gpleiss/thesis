@@ -25,41 +25,40 @@
 
 %Neural networks.
 
-Rapid advances in machine learning have led to numerous empirical successes and wide-scale adoption in many application domains.
+The past decade has witnessed a wide-scale adoption of machine learning methods across numerous application domains.
 %Here we will highlight two broad categories of methodological innovation that have contributed to this surge.
-Researchers have improved the {\bf predictive capabilities} of machine learning models.
-Algorithms are now able to achieve superhuman performance on complex tasks like object recognition \cite{} and strategy game-playing \cite{}.
-There have also been important strides making these predictions more risk-aware \cite{}, interpretable \cite{}, and societally equitable \cite{}.
-At the same time, the machine learning community has addressed many {\bf pragmatic concerns} around computational efficiency and easy-of-use.
-Models which used to require several weeks of training can now be trained in under an hour \cite{goyal2017accurate}.
-Transfer learning techniques and high-quality software frameworks have additionally made it easier for practitioners to rapidly-prototype new models.
-While many other factors have contributed to the machine learning surge, we will limit our focus to these two categories.
-Ever-increasing predictive capabilities have opened up new possibilities, while pragmatic improvements have accelerated the rate of innovation and adoption.
+This surge is due to the confluence of several factors, of which we will highlight two.
+Firstly, researchers have demonstrated the unparalleled {\bf predictive capabilities} of several machine learning algorithms.
+Models can achieve superhuman performance on complex tasks like object recognition \cite{he2016deep}, machine translation \cite{vaswani2017attention}, and strategy game-playing \cite{silver2017mastering}.
+At the same time, the community has developed algorithms that are increasingly {\bf practical and easy-to-use}.
+Many models can be trained rapidly on consumer-level computer hardware \cite{howard2018training}, and high-quality software frameworks enable practitioners to rapidly develop new models.
+%While many other factors have contributed to the machine learning surge, we will limit our focus to these two categories.
+While machine learning's predictive power has opened up new possibilities, its new-found ease-of-use has accelerated innovation and adoption.
 
-Arguably, the machine learning algorithms which have had the broadest impact are the ones that seamlessly offer \emph{both} predictive power and practicality.
+Arguably, the machine learning algorithms which have had the broadest impact are the ones that seamlessly offer \emph{both} predictive capability and practicality.
 Deep neural networks perhaps best exemplify this trend.
 Recent innovations in
 network architecture \citep[e.g.][]{krizhevsky2012imagenet,he2016deep,vaswani2017attention,devlin2018bert,huang2019convolutional},
 optimization \citep[e.g.][]{hochreiter1997flat,ioffe2015batch,izmailov2018averaging},
 and theoretical understanding \citep[e.g.][]{keskar2016large,jacot2018neural,arora2019fine}
-have led to massive performance improvements on increasingly complex vision and natural language tasks.
+have led to massive performance improvements on increasingly complex datasets.
 Moreover, these innovations have been complemented by
 the effective use of specialty compute hardware (such as GPUs and TPUs),
 the introduction of automatic differentiation \citep[e.g.][]{paszke2017automatic},
-and the development of of several easy-to-use software implementations~\citep[e.g.][]{jia2014caffe,abadi2016tensorflow,paszke2019pytorch}.
-These practical advances make it easy for practitioners to experiment with and rapidly prototype new deep learning models, which has undoubtedly contributed to research innovations and wide-spread adoption \cite{goodfellow2016deep}.
+and the development of of several high-quality software implementations~\citep[e.g.][]{jia2014caffe,abadi2016tensorflow,paszke2019pytorch}.
+These pragmatic advances make it easy for practitioners to experiment with new models and architectures, which has undoubtedly contributed to its profound and wide-spread successes \cite{goodfellow2016deep}.
 
-Gradient-boosted trees are another algorithm class with a similar powerful-and-practical story.
+Gradient-boosted trees are another algorithm class with a similar powerful-yet-practical story.
 Since their inception \cite{friedman2001greedy,friedman2002stochastic}, gradient boosted trees have excelled in many applications \citep[e.g.][]{richardson2007predicting,burges2010ranknet,li2010robust}.
 The predictive power of these models is a product of several key attributes: for example, their remarkable generalization properties \citep{freund1997decision,schapire2013boosting} and their ability to handle incomplete features \cite{friedman2001greedy}.
 Equally important, these models are simple and computational efficient, in large part due to specialty parallel algorithms \citep[e.g.][]{panda2009planet,tyree2011parallel,ke2017lightgbm} and easy-to-use software implementations such as XGBoost \cite{chen2016xgboost}.
 These advantages have made gradient-boosted decision trees a workhorse algorithm for many practitioners in a variety of application domains.
-According to a survey collected by Kaggle \cite{kaggle2019kaggle}, $75\%$ of the responding data scientists regularly use gradient-boosted decision trees and the XGBoost software.
+According to a survey collected by \citet{kaggle2019kaggle}, $75\%$ of the responding data scientists regularly use gradient-boosted decision trees and the XGBoost software.
 
 However, for many machine learning algorithms there is still a trade-off between predictive potential and its practical limitations.
 The focus of this thesis is {\bf Gaussian process models} (GPs), which perhaps best exemplify this tension.
 Within the machine learning community, GPs have been well-regarded as a powerful model class with many desirable properties---such as calibrated uncertainty estimates and interpretable model priors.
-Recent work on hierarchical modelling \citep[e.g.][]{damianou2013deep} and scalability \citep[e.g.][]{wilson2015kernel} have furthered their applicability to increasingly complex datasets.
+Recent work on hierarchical modelling \citep[e.g.][]{damianou2013deep} and scalability \citep[e.g.][]{wilson2015kernel} have furthered their applicability to increasingly complex tasks.
 However, Gaussian processes have historically not scaled to large datasets, and the tools most commonly used for inference do not effectively utilize modern compute hardware.
 %Scalable approximations can remedy these concerns to some extent, yet such approximations can sometimes bias the model's predictions \cite{turner2011two,bauer2016understanding}.
 %Finally, new
@@ -157,7 +156,7 @@ Gaussian processes models on the other hand require significant implementation e
 Often, the \emph{model} and the \emph{learning/inference procedures} are tightly coupled.
 As an example, consider converting a standard Gaussian process into a Gaussian process over multiple output dimensions \cite{bonilla2008multi}.
 While this is seemingly a simple modelling change, it requires a completely different implementation since the additional output dimension changes the structure of the prior covariance matrix (see \cref{sec:advantages}), modifying the equations used for efficient inference.
-In the popular GPy software package \cite{gpy2014}, multi-output GPs and standard GPs are implemented as separate models, with multi-output GPs requiring an additional 100 lines of code.
+In the popular \citet{gpy2014} software package, multi-output GPs and standard GPs are implemented as separate models, with multi-output GPs requiring an additional 100 lines of code.
 Compared to the one-line change required for multi-output neural networks, GPs are significantly more difficult to implement, which impedes the rapid prototyping of new models.
 
 
