@@ -1,10 +1,20 @@
 %!TEX root=main.tex
 \section{Introduction}
-The past years have witnessed unprecedented innovation in deep learning. This progress has involved innovations in network designs~\cite{alexnet,hahnloser2000digital,he2016deep,huang2017densely,batchnorm}, but it also has benefited vastly from improvements in optimization~\cite{bottou2010large}, and excellent software implementations such as PyTorch, MXNet, TensorFlow and Caffe~\cite{paszke2017automatic,chen2015mxnet,abadi2016tensorflow,jia2014caffe}. Broadly speaking, the gains in optimization originate in large part from insights in stochastic gradient optimization~\citep{bottou2010large, krizhevsky2012imagenet, chaudhari2016entropy, hochreiter1997flat, keskar2016large, izmailov2018averaging}, effectively trading off unnecessary exactness for speed and in some cases regularization. Moreover, the advantages of modern software frameworks for deep learning include rapid prototyping, easy access to specialty compute hardware (such as GPUs), and blackbox optimization through automatic differentiation.
 
-Similarly, Gaussian process research has undergone significant innovations in recent years~\cite{titsias2009variational,hensman2013gaussian,wilson2014thesis,wilson2015kernel,wilson2015thoughts,cunningham2008fast} --- in particular to improve scalability to large data sets. However,
-the tools most commonly used for GP inference do not effectively utilize modern hardware, and new models require significant implementation efforts. Often, in fact, the \emph{model} and the \emph{inference engine} are tightly coupled and consequently many complex models like multi-output GPs and scalable GP approximations require custom inference procedures \cite{hensman2015scalable,bonilla2008multi}. This entanglement of model specification and inference procedure impedes rapid prototyping of different model types, and obstructs innovation in the field.
+\gp{Incorporate}
+\paragraph{Conjugate gradients, the Lanczos tridiagonalization algorithm,}
+and their relatives are methods from numerical linear algebra for computing linear solves and solving eigenvalue problems \emph{without explicitly computing a matrix}.
+These techniques have been around for decades, and are covered in popular books and papers \cite{saad2003iterative,golub2012matrix,demmel1997applied,parlett1980new,lanczos1950iteration,datta2010numerical,paige1970practical}.
+These algorithms belong to a broad class of iterative methods known as \emph{Krylov subspace methods}, which access matrices only through matrix-vector multiplies (MVMs).
+Historically, these methods have been applied to solving large numerical linear algebra problems, particularly those involving sparse matrices that afford fast MVMs.
 
+Recently, a number of papers have used these MVM methods for parts of GP inference \cite{cunningham2008fast,murray2009gaussian,saatcci2012scalable,wilson2014thesis,wilson2015kernel,dong2017scalable,gardner2018product}.
+One key advantage is that MVM approaches can exploit algebraic structure for increased computational efficiencies.
+Notably, the structured kernel interpolation (SKI) method \cite{wilson2015kernel} uses structured kernel matrices with fast MVMs to achieve a remarkable asymptotic complexity.
+\citet{dong2017scalable} propose MVM methods for computing stochastic estimates of log determinants and their derivatives using a technique based on Lanczos tridiagonalization \cite{golub2009matrices,ubaru2017fast}.
+We utilize the same log determinant estimator as \citet{dong2017scalable}, except we avoid explicitly using the Lanczos tridiagonalization algorithm which has storage and numerical stability issues \cite{golub2012matrix}.
+
+\gp{Incorporate}
 In this paper, we address this gap by introducing a highly efficient framework for Gaussian process inference.
 Whereas previous inference approaches require the user to provide routines for computing the full GP marginal log likelihood for a sufficiently complex model,
 our framework only requires access to a blackbox routine that performs matrix-matrix multiplications with the kernel matrix and its derivative.
@@ -25,8 +35,8 @@ Most notably, BBMM reduces the time complexity of exact GP inference from $\bigo
 All required operations with this preconditioner are efficient, and in practice require negligible time.
 We demonstrate both empirically and theoretically that this preconditioner significantly accelerates inference.
 
-\noindent 3. We introduce \textbf{\href{https://gpytorch.ai}{GPyTorch}}, a new software platform using BBMM inference for
-scalable Gaussian processes, which is built on top of PyTorch: \url{https://gpytorch.ai}.
-On datasets as large as $3000$ data points (until we fill GPU memory) we demonstrate that \emph{exact} GPs with BBMM are \emph{up to $20\times$ faster than GPs using Cholesky-based approaches}.
-Moreover, the popular SKI \cite{wilson2015kernel} and SGPR \cite{titsias2009variational} frameworks with BBMM achieve up to $15\times$ and $4\times$ speedups (respectively) on datasets as large as $500,\!000$ data points.
-Additionally, SKI, SGPR and other scalable approximations are implemented in \emph{less than 50 lines of code}, requiring only an efficient matrix-matrix multiplication routine.
+%\noindent 3. We introduce \textbf{\href{https://gpytorch.ai}{GPyTorch}}, a new software platform using BBMM inference for
+%scalable Gaussian processes, which is built on top of PyTorch: \url{https://gpytorch.ai}.
+%On datasets as large as $3000$ data points (until we fill GPU memory) we demonstrate that \emph{exact} GPs with BBMM are \emph{up to $20\times$ faster than GPs using Cholesky-based approaches}.
+%Moreover, the popular SKI \cite{wilson2015kernel} and SGPR \cite{titsias2009variational} frameworks with BBMM achieve up to $15\times$ and $4\times$ speedups (respectively) on datasets as large as $500,\!000$ data points.
+%Additionally, SKI, SGPR and other scalable approximations are implemented in \emph{less than 50 lines of code}, requiring only an efficient matrix-matrix multiplication routine.

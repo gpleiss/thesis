@@ -1,0 +1,36 @@
+\section{Programmability with BBMM}
+\label{sec:advantages}
+We have discussed how the BBMM framework is more hardware efficient than existing inference engines, and avoids numerical instabilities with Lanczos. Another key advantage of BBMM is that it can easily be adapted to complex GP models or structured GP approximations.
+
+Indeed BBMM is \emph{blackbox} by nature, only requiring a routine to perform matrix-multiplications with the kernel matrix and its derivative.
+Here we provide examples of how existing GP models and scalable approximations can be easily implemented in this framework.
+The matrix-multiplication routines for the models require at most \emph{50 lines of Python code}.
+All our software, including the following GP implementations with BBMM, are available through our GPyTorch library: \\
+\url{https://gpytorch.ai}.
+%
+
+\paragraph{Bayesian linear regression} can be viewed as GP regression with the special kernel matrix $\trainK = \bX\bX^{\top} + \sigma^{2}I$.
+A matrix multiply with this kernel against an $n \times t$ matrix $\bV$, $(\bX\bX^{\top} + \sigma^{2}I)\bV$ requires $\bigo{tnd}$ time.
+Therefore, BBMM requires $\bigo{ptnd}$ time, and is exact in $\bigo{tnd^2}$ time.
+This running time complexity matches existing efficient algorithms for Bayesian linear regression, \emph{with no additional derivation}.
+Multi-task Gaussian processes \cite{bonilla2008multi} can be adapted in the same fashion \cite{gardner2018product}.
+
+\paragraph{Sparse Gaussian Process Regression (SGPR)} \cite{titsias2009variational} and many other sparse GP techniques \cite{quinonero2005unifying,snelson2006sparse,hensman2013gaussian} use the subset of regressors (SoR) approximation for the kernel:
+$
+  \trainK \approx (K_{XU}K_{UU}^{-1}K_{UX} + \sigma^{2}I).
+$
+Performing a matrix-matrix multiply with this matrix requires $\bigo{tnm + tm^{3}}$ time by distributing the vector multiply and grouping terms correctly.
+This computation is \emph{asymptotically faster} than the $\bigo{nm^{2} + m^{3}}$ time required by Cholesky based inference. Augmenting the SoR approximation with a diagonal correction, e.g. as in FITC \cite{snelson2006sparse}, is similarly straightforward.
+
+\paragraph{Structured Kernel Interpolation (SKI)} \cite{wilson2015kernel}, also known as KISS-GP, is an inducing point method designed to provide fast matrix vector multiplies (MVMs) for use with Krylov subspace methods. SKI is thus a natural candidate for BBMM and can benefit greatly from hardware acceleration.
+SKI is a generalization of SoR, which specifies $\bK_{XU} \approx W\bK_{UU}$, where $W$ is a sparse matrix. For example $W$ can correspond to the coefficients of sparse local cubic convolution interpolation.
+The SKI approximation applied to the training covariance matrix gives us
+$
+\trainK \approx (WK_{UU}W^{\top} \! + \! \sigma^{2}I).
+$
+Assuming no structure in $\bK_{UU}$ a matrix multiply requires $\bigo{tn \! + \! tm^{2}}$ time. In KISS-GP \citep{wilson2015kernel,wilson2015thoughts}, the matrix $\bK_{\bU\bU}$ is also chosen to have algebraic structure, such as Kronecker or Toeplitz structure, which further accelerates MVMs. For example, MVMs with a Toeplitz $\bK_{UU}$ only require $\bigo{m \log m}$ time. Thus KISS-GP
+provides $\bigo{tn \! + \! tm \log m}$ matrix-matrix multiplies \cite{wilson2015kernel}.
+
+\paragraph{Compositions of kernels} can often be handled automatically.
+For example, given a BBMM routine for $\bK_{1},\bK_{2},\bK_{3}$, we can automatically perform $(\bK_{1}\bK_{2}+\bK_{3})M = \bK_{1}(\bK_{2}M) + \bK_{3}M$.
+SGPR and KISS-GP are implemented in this fashion. Given some pre-defined basic compositionality strategies, the kernel matrix multiplication $\bK\bM$ in SGPR reduces to defining how to perform $\bK_{\bU\bU}^{-1}M$, and similarly for KISS-GP it reduces to performing multiplication with a Toeplitz matrix $\bK_{\bU\bU}M$. For product kernels one can follow Gardner et al.~\cite{gardner2018product}.
