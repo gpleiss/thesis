@@ -458,10 +458,10 @@ One advantage of KISS-GP's structure is the ability to perform constant time pre
 Substituting the KISS-GP approximate kernel into \cref{eqn:predictive_mean} and assuming a prior mean of 0 for notational brevity, the predictive mean is given by
 \begin{equation}
   \meantest{\bxtest} = \bw_{\bxtest}^\top {\blue{\underbracket{\bK_{\bZ\bZ} \bW_{\bX}(\bW_{\bX}^{\top}\bK_{\bZ\bZ}\bW_{\bX} + \sigma_\text{obs}^{2} \bI)^{-1} \by}_{\ba}}}.
-  \label{eq:pred_mean_ski}
+  \label{eqn:pred_mean_ski}
 \end{equation}
 (Here {\color{blue} blue} highlights computations that don't depend on test data.)
-Because $\bw_{\bx^{*}}$ is the only term in \eqref{eq:pred_mean_ski} that depends on $\bx^{*}$, the remainder of the equation (denoted as $\blue\ba$) can be pre-computed: $\meantest{\bxtest} = \bw_{\bxtest}^\top \blue \ba$.
+Because $\bw_{\bx^{*}}$ is the only term in \eqref{eqn:pred_mean_ski} that depends on $\bx^{*}$, the remainder of the equation (denoted as $\blue\ba$) can be pre-computed: $\meantest{\bxtest} = \bw_{\bxtest}^\top \blue \ba$.
 After pre-computing $\blue \ba$, the multiplication $\bw_{\bx^{*}}^\top \blue \ba$ requires $\bigo{1}$ time, as $\bw_{\bx^{*}}$ is sparse and has only four nonzero elements.
 
 \subsection{Summary of Notation}

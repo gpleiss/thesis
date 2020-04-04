@@ -1,5 +1,6 @@
 %\section{Computing $\trainK^{-1} \bb$ and $\log \vert \trainK \vert$ with Matrix Multiplication}
 \section{Matrix-Vector Multiplication (MVM) Algorithms for Computing Linear Solves and Other Matrix Functions}
+\label{sec:mvms}
 
 Gaussian process training and inference requires expensive computations involving the kernel matrix $\trainK = \bK_{\bX\bX} + \sigma_\text{obs} \bI$.
 For example, in \cref{eqn:log_lik} we must compute the linear solve $(\trainK^{-1}) \by$ and the log determinant $\log \vert \trainK \vert$.
@@ -225,6 +226,7 @@ We refer the reader to \cite{saad2003iterative} which devotes two chapters to di
 
 
 \subsection{Lanczos Tridiagonalization}
+\label{sec:lanczos}
 
 The Lanczos algorithm \cite{lanczos1950iteration} iteratively produces a partial tridiagonalization of a symmetric matrix $\bA \in \reals^{N \times N}$.
 At iteration $J$, $\bA$ is factorized as
