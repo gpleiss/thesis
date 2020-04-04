@@ -18,9 +18,9 @@
   \SetKwFunction{size}{size}
   \caption{Preconditioned conjugate gradients (PCG). Terms in {\color{\colorpcg} \colorpcg} differ from standard CG (\cref{alg:cg}).}
   \label{alg:std_pcg}
-    \Input{\mvmkxx{} -- function for matrix-vector multiplication (MVM) with matrix $\bA$}
+    \Input{\mvmkxx{$\cdot$} -- function for matrix-vector multiplication (MVM) with matrix $\bA$}
     \NextInput{$\bb$ -- vector to solve against}
-    \NextInput{\mvmprec{} -- function for preconditioner}
+    \NextInput{\mvmprec{$\color{\colorpcg} \cdot$} -- function for preconditioner}
     \Output{$\bc = \bA^{-1} \bb$.}
     \BlankLine
 	  $\bc_0$ $\gets$ $\mathbf 0$
