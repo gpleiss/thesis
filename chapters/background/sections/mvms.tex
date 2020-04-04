@@ -424,6 +424,7 @@ In particular, we will store the $\alpha_j$ and $\beta_j$ coefficients from \aut
   \end{equation}
   %
   is equal to the Lanczos tridiagonal matrix $\bT_J$, formed by running $J$ iterations of Lanczos to achieve $\left( \bP^{-1} \bA \right) \bQ_J = \bQ_J \bT_J + \br \be_J^\top$) with probe vector $\bb$.
+  \label{obs:lanczos_cg}
 \end{observation}
 (See \cite{saad2003iterative}, Section 6.7.3.)
 In other words, we can recover the Lanczos tridiagonal matrix $\bT_J$ simply by running CG.
