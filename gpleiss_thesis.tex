@@ -8,7 +8,7 @@
 \usepackage{color}
 \usepackage{amsmath,amsthm,amsbsy,verbatim,amssymb,amsfonts,amscd,mathrsfs}
 \usepackage{algorithm}
-\usepackage[algo2e,ruled]{algorithm2e}
+\usepackage[algo2e,ruled,algochapter]{algorithm2e}
 \usepackage[hidelinks]{hyperref}
 \usepackage[capitalise]{cleveref}
 \usepackage[inline]{enumitem}  % Horizontal lists
@@ -54,10 +54,9 @@
 
 
 %%%%%%%%%%%%%% Theorems, observations, etc.
-\newtheorem{observation}{Observation}
-\newtheorem{theorem}{Theorem}
-%\newaliascnt{lemma}{theorem}
-\newtheorem{lemma}{Lemma}
+\newtheorem{observation}{Observation}[chapter]
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}{Lemma}[chapter]
 
 
 %%%%%%%%%%%%%% Autoref
