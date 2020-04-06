@@ -20,14 +20,14 @@
   \SetKwFunction{diag}{diag}
   \caption{
     Modified batch conjugate gradients (mBCG).
-    Terms in {\color{\colormat} \colormat} represent matrix operations that were originally boldsymbol operations in standard PCG (\cref{alg:std_pcg}).
+    Terms in {\color{\colormat} \colormat} represent matrix operations that were originally vector operations in standard PCG (\cref{alg:std_pcg}).
     Terms in {\color{\colornew} \colornew} compute the Lanczos tridiagonalization matrices.
   }
   \label{alg:mod_pcg}
     \Input{{\color{\colormat} \mmmkxx{$\cdot$}} -- function for {\color{\colormat} matrix-matrix multiplication} with matrix $\bA$}
-    \NextInput{{\color{\colormat} $\bB$ -- $n \times t$ matrix} to solve against}
+    \NextInput{{\color{\colormat} $\bB$ -- $N \times (T + 1)$ matrix} to solve against}
     \NextInput{{\color{\colormat} \mmmprec{$\cdot$}} -- func. for preconditioner}
-    \Output{{\color{\colormat} $\bC = \bA^{-1} \bB$}, {\color{\colornew} $\tilde \bT_{1}$, $\ldots$, $\tilde \bT_{t}$}.}
+    \Output{{\color{\colormat} $\bC = \bA^{-1} \bB$}, {\color{\colornew} $\bT_{1}$, $\ldots$, $\bT_{T}$} (tridiag. matrices for $\bb^{(2)}$, $\ldots$, $\bb^{(T+1)}$).}
     \BlankLine
     {\color{\colormat} $\bC_0$ $\gets$ $\mathbf 0$}
     \tcp{Current solutions}
@@ -37,30 +37,30 @@
     \tcp{Preconditioned errors}
     {\color{\colormat} $\bD_0$ $\gets$ {$\bZ_0$}}
     \tcp{``Search'' directions for next solutions}
-    {\color{\colornew} $\tilde \bT_{1}, \ldots \tilde \bT_{t}$ $\gets$ $0$}
+    {\color{\colornew} $\bT_{1}, \ldots \bT_{T}$ $\gets$ $0$}
     \tcp{Tridiag matrices}
     \vspace{0.32em}
     \For{$j \gets 0$ \KwTo J}{
       {\color{\colormat} $\bV_{j}$ $\gets$ \mmmkxx{ $\bD_{j-1}$ }}
       \\
-      {\color{\colormat} $\boldsymbol \alpha_j$ $\gets$ ${( \bR_{j-1} \circ \bZ_{j-1} )^\top \mathbf 1}/{( \bD_{j-1} \circ \bV_{j} )^\top \mathbf 1}$}
+      {\color{\colormat} $\balpha_j$ $\gets$ ${( \bR_{j-1} \circ \bZ_{j-1} )^\top \mathbf 1}/{( \bD_{j-1} \circ \bV_{j} )^\top \mathbf 1}$}
       \\
-      {\color{\colormat} $\bC_j$ $\gets$ $\bC_{j-1} +$ \diag{$\boldsymbol \alpha_{j}$} $\bD_{j-1}$}
+      {\color{\colormat} $\bC_j$ $\gets$ $\bC_{j-1} +$ \diag{$\balpha_{j}$} $\bD_{j-1}$}
       \\
-      {\color{\colormat} $\bR_j$ $\gets$ $\bR_{j-1} -$ \diag{$\boldsymbol \alpha_{j}$} $\bV_{j}$}
+      {\color{\colormat} $\bR_j$ $\gets$ $\bR_{j-1} -$ \diag{$\balpha_{j}$} $\bV_{j}$}
       \\
       {\color{\colormat} \lIf{$\forall i$ \: $\left\Vert \br^{(i)}_{j} \right\Vert_2$ $<$ \tol}{
         \Return{$\bC_j$}
       }}
       {\color{\colormat} $\bZ_{j}$ $\gets$ \mmmprec{ $\bR_{j}$ }}
       \\
-      {\color{\colormat} $\boldsymbol \beta_j$ $\gets$ ${( \bZ_{j} \circ \bZ_{j} )^\top \mathbf 1}/{( \bZ_{j-1} \circ \bZ_{j-1} )^\top \mathbf 1}$}
+      {\color{\colormat} $\bbeta_j$ $\gets$ ${( \bZ_{j} \circ \bZ_{j} )^\top \mathbf 1}/{( \bZ_{j-1} \circ \bZ_{j-1} )^\top \mathbf 1}$}
       \\
-      {\color{\colormat} $\bD_{j}$ $\gets$ $\bZ_{j} -$ \diag{$\boldsymbol \beta_j$} $\bD_{j-1}$}
+      {\color{\colormat} $\bD_{j}$ $\gets$ $\bZ_{j} -$ \diag{$\bbeta_j$} $\bD_{j-1}$}
       \\
-      {\color{\colornew} $\forall i$ \: $\tilde [\bT_{i}]_{j,j}$ $\gets$ $1/[\boldsymbol \alpha_{j}]_{i} + [\boldsymbol \beta_{j-1}]_{i}/[\boldsymbol \alpha_{j-1}]_{i}$}
+      {\color{\colornew} $\forall i$ \: $[\bT_{i}]_{j,j}$ $\gets$ $1/[\balpha_{j}]_{i} + [\bbeta_{j-1}]_{i}/[\balpha_{j-1}]_{i}$}
       \\
-      {\color{\colornew} $\forall i$ \: $\tilde [\bT_{i}]_{j-1,j}$, $\tilde [\bT_{i}]_{j,j-1}$ $\gets$ $\sqrt{[\boldsymbol \beta_{j-1}]_{i}}/[\boldsymbol \alpha_{j}]_{i}$}
+      {\color{\colornew} $\forall i$ \: $[\bT_{i}]_{j-1,j}$, $[\bT_{i}]_{j,j-1}$ $\gets$ $\sqrt{[\bbeta_{j-1}]_{i}}/[\balpha_{j}]_{i}$}
     }
-    \Return{{\color{\colormat}$\bC_{j+1}$}, {\color{\colornew} $\tilde \bT_{1}, \ldots \tilde \bT_{t}$ $\gets$ $0$}}
+    \Return{{\color{\colormat}$\bC_{j+1}$}, {\color{\colornew} $\bT_{1}, \ldots \bT_{T}$}}
 \end{algorithm2e}

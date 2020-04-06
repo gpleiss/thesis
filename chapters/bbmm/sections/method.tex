@@ -6,7 +6,7 @@
 The goal of our paper is to replace existing training strategies with a unified framework that utilizes modern hardware efficiently.
 We additionally desire that complex GP models can be used in a blackbox manner without additional training rules.
 To this end, our method reduces the bulk of GP inference to one of the most efficiently-parallelized computations: \emph{matrix-matrix multiplication}.
-We call our method BlackBox Matrix$\times$Matrix inference (BBMM) because it only requires a user to specify a matrix multiply routine for the kernel $\trainK ( \cdot )$ and its derivative $\frac{d\trainK}{d\theta} ( \cdot )$.
+We call our method BlackBox Matrix$\times$Matrix inference (BBMM) because it only requires a user to specify a matrix multiply routine for the kernel $\trainK ( \cdot )$ and its derivative $\frac{\partial \trainK}{\partial \btheta} ( \cdot )$.
 
 \paragraph{Required operations.}
 To train a GP we must compute the marginal log likelihood~(\cref{eqn:log_lik}) and its derivative~(\cref{eqn:log_lik_deriv}).
@@ -25,25 +25,26 @@ These equations have three operations that dominate their time complexity:
 \begin{enumerate}
   \item the linear solve $\trainK^{-1}\by$,
   \item the log determinant $\log \vert \trainK \vert$, and
-  \item a trace term $\tr{\trainK^{-1}\frac{d\trainK}{d\theta}}$.
+  \item a trace term $\tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}}$.
 \end{enumerate}
 
 \paragraph{The Cholesky decomposition} is used in many GP implementations to compute these three terms.
 This procedure factorizes $\trainK$ as $\bL \bL^\top$, where $\bL$ is lower triangular.
+The columns of $\bL = [ \bl^{(1)}, \:\: \ldots, \:\: \bl^{(N)} ]$ are computed recursively \citep{golub2012matrix}.
 Computing $\bL$ requires $\bigo{N^3}$ time and $\bigo{N^2}$ memory.
 After computing this factorization, matrix solves and log determinants take $\bigo{N^2}$ and $\bigo{N}$ time respectively.
-The columns of $\bL = \left[ \bl^{(1)}, \:\: \ldots, \:\: \bl^{(N)} \right]$ are computed recursively \citep{golub2012matrix}.
+In general, this asymptotic complexity cannot be reduced even if $\trainK$ has nice structure (e.g. Toeplitz).
 Although concurrent work by \citet{nguyen2019exact} uses the Cholesky decomposition for large scale GP inference through distributed computing, it requires quadratic communication costs and quadratic memory.
 Furthermore, its recursive nature makes the Cholesky algorithm less amenable to GPU acceleration since GPUs are designed to parallelize matrix-vector multiplications.
 
 \paragraph{MVM-based training methods.}
 Recently, there is a growing line of research that computes these operations with iterative routines based on matrix-vector multiplications (MVMs).
 As described in \cref{sec:mvms},
-$\trainK^{-1}\by$ can be computed using \emph{conjugate gradients} (CG) \cite{cunningham2008fast,saatcci2012scalable,cutajar2016preconditioning,ilson2015kernel},
+$\trainK^{-1}\by$ can be computed using \emph{conjugate gradients} (CG) \cite{cunningham2008fast,cutajar2016preconditioning},
 and the other two quantities can be computed using the Lanczos tridiagonalization algorithm \cite{ubaru2017fast,dong2017scalable}.
 These MVM-based methods are asymptotically faster and more space efficient than Cholesky based methods \cite{wilson2015kernel,dong2017scalable}.
 Additionally, these methods are able to exploit algebraic structure in the data for further efficiencies \cite{cunningham2008fast,saatcci2012scalable,wilson2015kernel}.
-However, they also have disadvantages.
+However, these methods also have disadvantages.
 The quantities are computed via several independent calls to the CG and stochastic Lanczos quadrature subroutines, which are inherently sequential and therefore do not fully utilize parallel hardware.
 Additionally, the Lanczos tridiagonalization algorithm requires $\bigo{NP}$ space for $P$ iterations and suffers from numerical stability issues due to loss of orthogonality \cite{golub2012matrix}.
 
@@ -57,87 +58,99 @@ We modify conjugate gradients to 1. perform linear solves with multiple right ha
 %}
 Specifically, mBCG takes as input a matrix $\left[ \by, \:\: \bz^{(1)}, \:\: \cdots, \:\: \bz^{(T)} \right]$, and outputs:
 \begin{equation}
-  \label{eq:mod_cg_call}
+  \label{eqn:mod_cg_call}
   \left[ \bc^{(0)}, \:\: \bc^{(1)}, \:\: \cdots, \:\: \bc^{(T)} \right] = \trainK^{-1} \left[ \by, \:\: \bz^{(1)}, \:\: \cdots, \:\: \bz^{(T)} \right], \quad \bT^{(1)}, \: \ldots, \: \bT^{(T)}
 \end{equation}
 where $\bT^{(1)}, \ldots, \bT^{(T)}$ are the partial Lanczos tridiagonalizations of $\trainK$ with respect to the vectors $\bz^{(1)}, \ldots, \bz^{(T)}$ (see \cref{sec:lanczos}).
 
 \paragraph{Using mBCG for GP training.}
 Before describing the details of the mBCG algorithm, we will first discuss how its outputs can be used to compute the three GP training terms:
-$\trainK^{-1} \by$, $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \theta} }$, and $\log \vert \trainK \vert$.
+$\trainK^{-1} \by$, $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \btheta} }$, and $\log \vert \trainK \vert$.
 
 \begin{enumerate}
-  \item $\trainK^{-1}\by$ is equal to $\bc^{(0)}$ in~\cref{eq:mod_cg_call}, directly returned from mBCG.
+  \item $\trainK^{-1}\by$ is equal to $\bc^{(0)}$ in~\cref{eqn:mod_cg_call}, directly returned from mBCG.
 
-  \item $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \theta} }$ is approximated using \emph{stochastic trace estimation} \cite{hutchinson1990stochastic,fitzsimons2016improved}, which treats this term as a sum of linear solves.
+  \item $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \btheta} }$ can be approximated using \emph{stochastic trace estimation} \cite{hutchinson1990stochastic,fitzsimons2016improved}, which treats this term as a sum of linear solves.
     Given i.i.d. random variables $\bz^{(1)}, \ldots, \bz^{(T)}$ so that $\Ev{\bz^{(i)}}=0$ and $\Ev{\bz^{(i)} \bz^{(i)^\top}}=\bI,
-    $ (e.g., $\bz^{(i)}$ are standard Normal)
-    the matrix trace $\tr{\bA}$ can be written as
+    $
+    the matrix trace can be written as
     $
       \tr{\bA} = \Ev{\bz^{(i)^\top} \bA\bz^{(i)}}.
     $
     Thus,
     %
     \begin{align}
-      \tr{\trainK^{-1}\frac{d\trainK}{d\theta}} &= \Ev{\bz^{(i)^\top} \trainK^{-1} \frac{d\trainK}{d\theta} \bz^{(i)}}
+      \tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}} &= \Ev{\bz^{(i)^\top} \trainK^{-1} \frac{\partial \trainK}{\partial \btheta} \bz^{(i)}}
       \nonumber \\
-      &\approx \frac{1}{T}\sum_{i=1}^{T}\left(\bz^{(i)^\top} \trainK^{-1}\right)\left(\frac{d\trainK}{d\theta}\bz^{(i)} \right)
-      \label{eq:trace_deriv_estimate}
+      &\approx \frac{1}{T}\sum_{i=1}^{T}\left(\bz^{(i)^\top} \trainK^{-1}\right)\left(\frac{\partial \trainK}{\partial \btheta}\bz^{(i)} \right)
+      \label{eqn:trace_deriv_estimate}
     \end{align}
     %
-    is an unbiased estimator of the derivative. This computation motivates the $\bz^{(1)}, \ldots, \bz^{(T)}$ terms in \cref{eq:mod_cg_call}:
-    the mBCG call returns the solves $\trainK^{-1}[\bz^{(1)} \ldots \bz^{(T)}]$, which yields $\bc^{(i)} = \trainK^{-1} \bz^{(i)}$.
-    A single matrix multiply with the derivative $\frac{d\trainK}{d\theta}[\bz^{(1)}, \:\: \ldots, \:\: \bz^{(T)}]$ yields the remaining terms on the RHS.
-    The full trace can then be estimated by elementwise multiplying these terms together and summing, as in \cref{eq:trace_deriv_estimate}.
+    is an unbiased estimator of the derivative. This computation motivates the $\bz^{(1)}, \ldots, \bz^{(T)}$ terms in \cref{eqn:mod_cg_call}:
+    mBCG returns the solves $\trainK^{-1}[\bz^{(1)}, \:\: \ldots, \:\: \bz^{(T)}]$.
+    A single matrix multiply with the derivative $\frac{\partial \trainK}{\partial \btheta}[\bz^{(1)}, \:\: \ldots, \:\: \bz^{(T)}]$ yields the remaining terms on the RHS.
+    The full trace can then be estimated by elementwise multiplying these terms together and summing, as in \cref{eqn:trace_deriv_estimate}.
 
   \item $\log \vert \trainK \vert$
-    \gp{Stopped here.}
-    is estimated using the $\bT^{(1)}$, $\ldots$, $\bT^{(T)}$ Lanczos matrices produced from mBCG.
-    The estimate is obtained using the stochastic Lanczos quadrature routine of \citet{ubaru2017fast}, as described in \cref{sec:lanczos}.
-    To briefly summarize, this procedure combines stochastic trace estimation with Lanczos tridiagonalization for an unbiased estimate of the log determinant:
-    If $\trainK = \bQ\bT\bQ^{\top}$, with $\bQ$ orthonormal, then because $\trainK$ and $\bT$ have the same eigenvalues:
+    can be estimated using the stochastic Lanczos quadrature routine of \citet{ubaru2017fast}, as described in \cref{sec:lanczos}.
+    To briefly summarize, this approach approximates the matrix logarithm as $\left( \log \bA \right) \bz^{(i)} \approx \bQ^{(i)} \left( \log \bT^{(i)} \right) \bQ^{(i)^\top} \bz^{(i)}$,
+    where $\bQ^{(i)}$ and $\bT^{(i)}$ are the orthogonal and tridiagonal matrices from Lanczos with initial vector $\bz^{(i)}$.
+    Combining stochastic trace estimation with this approximation gives us
+    %
+    \begin{align*}
+      \log \vert \trainK \vert = \tr{ \log \trainK }
+      &\approx \frac{1}{T} \sum_{i=1}^T \bz^{(i)^\top} \bQ^{(i)} \left( \log \bT^{(i)} \right) \bQ^{(i)^\top} \bz^{(i)}
+      \\
+      &= \frac{1}{T} \sum_{i=1}^T \Vert \bz^{(i)} \Vert_2 \: \be_1^\top \left( \log \bT^{(i)} \right) \be_1,
+    \end{align*}
+    %
+    where $\be_1 = [1, 0, \:\:, \ldots, \:\: 0]$.
+    (The reduction in the second line comes from the orthogonality of $\bQ^{(i)}$ and $\bz^{(i)} / \Vert \bz^{(i)} \Vert_2$ is the first column of $\bQ^{(i)}$.)
+    Therefore, we can estimate the log determinant of $\trainK$ simply by computing logarithms of the tridiagonal matrices returned by mBCG in \cref{eqn:mod_cg_call}.
+    %
     %\begin{equation}
-      %\log \vert \trainK \vert = \tr{\log \bT}  = \Ev{\bz^{(i)^\top} (\log \bT)\bz^{(i)}} \approx \sum_{i=1}^{t}\bz^{(i)^\top} \left( \log \bT \right) \bz^{(i)}\label{eq:logdetKQ}
+      %\log \vert \trainK \vert = \tr{\log \bT}  = \Ev{\bz^{(i)^\top} (\log \bT)\bz^{(i)}} \approx \sum_{i=1}^{t}\bz^{(i)^\top} \left( \log \bT \right) \bz^{(i)}\label{eqn:logdetKQ}
     %\end{equation}
-    %where $\log \bT$ here denotes the matrix logarithm, and the approximation comes from the same stochastic trace estimation technique used for \cref{eq:trace_deriv_estimate}.
+    %where $\log \bT$ here denotes the matrix logarithm, and the approximation comes from the same stochastic trace estimation technique used for \cref{eqn:trace_deriv_estimate}.
       %One approach to obtain a decomposition $\trainK=\bQ\bT\bQ^{\top}$ is to use the \emph{Lanczos tridiagonalization algorithm}.
       %This algorithm takes the matrix $\trainK$ and a probe vector $\bz$ and outputs the decomposition $\bQ\bT\bQ^{\top}$ (where $\bz$ is the first column of $\bQ$).
-      %However, rather than running the full algorithm, we can instead run $p$ iterations of the algorithm $t$ times, each with a vector $\bz^{(1)},...,\bz^{(T)}$ to obtain $T$ decompositions  $\tilde{\bQ}_{1}\tilde{\bT}_{1}\tilde{\bQ}_{1}^{\top},...,\tilde{\bQ}_{t}\tilde{\bT}_{t}\tilde{\bQ}_{t}^{\top}$ with $\tilde{\bQ}_{i} \in \reals^{n \times p}$ and $\tilde{\bT}_{i} \in \reals^{p \times p}$. We can use these partial decompositions to estimate~\eqref{eq:logdetKQ}:
+      %However, rather than running the full algorithm, we can instead run $p$ iterations of the algorithm $t$ times, each with a vector $\bz^{(1)},...,\bz^{(T)}$ to obtain $T$ decompositions  $\tilde{\bQ}_{1}\tilde{\bT}_{1}\tilde{\bQ}_{1}^{\top},...,\tilde{\bQ}_{t}\tilde{\bT}_{t}\tilde{\bQ}_{t}^{\top}$ with $\tilde{\bQ}_{i} \in \reals^{n \times p}$ and $\tilde{\bT}_{i} \in \reals^{p \times p}$. We can use these partial decompositions to estimate~\eqref{eqn:logdetKQ}:
     %\begin{equation}
       %\Ev{\bz^{(i)\top} (\log \bT)\bz^{(i)}} = \Ev{\bz^{(i)\top}  \tilde{\bQ}_{i}(\log \tilde{\bT}_{i}) \tilde{\bQ}_{i}^{\top}\bz^{(i}} \approx \frac{1}{t} \sum_{i=1}^{t} \bz^{(i)\top} \tilde{\bQ}_{i}(\log \tilde{\bT}_{i})\tilde{\bQ}_{i}^{\top}\bz_{i} = \frac{1}{t} \sum_{i=1}^{t}e_{1}^{\top}(\log \tilde{\bT}_{i})e_{1},
-      %\label{eq:slq}
+      %\label{eqn:slq}
     %\end{equation}
     %where $e_{1}$ is the first row of the identity matrix.
     %Running Lanczos with a starting vector $\bz_{i}$ ensures that all columns of $\tilde{\bQ}_{i}$ are orthogonal to $\bz_{i}$ except the first, so $\tilde{\bQ}_{i}\bz_{i} = e_{1}$ \cite{dong2017scalable,ubaru2017fast,golub2009matrices}.
 \end{enumerate}
+%
+We note that our derivative and log determinant estimates are also proposed by \citet{cutajar2016preconditioning} and \citet{dong2017scalable}, respectively.
+Notably, \citet{cutajar2016preconditioning} does not return a log determinant estimate and therefore their approach cannot be used for sampling $\btheta$ or Bayesian model selection.
+We further differ from \citet{cutajar2016preconditioning} in that we use batched operations to compute all terms simultaneously.
+We differ from \citet{dong2017scalable} by avoiding the explicit Lanczos tridiagonalization algorithm (\cref{alg:lanczos}) and thus circumventing its storage and numerical stability issues \cite{golub2012matrix}.
+
+Now that we have motivated the terms produced by mBCG, we will present the algorithm itself.
 
 
 \input algorithms/mbcg
 
-\paragraph{The mBCG algorithm} is presented in \cref{alg:mod_pcg}.
-It makes two changes to the standard conjugate gradients algorithm (\cref{alg:std_pcg}, \cref{sec:cg}).
-In particular, it performs multiple solves $\bA^{-1} \bB = \left[ \bA^{-1} \bb^{(1)}, \:\: \ldots, \:\:, \bA^{-1} \bb^{(T)} \right]$
-simultaneously using {\bf matrix-matrix multiplication} (MMM), and it also returns Lanczos tridiagonalization matrices associated with each of the solves.
+\paragraph{The mBCG algorithm,} presented in \cref{alg:mod_pcg}, makes two changes to the standard conjugate gradients algorithm (\cref{alg:std_pcg}).
+In particular, it performs multiple solves $\bA^{-1} \bB = \left[ \bA^{-1} \bb^{(0)}, \:\: \ldots, \:\:, \bA^{-1} \bb^{(T)} \right]$
+simultaneously using {\bf matrix-matrix multiplication} (MMM), and it also returns Lanczos tridiagonalization matrices
+$\bT^{(1)}, \: \ldots, \: \bT^{(T)}$
+associated with each of the solves.
 
-The majority of the lines in Algorithm 2 are direct adaptations of lines from Algorithm 1 to handle multiple vectors simultaneously.
+The majority of the lines in \cref{alg:mod_pcg} are direct adaptations of lines from \cref{alg:std_pcg} to handle multiple vectors simultaneously.
 We denote these lines in {\color{\colormat} \colormat}.
-For example, performing
-%
-$
-  \bV_{j} \gets \mathtt{mmm\_A} \left( \bD_{j-1} \right)
-$
-%
-is equivalent to performing $\bv_{j} \gets \mathtt{mmm\_A} \left( \bd_{j-1} \right)$ for each column of $\bD_{j-1}$.
+For example, performing a matrix-matrix multiply $\bA \bB$ is equivalent to performing a matrix-vector multiply $\bA \bb^{(i)}$ for each column of $\bB$.
 Thus we can replace multiple MVM calls with a single MMM call.
-
-In standard CG, there are two scalar coefficient used during each iteration: $\alpha_j$ and $\beta_j$ (see \autoref{alg:std_pcg}).
-In mBCG, each solve $\bu_1, \ldots, \bu_t$ uses different scalar values.
-We therefore now have \emph{two coefficient vectors}: $\vec \alpha_j \in \reals^t$ and $\vec \beta_j \in \reals^t$, where each of the entries corresponds to a single solve.
+In standard PCG, there are two scalar coefficient used during each iteration $j$: $\alpha_j$ and $\beta_j$ (see \cref{alg:std_pcg}).
+Note that each solve $\bc^{(0)}, \ldots, \bc^{(T)}$ in mBCG uses different scalar values.
+Therefore, mBCG replaces the scalers with \emph{two coefficient vectors}: $\balpha_j \in \reals^{T+1}$ and $\bbeta_j \in \reals^{T+1}$, where each of the vector entries corresponds to a single solve.
 There are two types of operations involving these coefficients:
 %
 \begin{enumerate}
-  \item Updates (e.g. {\color{\colormat} $\vec \alpha_j$ $\gets$ ${( \bR_{j-1} \circ \bZ_{j-1} )^\top \mathbf 1}/{( \bD_{j-1} \circ \bV_{j} )^\top \mathbf 1}$})
-  \item Scalaing (e.g. {\color{\colormat} $\bU_j$ $\gets$ $\bU_{j-1} +$ \diag{$\vec \alpha_{j}$} $\bD_{j-1}$})
+  \item updates (e.g. {\color{\colormat} $\balpha_j$ $\gets$ ${( \bR_{j-1} \circ \bZ_{j-1} )^\top \mathbf 1}/{( \bD_{j-1} \circ \bV_{j} )^\top \mathbf 1}$}) and
+  \item scalaing (e.g. {\color{\colormat} $\bU_j$ $\gets$ $\bU_{j-1} +$ \diag{$\balpha_{j}$} $\bD_{j-1}$}).
 \end{enumerate}
 %
 The update rules are batched versions of the update rules in the standard CG algorithm.
@@ -145,66 +158,64 @@ For example:
 %
 \begin{equation*}
   \left[ \begin{array}{c}
-    \left[ \vec \alpha_j \right]_1
+    \alpha_j^{(0)}
     \\
     \vdots
     \\
-    \left[ \vec \alpha_j \right]_t
+    \alpha_j^{(T)}
   \end{array} \right]
   = \frac{( \bR_{j-1} \circ \bZ_{j-1} )^\top \mathbf 1}{( \bD_{j-1} \circ \bV_{j} )^\top \mathbf 1}
   = \left[ \begin{array}{c}
-        \frac{\left( [\bR_{j-1}]_{1} \circ [\bZ_{j-1}]_{1} \right) \mathbf 1}
-        {\left( [\bD_{j-1}]_{1} \circ [\bV_{j}]_{1} \right) \mathbf 1}
+      \frac{\left( \br_{j-1}^{(0)} \: \circ \: \bz_{j-1}^{(0)} \right) \mathbf 1}
+        {\left( \bd_{j-1}^{(0)} \: \circ \: \bv_{j}^{(0)} \right) \mathbf 1}
         \\
         \vdots
         \\
-        \frac{\left( [\bR_{j-1}]_{t} \circ [\bZ_{j-1}]_{t} \right) \mathbf 1}
-        {\left( [\bD_{j-1}]_{t} \circ [\bV_{j}]_{t} \right) \mathbf 1}
+        \frac{\left( \br_{j-1}^{(T)} \: \circ \: \bz_{j-1}^{(T)} \right) \mathbf 1}
+        {\left( \bd_{j-1}^{(T)} \: \circ \: \bv_{j}^{(T)} \right) \mathbf 1}
      \end{array} \right]
   = \left[ \begin{array}{c}
-        \frac{[\bR_{j-1}]_{1}^\top [\bZ_{j-1}]_{1}}
-        {[\bD_{j-1}]_{1}^\top [\bV_{j}]_{1}}
+      \frac{\left( \br_{j-1}^{(0)\top} \bz_{j-1}^{(0)} \right)}
+        {\left( \bd_{j-1}^{(0)\top} \bv_{j}^{(0)} \right)}
         \\
         \vdots
         \\
-        \frac{[\bR_{j-1}]_{t}^\top [\bZ_{j-1}]_{t}}
-        {[\bD_{j-1}]_{t}^\top [\bV_{j}]_{t}}
+        \frac{\left( \br_{j-1}^{(T)\top} \bz_{j-1}^{(T)} \right)}
+        {\left( \bd_{j-1}^{(T)\top} \bv_{j}^{(T)} \right)}
      \end{array} \right],
 \end{equation*}
 %
-using the identity $(\bv \cdots \bv') \mathbf 1 = \bv^\top \bv'$.
-Thus these updates are batched versions of their non-batched counterparts in \autoref{alg:std_pcg}.
 Similarly, for scaling,
 %
 \begin{align*}
-  \left[ \begin{array}{ccc}
-    \left[\bU_j \right]_1 & \cdots & \left[ \bU_j \right]_t
-  \end{array} \right]
+  \begin{bmatrix}
+    \bu_j^{(0)} & \cdots & \bu_j^{(T)}
+  \end{bmatrix}
   &=
-  \bU_j = \bU_{j-1} + \text{diag}(\alpha_j) \bD_{j-1}
+  \bU_{j-1} + \text{diag}(\alpha_j) \bD_{j-1}
   \\
   &=
-  \left[ \begin{array}{ccc}
-    \left[\bU_{j-1} \right]_1 & \cdots & \left[ \bU_{j-1} \right]_t
-  \end{array} \right]
+  \begin{bmatrix}
+    \bu_{j-1}^{(0)} & \cdots & \bu_{j-1}^{(T)}
+  \end{bmatrix}
   +
-  \left[ \begin{array}{ccc}
-    \left[ \alpha_{j} \right]_1 \left[\bD_{j-1} \right]_1 & \cdots & \left[ \alpha_{j} \right]_t \left[ \bD_{j-1} \right]_t
-  \end{array} \right].
+  \begin{bmatrix}
+    \alpha_{j}^{(0)} \bd_{j-1}^{(0)} & \cdots &  \alpha_{j}^{(T)} \bd_{j-1}^{(T)}.
+  \end{bmatrix}
 \end{align*}
 %
-This these scaling operations are also batched versions of their counterparts in \autoref{alg:std_pcg}.
-mBCG is therefore able to perform all solve operations in batch, allowing it to perform multiple solves at once.
+In summary, mBCG is therefore able to perform all solve operations in batch, which enables it to use GPU parallelism.
 
-In mBCG, we adapt a technique from \citet{saad2003iterative} which allows us to compute $\tilde{\bT}_{1},\ldots,\tilde{\bT}_{t}$ corresponding to the input vectors $\bz_{1},\ldots,\bz_{t}$  to mBCG from the coefficients of CG in $\bigo{1}$ additional work per iteration.
-This approach allows us to compute a log determinant estimate identical to \eqref{eq:slq} \emph{without running the Lanczos algorithm}.
-In particular, we will store the $\alpha_j$ and $\beta_j$ coefficients from \autoref{alg:std_pcg}.
-\cref{obs:lanczos_cg}.
-(See \cite{saad2003iterative}, Section 6.7.3.)
-In other words, we can recover the Lanczos tridiagonal matrix $\tilde T$ simply by running CG.
-Our mBCG algorithm simply exploits this fact.
-The final two lines in {\color{\colornew} \colornew} in \autoref{alg:mod_pcg} use the $\vec \alpha_j$ and $\vec \beta_j$ coefficients to form $t$ tridiagonal matrices.
-If we are solving the systems $\bA^{-1}[\bb_1, \ldots, \bb_t]$, then the resulting tridiagonal matrices correspond to the Lanczos matrices with probe vectors $\bb_1, \ldots, \bb_t$.
+To compute the Lanczos tridiagonal matrices  that correspond to inputs $\bz^{(1)}, \ldots, \bz^{(T)}$, mBCG adapts a technique from \citet{saad2003iterative}.
+From \cref{obs:lanczos_cg}, the diagonal and subdiagonal entries of $\bT^{(1)}, \ldots, \bT^{(T)}$ are simple deterministic transforms of the $\balpha_j$ and $\bbeta_j$ coefficients from mBCG.
+%This approach allows us to compute a log determinant estimate identical to \eqref{eqn:slq} \emph{without running the Lanczos algorithm}.
+%In particular, we will store the $\alpha_j$ and $\beta_j$ coefficients from \cref{alg:std_pcg}.
+%\cref{obs:lanczos_cg}.
+%(See \cite{saad2003iterative}, Section 6.7.3.)
+%In other words, we can recover the Lanczos tridiagonal matrix $\tilde T$ simply by running CG.
+%Our mBCG algorithm simply exploits this fact.
+The final two lines in {\color{\colornew} \colornew} in \cref{alg:mod_pcg} use the $\balpha_j$ and $\bbeta_j$ coefficients to iteratively compute the Lanczos matrices from \cref{obs:lanczos_cg}.
+Notably, these matrices can be formed with $\bigo{T}$ extra computation, and we are able to avoid running the Lanczos algorithm.
 
 
 
@@ -224,7 +235,7 @@ It is also worth noting that mBCG offers an advantage over existing MVM-based GP
 Rather than requiring separate algorithms for matrix solves and log determinants, mBCG is a unified approach that computes both terms simultaneously.
 Moreover, mBCG obtains the Lanczos tridiagonal matrices without explicitly using \cref{alg:lanczos}, which avoids the numerical instabilities of Gram-Schmidt orthogonalization.
 
-We first briefly analyze the running time of mBCG (\autoref{alg:mod_pcg}) itself.
+We first briefly analyze the running time of mBCG (\cref{alg:mod_pcg}) itself.
 The algorithm performs matrix multiplies with $\trainK$ once before the loop and once during every iteration of the loop.
 Therefore, the running time of mBCG is at least $\bigo{p\mmm{\trainK}}$, where $\mmm{\trainK}$ is the time to multiply $\trainK$ by an $n \times t$ matrix.
 
@@ -247,14 +258,14 @@ where $\bz_i$ are random vectors and $\tilde \bT_i$ are their associated Lanczos
 \paragraph{Time complexity of $\trainK^{-1}\by$.}
 This requires no additional work over running mBCG because it is the first output of the algorithm.
 
-\paragraph{Time complexity of $\tr{\trainK^{-1}\frac{d\trainK}{d\theta}}$.}
+\paragraph{Time complexity of $\tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}}$.}
 mBCG gives us access to $\trainK^{-1}[\bz_{1} \: \ldots \: \bz_{t}]$.
 Recall that we compute this trace as:
 \begin{equation}
-  \tr{\trainK^{-1}\frac{dK}{d\theta}} \approx \frac{1}{t}\sum_{i=1}^{t}(\bz_{i}\trainK^{-1})(\frac{d\trainK}{d\theta}\bz_{i})
+  \tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}} \approx \frac{1}{t}\sum_{i=1}^{t}(\bz_{i}\trainK^{-1})(\frac{\partial \trainK}{\partial \btheta}\bz_{i})
 \end{equation}
-We can get $\frac{d\trainK}{d\theta}\bz_{i}$ by performing a single matrix multiply $\frac{d\trainK}{d\theta}[\bz_{1} \: \ldots \: \bz_{t}]$, requiring $\mmm{\frac{d\trainK}{d\theta}}$.
-(We assume that $\mmm{\frac{d\trainK}{d\theta}} \approx \mmm{\trainK}$, which is true for exact GPs and all sparse GP approximations.)
+We can get $\frac{\partial \trainK}{\partial \btheta}\bz_{i}$ by performing a single matrix multiply $\frac{\partial \trainK}{\partial \btheta}[\bz_{1} \: \ldots \: \bz_{t}]$, requiring $\mmm{\frac{\partial \trainK}{\partial \btheta}}$.
+(We assume that $\mmm{\frac{\partial \trainK}{\partial \btheta}} \approx \mmm{\trainK}$, which is true for exact GPs and all sparse GP approximations.)
 After this, we need to perform $t$ inner products between the columns of this result and the columns of $\trainK^{-1}[\bz_{1} \: \ldots \: \bz_{t}]$, requiring $\bigo{tn}$ additional time.
 Therefore, the running time is still dominated by the running time of mBCG.
 The additional space complexity involves the $2t$ length $n$ vectors involved in the inner products, which is negligible.
