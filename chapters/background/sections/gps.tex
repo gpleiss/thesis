@@ -384,7 +384,7 @@ The kernel function for \emph{real}-inputs $\bx$, $\bx'$ is approximated by inte
 \end{align}
 %
 In its simplest form, it is common to choose $M \ll N$ inducing points.
-The approximate training kernel matrix $\widetilde \bK_{\bX\bX} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bx}$ will then have low-rank structure, allowing for efficient computation of \cref{eqn:predictive_mean,eqn:predictive_var,eqn:log_lik,eqn:log_lik_deriv}.
+The approximate training kernel matrix $\widetilde \bK_{\bX\bX} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bX}$ will then have low-rank structure, allowing for efficient computation of \cref{eqn:predictive_mean,eqn:predictive_var,eqn:log_lik,eqn:log_lik_deriv}.
 The locations of the inducing points $\bZ$ are considered to be additional parameters to optimize via \cref{eqn:log_lik} (typically with gradient descent).
 
 Here we have presented inducing points as a mechanism for approximating kernel matrices.

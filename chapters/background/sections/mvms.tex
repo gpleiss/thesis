@@ -413,7 +413,7 @@ In particular, we will store the $\alpha_j$ and $\beta_j$ coefficients from \aut
   Let $\alpha_1, \ldots, \alpha_p$ and $\beta_1, \ldots, \beta_p$ be the scalar coefficients from each iteration (defined in \autoref{alg:std_pcg}).
   The matrix
   %
-  \begin{equation}
+  \begin{equation*}
     \left[\begin{array}{ccccc}
       \frac{1}{\alpha_1} & \frac{\sqrt{\beta_1}}{\alpha_1} &  & & 0 \\
       \frac{\sqrt{\beta_1}}{\alpha_1} & \frac{1}{\alpha_2} + \frac{\beta_1}{\alpha_1} & \frac{\sqrt{\beta_2}}{\alpha_2} &  &  \\
@@ -421,7 +421,7 @@ In particular, we will store the $\alpha_j$ and $\beta_j$ coefficients from \aut
       &       & \ddots & \ddots & \frac{\sqrt{\beta_{m-1}}}{\alpha_{m-1}} \\
       0 &       &        & \frac{\sqrt{\beta_{m-1}}}{\alpha_{m-1}} & \frac{1}{\alpha_m} + \frac{\beta_{m-1}}{\alpha_{m-1}}
     \end{array}\right]
-  \end{equation}
+  \end{equation*}
   %
   is equal to the Lanczos tridiagonal matrix $\bT_J$, formed by running $J$ iterations of Lanczos to achieve $\left( \bP^{-1} \bA \right) \bQ_J = \bQ_J \bT_J + \br \be_J^\top$) with probe vector $\bb$.
   \label{obs:lanczos_cg}
