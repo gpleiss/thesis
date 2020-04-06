@@ -101,10 +101,10 @@ $\trainK^{-1} \by$, $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \btheta}
       \log \vert \trainK \vert = \tr{ \log \trainK }
       &\approx \frac{1}{T} \sum_{i=1}^T \bz^{(i)^\top} \bQ^{(i)} \left( \log \bT^{(i)} \right) \bQ^{(i)^\top} \bz^{(i)}
       \\
-      &= \frac{1}{T} \sum_{i=1}^T \Vert \bz^{(i)} \Vert_2 \: \be_1^\top \left( \log \bT^{(i)} \right) \be_1,
+      &= \frac{1}{T} \sum_{i=1}^T \Vert \bz^{(i)} \Vert_2 \: \be^{(1)^\top} \left( \log \bT^{(i)} \right) \be^{(1)},
     \end{align*}
     %
-    where $\be_1 = [1, 0, \:\:, \ldots, \:\: 0]$.
+    where $\be^{(1)} = [1, 0, \:\:, \ldots, \:\: 0]$.
     (The reduction in the second line comes from the orthogonality of $\bQ^{(i)}$ and $\bz^{(i)} / \Vert \bz^{(i)} \Vert_2$ is the first column of $\bQ^{(i)}$.)
     Therefore, we can estimate the log determinant of $\trainK$ simply by computing logarithms of the tridiagonal matrices returned by mBCG in \cref{eqn:mod_cg_call}.
     %
@@ -214,7 +214,7 @@ From \cref{obs:lanczos_cg}, the diagonal and subdiagonal entries of $\bT^{(1)}, 
 %(See \cite{saad2003iterative}, Section 6.7.3.)
 %In other words, we can recover the Lanczos tridiagonal matrix $\tilde T$ simply by running CG.
 %Our mBCG algorithm simply exploits this fact.
-The final two lines in {\color{\colornew} \colornew} in \cref{alg:mod_pcg} use the $\balpha_j$ and $\bbeta_j$ coefficients to iteratively compute the Lanczos matrices from \cref{obs:lanczos_cg}.
+The final three lines in {\color{\colornew} \colornew} in \cref{alg:mod_pcg} use the $\balpha_j$ and $\bbeta_j$ coefficients to iteratively compute the Lanczos matrices from \cref{obs:lanczos_cg}.
 Notably, these matrices can be formed with $\bigo{T}$ extra computation, and we are able to avoid running the Lanczos algorithm.
 
 

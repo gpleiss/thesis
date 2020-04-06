@@ -9,7 +9,7 @@ Since $\trainK$ is positive definite, both of these operations can computed usin
 \[
   \bL \bL^\top = \trainK, \quad
   (\trainK^{-1}) \by = \bL^{-\top} \bL^{-1} \by, \quad
-  \log \vert \trainK \vert = 2 \sum_{i=1}^N \log L_{[i,i]}
+  \log \vert \trainK \vert = 2 \sum_{i=1}^N \log L^{(i,i)}
 \]
 %
 where $\bL$ is the lower-triangular Cholesky factor of $\trainK$.
@@ -232,11 +232,11 @@ The Lanczos algorithm \cite{lanczos1950iteration} iteratively produces a partial
 At iteration $J$, $\bA$ is factorized as
 %
 \begin{equation}
-  \bA \bQ_J = \bQ_J \bT_J + \br_J \be_J^\top,
+  \bA \bQ_J = \bQ_J \bT_J + \br_J \be^{(J)^\top},
   \label{eqn:lanczos}
 \end{equation}
 %
-where $\bQ_J \in \reals^{N \times J}$ has orthonormal columns, $\bT_J \in \reals^{J \times J}$ is symmetric tridiagonal, and $(\br_J \be_J^\top) \in \reals^{N \times J}$ is a residual term involving the unit vector $\be_J$.
+where $\bQ_J \in \reals^{N \times J}$ has orthonormal columns, $\bT_J \in \reals^{J \times J}$ is symmetric tridiagonal, and $(\br_J \be^{(J)^\top}) \in \reals^{N \times J}$ is a residual term involving the unit vector $\be^{(J)}$.
 After $N$ iterations, the residual term will be zero and we recover the complete tridiagonalization $\bA = \bQ_N \bT_N \bQ^\top_N$.
 In practice however, the complete tridiagonalization is almost never computed, and the matrices $\bQ_J, \bT_J$ after $J \ll N$ iterations can approximate functions involving $\bA$ with high degrees of accuracy.
 We will discuss how $\bQ_J$ and $\bT_J$ can approximate log determinants and matrix solves after briefly describing the algorithm itself.
@@ -251,7 +251,7 @@ Given an initial vector $\bb$, $J$ iterations of the Lanczos algorithm form an o
 %\end{equation}
 %%
 %$\mathcal{K}_J (\bA, \bb)$ is known as the $J^\text{th}$ \emph{Krylov Subspace} of $\bA$ and $\bb$ (hence why this algorithm is classified as a ``Krylov Subspace Method''---see \citep{saad2003iterative} for more details).
-Applying Gram-Schmidt orthogonalization to $\left[ \bb, \:\: \bA \bb, \:\: \ldots, \:\: \bA^{J-1} \bb \right]$ produces the columns of $\bQ_J = \left[ \bb/\Vert \bb \Vert, \:\: \bq_2, \:\: \ldots, \:\: \bq_J \right]$, and the orthogonalization coefficients are collected into $\bT_J$.
+Applying Gram-Schmidt orthogonalization to $\left[ \bb, \:\: \bA \bb, \:\: \ldots, \:\: \bA^{J-1} \bb \right]$ produces the columns of $\bQ_J = \left[ \bb/\Vert \bb \Vert, \:\: \bq^{(2)}, \:\: \ldots, \:\: \bq^{(J)} \right]$, and the orthogonalization coefficients are collected into $\bT_J$.
 Because $\bA$ is symmetric, each vector needs only be orthogonalized against the two preceding vectors, which results in the tridiagonal structure of $\bT$ \cite{golub2012matrix}.
 In practice, the columns of $\bQ_J$ and the sub-diagonal/diagonal entries of $T_j$ can be computed using a simple iterative procedure (\cref{alg:lanczos}).
 %
@@ -275,7 +275,7 @@ We list some solutions to overcome these numerical instabilities in \cref{sec:lo
 
 %If $\bA$ is a symmetric matrix, the {\bf Lanczos algorithm} provides an efficient way to compute an orthonormal basis of $\mathcal{K}_J$: %%
 %\[
-  %\bQ_J = \begin{bmatrix} \bq_1, & \bq_2, & \cdots, & \bq_J \end{bmatrix}, \quad
+  %\bQ_J = \begin{bmatrix} \bq_1, & \bq^{(2)}, & \cdots, & \bq^{(J)} \end{bmatrix}, \quad
   %\bq_1 = \bb / \Vert \bb \Vert^2, \quad
   %\text{span} \left\{ \bQ_J \right\} = \mathcal{K}_{J}(\bA, \bb).
 %\]
@@ -286,12 +286,12 @@ We list some solutions to overcome these numerical instabilities in \cref{sec:lo
 %Moreover, this orthogonalization process can be summarized through the following relation of $\bA$, $\bQ_J$, and $\bT_J$:
 %%
 %\begin{equation}
-  %\bA \bQ_J = \bQ_J \bT_J + \br_J \be_J^\top,
+  %\bA \bQ_J = \bQ_J \bT_J + \br_J \be^{(J)}^\top,
   %\label{eqn:lanczos}
 %\end{equation}
 %%
-%where $\br_J \in \reals^J$ is a residual vector given by $\br_J = (\bA - T_{[J,J]} \bI) \bq_J - (T_{[J,J-1]} \bq_{J-1})$
-%and $\be_J \in \reals^J$ is the unit vector $[ 0, 0, \ldots, 1 ]$.
+%where $\br_J \in \reals^J$ is a residual vector given by $\br_J = (\bA - T_{[J,J]} \bI) \bq^{(J)} - (T_{[J,J-1]} \bq_{J-1})$
+%and $\be^{(J)} \in \reals^J$ is the unit vector $[ 0, 0, \ldots, 1 ]$.
 %If $J=N$, then $\bQ_N$ and $\bT_N$ form a complete tridiagonalization $\bA = \bQ_N \bT_N \bQ_N^\top$.
 
 %The Lanczos matrices $\bQ_J$ and $\bT_J$ can be used to estimate a wide variety of matrix functions.
@@ -316,12 +316,12 @@ However, this partial tridiagonalization can be used to approximate $\bF ( \bA )
   \bF ( \bA ) \bb
   &\approx \Bigl( \bQ_J \bigl[ \bF ( \bT_J ) \bigr] \bQ_J^\top \Bigr) \bb.
   \nonumber \\
-  &= \Vert \bb \Vert_2 \Bigl( \bQ_J \bigl[ \bF ( \bT_J ) \bigr] \Bigr) \be_1
+  &= \Vert \bb \Vert_2 \Bigl( \bQ_J \bigl[ \bF ( \bT_J ) \bigr] \Bigr) \be^{(1)}
   \triangleq \bc_J,
   \label{eqn:f_lanczos}
 \end{align}
 %
-where the second line holds because $\bq_1 = \bb / \vert \bb \vert$.
+where the second line holds because $\bq_1 = \bb / \Vert \bb \Vert$.
 The estimate $\bc_J$ tend to converge exponentially as $J$ increases, though the rate of convergence depends on the conditioning of $\bA$.
 Moreover, the computational complexity of \cref{eqn:f_lanczos} is quite small since we can take advantage of the tridiagonal structure of $\bT_J$.
 
@@ -331,29 +331,29 @@ We now outline two special cases that can be applied to Gaussian process inferen
 \paragraph{Estimating log determinants.}
 
 \citet{ubaru2017fast} introduce a method to produce unbiased estimates log determinants using Lanczos tridiagonalization, and \emph{stochastic trace estimation} \cite{hutchinson1990stochastic,avron2011randomized,fitzsimons2016improved}.
-%First, given i.i.d random variables $\bz_1, \ldots, \bz_t$ with $\Ev{\bz_i} = 0$ and $\Ev{\bz_i \bz_i}^\top = \bI$ (e.g. $\bz_i \sim \normaldist{0}{\bI})$, note that the trace operation can be written as $\tr{ \cdot} = \Ev{ \bz_i^\top \left( \cdot \right) \bz_i^\top }.$
+%First, given i.i.d random variables $\bz_1, \ldots, \bz_t$ with $\Ev{\bz^{(i)}} = 0$ and $\Ev{\bz^{(i)} \bz^{(i)}}^\top = \bI$ (e.g. $\bz^{(i)} \sim \normaldist{0}{\bI})$, note that the trace operation can be written as $\tr{ \cdot} = \Ev{ \bz^{(i)}^\top \left( \cdot \right) \bz^{(i)}^\top }.$
 They note that the log determinant can be re-written as:
 %
 \begin{align}
   \log \vert \bA \vert &= \tr{ \log \bA }
   \nonumber \\
-  &\approx \frac{1}{T} \sum_{i=1}^T \bz_i^\top \left( \log \bA \right) \bz_i.
+  &\approx \frac{1}{T} \sum_{i=1}^T \bz^{(i)^\top} \left( \log \bA \right) \bz^{(i)}.
   \label{eqn:logdet_sta}
 \end{align}
 %
-where $\log \bA$ denotes the matrix logarithm, and $\bz_i$ are i.i.d random variables with zero mean and unit covariance (e.g. $\bz_i \sim \normaldist{0}{\bI}$).
+where $\log \bA$ denotes the matrix logarithm, and $\bz^{(i)}$ are i.i.d random variables with zero mean and unit covariance (e.g. $\bz^{(i)} \sim \normaldist{0}{\bI}$).
 It can be seen with a little mathematical manipulation that the second line is an unbiased estimate of the trace operator \cite{hutchinson1990stochastic}.
 
-To compute each of the $\bz_i \left( \log \bA \right) \bz_i$ terms, we turn to \cref{eqn:f_tridiagonal}.
-Let $\bQ_J^{(i)}$, $\bT_J^{(i)}$ correspond to the Lanczos matrices with initial vector $\bq^{(i)}_1 = \bz_i / \vert \bz_i \vert$.
+To compute each of the $\bz^{(i)} \left( \log \bA \right) \bz^{(i)}$ terms, we turn to \cref{eqn:f_tridiagonal}.
+Let $\bQ_J^{(i)}$, $\bT_J^{(i)}$ correspond to the Lanczos matrices with initial vector $\bq^{(i)}_1 = \bz^{(i)} / \Vert \bz^{(i)} \Vert$.
 Then we apply \cref{eqn:f_lanczos}:
 %
 \begin{align}
-  \bz_i^\top \left( \log \bA \right) \bz_i
-  &\approx \bz_i^\top \Bigl( \bQ^{(i)}_J \bigl[ \log \bT^{(i)}_J \bigr] \bQ^{(i)\top}_J \Bigr) \bz_i
+  \bz^{(i)^\top} \left( \log \bA \right) \bz^{(i)}
+  &\approx \bz^{(i)^\top} \Bigl( \bQ^{(i)}_J \bigl[ \log \bT^{(i)}_J \bigr] \bQ^{(i)\top}_J \Bigr) \bz^{(i)}
   \nonumber
   \\
-  &= \Vert \bz_i \Vert^2_2 \: \Bigl( \be_1^\top \bigl[ \log \bT^{(i)}_J \bigr] \be_i \Bigr).
+  &= \Vert \bz^{(i)} \Vert^2_2 \: \Bigl( \be^{(1)^\top} \bigl[ \log \bT^{(i)}_J \bigr] \be^{(1)} \Bigr).
   \label{eqn:slq}
 \end{align}
 %
@@ -366,11 +366,11 @@ Let $\bQ_J$ and $\bT_J$ be the Lanczos matrices using $\bb$ as the initial vecto
 We can approximate the matrix solve using \cref{eqn:f_lanczos}:
 %
 \begin{equation}
-  \bA^{-1} \bb \approx \Vert \bb \Vert_2 \bQ_J \bT_J^{-1} \be_1
+  \bA^{-1} \bb \approx \Vert \bb \Vert_2 \bQ_J \bT_J^{-1} \be^{(1)}
   \label{eqn:lanczos_solves}
 \end{equation}
 %
-where again $\be_1 \in \reals^J$ is the first unit vector $[1, 0, 0, \ldots, 0]$.
+where again $\be^{(1)} \in \reals^J$ is the first unit vector $[1, 0, 0, \ldots, 0]$.
 
 
 
@@ -423,7 +423,7 @@ In particular, we will store the $\alpha_j$ and $\beta_j$ coefficients from \aut
     \end{array}\right]
   \end{equation*}
   %
-  is equal to the Lanczos tridiagonal matrix $\bT_J$, formed by running $J$ iterations of Lanczos to achieve $\left( \bP^{-1} \bA \right) \bQ_J = \bQ_J \bT_J + \br \be_J^\top$) with probe vector $\bb$.
+  is equal to the Lanczos tridiagonal matrix $\bT_J$, formed by running $J$ iterations of Lanczos to achieve $\left( \bP^{-1} \bA \right) \bQ_J = \bQ_J \bT_J + \br \be^{(J)^\top}$) with probe vector $\bb$.
   \label{obs:lanczos_cg}
 \end{observation}
 (See \cite{saad2003iterative}, Section 6.7.3.)

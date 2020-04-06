@@ -8,7 +8,7 @@ We assume that the child's height $y$ can be explained by 1) some latent functio
 \end{equation}
 %
 In particular, we assume the observational noise follows some Gaussian distribution with variance $\sigma_\text{obs}^2$.
-At a high level, the goal of supervised regression is to find a function $f(\bx)$ (or a distribution of functions) that fits the available training data $\dset_\text{train} = \{(\bx_1, y_1), \ldots, (\bx_n, y_n)\}$ and makes accurate predictions on new data points $( \bxtest, \ytest )$ at test time.
+At a high level, the goal of supervised regression is to find a function $f(\bx)$ (or a distribution of functions) that fits the available training data $\dset_\text{train} = \{(\bx^{(1)}, y^{(1)}), \ldots, (\bx^{(N)}, y^{(N)})\}$ and makes accurate predictions on new data points $( \bxtest, \ytest )$ at test time.
 
 This setup is one of the most studied problems in machine learning, and there are numerous different approaches to tackling this problem.
 In this thesis we concern ourselves with the approach of \emph{Gaussian process regression}, which is a {\bf non-parametric} and {\bf Bayesian} approach to regression.

@@ -15,14 +15,14 @@ It is defined by a \emph{mean function} $\mu(\cdot)$ and a \emph{covariance func
   Throughout this thesis we will use the two terms interchangeably.
 }
 %It can only be realized by applying $f$ to some finite set of points.
-Given $N$ data points $\bX = [ \bx_1, \ldots, \bx_N ] \in \reals^{\numdata \times \numdim}$ (e.g. the $D$-dimensional features of $N$ different children in our running example),
-the distribution over $\bfn = [ f(\bx_1), \ldots, f(\bx_N) ] \in \reals^\numdata$ is a multivariate Normal distribution:
-%The multivariate Normal's mean $\bmu_\bX$ comes from a \emph{mean function} $\mu(\cdot)$ applied to each $\bx_i$, and its covariance matrix $\bK_{\bX\bX}$ comes from a \emph{covariance function} $k(\cdot, \cdot)$ (also referred to as a \emph{kernel function}) applied to every pair of data points:
+Given $N$ data points $\bX = [ \bx^{(1)}, \ldots, \bx^{(N)} ] \in \reals^{\numdata \times \numdim}$ (e.g. the $D$-dimensional features of $N$ different children in our running example),
+the distribution over $\bfn = [ f(\bx^{(1)}), \ldots, f(\bx^{(N)}) ] \in \reals^\numdata$ is a multivariate Normal distribution:
+%The multivariate Normal's mean $\bmu_\bX$ comes from a \emph{mean function} $\mu(\cdot)$ applied to each $\bx^{(i)}$, and its covariance matrix $\bK_{\bX\bX}$ comes from a \emph{covariance function} $k(\cdot, \cdot)$ (also referred to as a \emph{kernel function}) applied to every pair of data points:
 \begin{equation}
  p \left( \bfn \right) = \normaldist{ \bfn ; \bmu_\bX}{ \bK_{\bX\bX} },
  \label{eqn:prior_finite}
 \end{equation}
-where $f^{(i)} = f(\bx_i)$, $\mu^{(i)}_\bX = \mu( \bx_i )$ and $\bK_{\bX\bX}^{(i,j)} = k(\bx_i, \bx_j)$.
+where $f^{(i)} = f(\bx^{(i)})$, $\mu^{(i)}_\bX = \mu( \bx^{(i)} )$ and $K_{\bX\bX}^{(i,j)} = k(\bx^{(i)}, \bx^{(j)})$.
 (We will be using the above short-hand notations $\bfn$, $\bmu_\bX$, and $\bK_{\bX\bX}$ throughout the remainder of this thesis.)
 The matrix $\bK_{\bX\bX} \in \reals^{\numdata \times \numdata}$ is often referred to as the \emph{kernel matrix} of $\bX$.
 
@@ -91,7 +91,7 @@ where $\meantest{\cdot}$ and $\covtest{\cdot}$ are given by:
   \label{eqn:predictive_var}
 \end{align}
 %
-Here the shorthand $\bk_{\bX \bxtest} \in \reals^N$ is the vector of covariances between $\bxtest$ and all training points $\bX = [\bx_1, \ldots, \bx_N].$
+Here the shorthand $\bk_{\bX \bxtest} \in \reals^N$ is the vector of covariances between $\bxtest$ and all training points $\bX = [\bx^{(1)}, \ldots, \bx^{(N)}].$
 Note that, under \cref{eqn:predictive_mean,eqn:predictive_var}, the Gaussian process' prediction for a child's weight depends on
 \begin{enumerate*}
   \item the weights of previously-observed children and
@@ -203,12 +203,10 @@ We will discuss how to efficiently compute these terms in \cref{chapter:bbmm}.
 %where again $\sigma^2_\text{obs}$ is a parameter that defines the observational noise variance.
 
 %In a \emph{Gaussian process model}, we assume assume a priori that the latent function $f(\cdot)$ is drawn from a Gaussian process distribution $\normaldist{\mu(\cdot)}{k(\cdot, \cdot)}$.
-%Given a training dataset $\bX = [\bx_1, \ldots, \bx_n]$ and $\by = [y_1, \ldots, y_n]$,
 
 %%%%%%%%%%%
 
 %In general, we assume that the observational noise $\epsilon$ is independent for all data points.
-%Therefore, given a training dataset $\bX = [\bx_1, \ldots, \bx_n]$ and $\by = [y_1, \ldots, y_n]$, we can write the likelihood for all data points as
 %%
 %\begin{equation}
   %p(\by \mid \bfn) = \normaldist{ \by; \bfn}{\sigma^2_\text{obs} \bI}.
@@ -263,7 +261,7 @@ We will describe their functional form and their properties:
   \item The {\bf Radial Basis Function (RBF)} kernel, or squared exponential kernel is one of the most commonly-used covariance functions.
     It's functional form is given by
     %
-    \[ k_\text{RBF}(\bx, \bx') = o^2 \exp \left( \sum_{d=1}^D \frac{\left( x_d - x_d' \right)^2}{\ell_d^2}  \right) \]
+    \[ k_\text{RBF}(\bx, \bx') = o^2 \exp \left( \sum_{d=1}^D \frac{\left( x^{(d)} - x^{(d)\prime} \right)^2}{\ell_d^2}  \right) \]
     %
     where $o^2$ is referred to as the \emph{outputscale} parameter and the $\ell_1, \ldots, \ell_D$ are the \emph{lengthscales} for each dimension $d \in [1, D]$.
     When the $\ell_d$ parameter is different across all dimensions, the kernel is referred to as the {\bf RBF-ARD } kernel, where ARD stands for \emph{ automatic relevance determination }.
@@ -278,8 +276,8 @@ We will describe their functional form and their properties:
     %
     \[
 			k_{\text{Mat}-\nu} (\bx, \bx') = o^2 \frac{2^{1 - \nu}}{\gamma(\nu)}
-			\left( \sqrt{2 \nu} \sum_{d=1}^D \frac{\vert x_d - x_d' \vert}{\ell_d}  \right)^\nu
-			K_\nu \left( \sqrt{2 \nu} \sum_{d=1}^D \frac{\vert x_d - x_d' \vert}{\ell_d}  \right),
+			\left( \sqrt{2 \nu} \sum_{d=1}^D \frac{\vert x^{(d)} - x^{(d)\prime} \vert}{\ell_d}  \right)^\nu
+			K_\nu \left( \sqrt{2 \nu} \sum_{d=1}^D \frac{\vert x^{(d)} - x^{(d)\prime} \vert}{\ell_d}  \right),
 		\]
 		%
     where $o^2$ and $\ell_d$ are analogous to the parameters from the RBF kernel, and where $K_\nu$ is a modified Bessel function \cite{rasmussen2006gaussian}.
@@ -371,7 +369,7 @@ Many of these methods approximate the training kernel matrix $\bK_{\bX\bX}$ with
 
 \paragraph{Inducing Points.}
 A common mechanism for scalable methods is to introduce a set of pseudo-inputs, or \emph{inducing points}, which function as a sufficient statistic for the predictive distribution.
-The kernel function for \emph{real}-inputs $\bx$, $\bx'$ is approximated by interpolating against the kernel matrix for the \emph{pseudo}-inputs $\bZ = [\bz_1, \ldots, \bz_M]$.
+The kernel function for \emph{real}-inputs $\bx$, $\bx'$ is approximated by interpolating against the kernel matrix for the \emph{pseudo}-inputs $\bZ = [\bz^{(1)}, \ldots, \bz^{(M)}]$.
 %
 \begin{align}
   k(\bx, \bx') \approx \widetilde k(\bx, \bx') &= \:\:
@@ -407,13 +405,13 @@ In the next section we will discuss a fourth variant---Kernel Interpolation for 
 	\item {\bf Fully Independent Training Conditional (FITC) } \cite{snelson2006sparse} can be interpreted as an extension of SoR
 		where the approximate training kernel matrix has a diagonal correction term $\bLambda$.
     \[ \widetilde \bK_{\bX\bX} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bX} + \bLambda, \quad
-       \Lambda^{(i,i)} = k(\bx_i, \bx_i) - \bk_{\bZ\bx_i}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx_i}. \]
+       \Lambda^{(i,i)} = k(\bx^{(i)}, \bx^{(i)}) - \bk_{\bZ\bx^{(i)}}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx^{(i)}}. \]
     The diagonal correction term is motivated through a connection to approximate inference.
 
 	\item {\bf Sparse Gaussian Process Regression (SGPR) } \cite{titsias2009variational} uses the same kernel approximations as SoR.
 		However, when learning the inducing point locations and other parameters, SGPR uses an alternative objective function:
 		the marginal log likelihood of \cref{eqn:log_lik} augmented with a diagonal correction term:
-    \[ \loglik(\by \mid \bX, \btheta) = -\log p(\by \mid \bX, \btheta) + \sum_{i=1}^N \left( k(\bx_i, \bx_i) - \bk_{\bZ\bx_i}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx_i} \right). \]
+    \[ \loglik(\by \mid \bX, \btheta) = -\log p(\by \mid \bX, \btheta) + \sum_{i=1}^N \left( k(\bx^{(i)}, \bx^{(i)}) - \bk_{\bZ\bx^{(i)}}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx^{(i)}} \right). \]
     The diagonal correction term can be derived by optimizing a variational lower bound on the function values at inducing point locations.
 \end{itemize}
 %
@@ -424,7 +422,7 @@ Kernel Interpolation for Scalable Structured Gaussian Processes (KISS-GP) \cite{
 While other methods tend to use $M \ll N$ inducing points, \citet{wilson2015kernel} demonstrate that it is possible to set $M \gg N$ by making the following restrictions:
 \begin{enumerate}
   \item the interpolation terms in \cref{eqn:inducing_interpolation} are approximated by a \emph{sparse interpolation vector} $\bw_\bx \approx \bK^{-1}_{\bZ\bZ} \bk_{\bZ\bx};$
-  \item the inducing points $\bZ = [\bz_1, \ldots, \bz_M]$ must lie on a \emph{regularly-spaced grid};
+  \item the inducing points $\bZ = [\bz^{(1)}, \ldots, \bz^{(M)}]$ must lie on a \emph{regularly-spaced grid};
   \item the kernel function is \emph{stationary} (e.g. RBF, Mat\'ern, etc.).
 \end{enumerate}
 The resulting approximate kernel matrix has nice algebraic structure that can be exploited for efficient storage and fast computations.
@@ -444,10 +442,10 @@ The $\bw_\bx$ vectors approximate the training kernel matrix $\bK_{\bX\bX} \appr
   \label{eqn:ski}
 \end{align}
 %
-Here, $\bW_{\bX} = [\bw_{\bx_1}, \ldots, \bw_{\bx_n}]$ contains the interpolation vectors for all $\bx_i$.
+Here, $\bW_{\bX} = [\bw_{\bx^{(1)}}, \ldots, \bw_{\bx^{(N)}}]$ contains the interpolation vectors for all $\bx^{(i)}$.
 Performing a matrix-vector multiplication with $\widetilde \bK_{\bX\bX}$ (i.e. $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bv$ for any vector $\bv$) takes \emph{near-linear} time.
 To see why, a MVM with the matrix $\bW_\bX$ require $\bigo{N}$ time due to the $\bigo{N}$ sparsity of $\bW_\bX$.
-Moreover, restrictions 2 and 3 (stationary kernel/grided inducing points) endow the inducing kernel matrix $\bK_{\bZ\bZ}$ with Toeplitz structure (or Kronecker/Toeplitz structure if the inputs $\bx_i$ are multi-dimensional).
+Moreover, restrictions 2 and 3 (stationary kernel/grided inducing points) endow the inducing kernel matrix $\bK_{\bZ\bZ}$ with Toeplitz structure (or Kronecker/Toeplitz structure if the inputs $\bx^{(i)}$ are multi-dimensional).
 By exploiting this structure, $\bK_{\bZ\bZ}$ requires $\bigo{M}$ storage and MVMs with $\bK_{\bZ\bZ}$ require $\bigo{M \log M}$ time \citep[see][for details]{cunningham2008fast,saatcci2012scalable}.
 Thus, if we perform $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bv$ from right-to-left, the entire multiplication takes $\bigo{N + M \log M}$ time.
 As we will demonstrate in the next section, exploiting these fasts MVMs results in a near-linear training time complexity for KISS-GP.

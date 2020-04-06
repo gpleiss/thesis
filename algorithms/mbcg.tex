@@ -58,9 +58,11 @@
       \\
       {\color{\colormat} $\bD_{j}$ $\gets$ $\bZ_{j} -$ \diag{$\bbeta_j$} $\bD_{j-1}$}
       \\
-      {\color{\colornew} $\forall i$ \: $[\bT_{i}]_{j,j}$ $\gets$ $1/[\balpha_{j}]_{i} + [\bbeta_{j-1}]_{i}/[\balpha_{j-1}]_{i}$}
+      {\color{\colornew} $\forall i$ \: $T_{i}^{(j,j)}$ $\gets$ $1/\balpha_{j}^{(i)} + \bbeta_{j-1}^{(i)}/\balpha_{j-1}^{(i)}$}
       \\
-      {\color{\colornew} $\forall i$ \: $[\bT_{i}]_{j-1,j}$, $[\bT_{i}]_{j,j-1}$ $\gets$ $\sqrt{[\bbeta_{j-1}]_{i}}/[\balpha_{j}]_{i}$}
+      {\color{\colornew} $\forall i$ \: $T_{i}^{(j-1,j)}$ $\gets$ $\sqrt{\bbeta_{j-1}^{(i)}}/\balpha_{j}^{(i)}$}
+			\\
+      {\color{\colornew} $\forall i$ \: $T_{i}^{(j,j-1)}$ $\gets$ $\sqrt{\bbeta_{j-1}^{(i)}}/\balpha_{j}^{(i)}$}
     }
     \Return{{\color{\colormat}$\bC_{j+1}$}, {\color{\colornew} $\bT_{1}, \ldots \bT_{T}$}}
 \end{algorithm2e}

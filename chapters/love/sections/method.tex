@@ -4,9 +4,9 @@
 
 In this section we introduce LOVE{}, an approach to efficiently approximate the predictive covariance
 \begin{align*}
-  k_{f\mid\dset}(\bx^*_i, \bx^*_j) = k_{\bx^{*}_i \bx^{*}_j} - \bk_{\bX \! \bx^{*}_i}^\top (K_{\bX\!\bX} + \sigma^2 \bI)^{-1} \bk_{\bX \! \bx^{*}_j},
+  k_{f\mid\dset}(\bxtest_i, \bxtest_j) = k_{\bxtest_i \bxtest_j} - \bk_{\bX \! \bxtest_i}^\top (K_{\bX\!\bX} + \sigma^2 \bI)^{-1} \bk_{\bX \! \bxtest_j},
 \end{align*}
-where $\bX^{*} = [ \bx^{*}_1, \ldots \bx^{*}_t ]$ denotes a set of $t$ test points, and $\bX = [\bx_1, \ldots \bx_n]$ a set of $n$ training points.
+where $\bX^{*} = [ \bxtest_1, \ldots \bxtest_t ]$ denotes a set of $t$ test points, and $\bX = [\bx^{(1)}, \ldots \bx^{(N)}]$ a set of $n$ training points.
 %
 Solving $(K_{\bX \bX} + \sigma^2 \bI)^{-1}$ na\"ively takes $\bigo{n^3}$ time, but is typically performed as a one-type pre-computation during training since $K_{\bX \bX}$ does not depend on the test data.
 At test time, all covariance calculations will then cost $\bigo{n^2}$.
@@ -14,39 +14,39 @@ In what follows, we build a significantly faster method for (co-)variance comput
 
 \subsection{A first $\bigo{m^2}$ approach with KISS-GP}
 It is possible to obtain some computational savings when using inducing point methods.
-For example, we can replace $\bk_{X \! \bx^*_i}$ and $K_{X \! X}$ with their corresponding KISS-GP approximations,
-$\tilde{\bk}_{X \! \bx^*_i}$ and $\tilde{K}_{X \! X}$, which we restate here:
+For example, we can replace $\bk_{X \! \bxtest_i}$ and $K_{X \! X}$ with their corresponding KISS-GP approximations,
+$\tilde{\bk}_{X \! \bxtest_i}$ and $\tilde{K}_{X \! X}$, which we restate here:
 %
 %
 \begin{align*}
-  \tilde{\bk}_{\bX \bx^*_i} = W^\top_{\bX} \bK_{U \! U} \bw_{\bx^*_i},
+  \tilde{\bk}_{\bX \bxtest_i} = W^\top_{\bX} \bK_{U \! U} \bw_{\bxtest_i},
   \: \: \: & \: \: \:
   \tilde{K}_{\bX \bX} = W^\top_{\bX} \bK_{U \! U} W_{\bX}.
 \end{align*}
 $W_\bX$ is the sparse interpolation matrix for training points $X$.
-$\bw_{\bx^{*}_i}$ and $\bw_{\bx^{*}_j}$ are the sparse interpolations for $\bx^{*}_i$ and $\bx^{*}_j$ respectively.
+$\bw_{\bxtest_i}$ and $\bw_{\bxtest_j}$ are the sparse interpolations for $\bxtest_i$ and $\bxtest_j$ respectively.
 Substituting these into \eqref{eq:pred_covar} results in the following approximation to the predictive covariance:
 %
 \begin{align}
-  k_{\!f\mid\dset}(\bx^*_i, \bx^*_j) &\approx k_{\bx^{*}_i \! \bx^{*}_j} - \tilde{\bk}_{\bX \! \bx^{*}_i}^\top (\tilde{K}_{\bX\!\bX} + \sigma^2 \bI)^{-1} \tilde{\bk}_{\bX \! \bx^{*}_j}.
+  k_{\!f\mid\dset}(\bxtest_i, \bxtest_j) &\approx k_{\bxtest_i \! \bxtest_j} - \tilde{\bk}_{\bX \! \bxtest_i}^\top (\tilde{K}_{\bX\!\bX} + \sigma^2 \bI)^{-1} \tilde{\bk}_{\bX \! \bxtest_j}.
     \label{eq:pred_covar_approx}
 \end{align}
 %
 By fully expanding the second term in \eqref{eq:pred_covar_approx}, we obtain
 %
 \begin{equation}
-  \bw_{\bx^*_i}^{\top} {\color{blue}\underbrace{{\bK_{U \! U} W_{\bX} (\tilde{K}_{\bX\!\bX} + \sigma^2 \bI)^{-1} W^\top_{\bX} \bK_{U \! U}}}_{\blue C}} \bw_{\bx^*_j}
+  \bw_{\bxtest_i}^{\top} {\color{blue}\underbrace{{\bK_{U \! U} W_{\bX} (\tilde{K}_{\bX\!\bX} + \sigma^2 \bI)^{-1} W^\top_{\bX} \bK_{U \! U}}}_{\blue C}} \bw_{\bxtest_j}
   \label{eq:pred_covar_ski_cache}
 \end{equation}
 %
 
 
 \paragraph{Precomputation phase.}
-$\blue C$, the braced portion of \eqref{eq:pred_covar_ski_cache}, does not depend on the test points $\bx^{*}_{i}$, $\bx^{*}_{j}$ and therefore can be pre-computed during training.
+$\blue C$, the braced portion of \eqref{eq:pred_covar_ski_cache}, does not depend on the test points $\bxtest_{i}$, $\bxtest_{j}$ and therefore can be pre-computed during training.
 The covariance becomes:
 %
 \begin{align}
-  k_{f\mid\dset}(\bx^*_i, \bx^*_j) &\approx k_{\bx^{*}_i \bx^{*}_j} - \bw_{\bx^{*}_i}^\top \: \blue C \: \bw_{\bx^{*}_j}
+  k_{f\mid\dset}(\bxtest_i, \bxtest_j) &\approx k_{\bxtest_i \bxtest_j} - \bw_{\bxtest_i}^\top \: \blue C \: \bw_{\bxtest_j}
     \label{eq:pred_covar_ski_naive}
 \end{align}
 %
@@ -79,17 +79,17 @@ In particular, we approximate $\blue C$ in \eqref{eq:pred_covar_ski_naive} as a 
 Letting $\blue R$ and $\blue{R'}$ be $k \times m$ matrices such that $\blue R^\top \blue{R'} \approx \blue C$, we rewrite \eqref{eq:pred_covar_ski_naive} as:
 %
 % \begin{align}
-%   k_{f\mid\dset}(\bx^*_i, \bx^*_j) &\approx k_{\bx^{*}_i \bx^{*}_j} - \bw_{\bx^{*^\top}_i} \blue R^{\top}\blue{R'} \: \bw_{\bx^{*}_j}.\nonumber \\
-%                                  &\approx k_{\bx^{*}_i \bx^{*}_j} - (\blue R \bw_{\bx^{*}_i})^\top (\blue{R'} \: \bw_{\bx^{*}_j}).
+%   k_{f\mid\dset}(\bxtest_i, \bxtest_j) &\approx k_{\bxtest_i \bxtest_j} - \bw_{\bx^{*^\top}_i} \blue R^{\top}\blue{R'} \: \bw_{\bxtest_j}.\nonumber \\
+%                                  &\approx k_{\bxtest_i \bxtest_j} - (\blue R \bw_{\bxtest_i})^\top (\blue{R'} \: \bw_{\bxtest_j}).
 %     \label{eq:pred_covar_ski_fast}
 % \end{align}
 \begin{align}
-  k_{f\mid\dset}(\bx^*_i, \bx^*_j) &\approx k_{\bx^{*}_i \bx^{*}_j} - (\blue R\bw^{*}_i )^{\top}\blue{R'} \: \bw^{*}_j.
+  k_{f\mid\dset}(\bxtest_i, \bxtest_j) &\approx k_{\bxtest_i \bxtest_j} - (\blue R\bw^{*}_i )^{\top}\blue{R'} \: \bw^{*}_j.
     \label{eq:pred_covar_ski_fast}
 \end{align}
 %
 Variance computations with \eqref{eq:pred_covar_ski_fast} take $\bigo{k}$ time
-due to the sparsity of $\bw_{\bx^{*}_i}$ and $\bw_{\bx^{*}_j}$.
+due to the sparsity of $\bw_{\bxtest_i}$ and $\bw_{\bxtest_j}$.
 Recalling the Lanczos approximation
 $
     (\tilde{K}_{\bX\bX} + \sigma^2 \bI)^{-1}\bb \approx Q_{k}T^{-1}_{k}Q_{k}^{\top}\bb
@@ -128,8 +128,8 @@ Running times are summarized in \autoref{tab:running_times}.
 
 LOVE{} can also be used to compute predictive \emph{covariances} and operations involving the predictive covariance matrix.
 Let $\bXtest = [\bxtest_1, \ldots, \bxtest_t]$ be a test set of $t$ points.
-%In many applications \eqref{eq:pred_covar} will be used only to compute the predictive variance terms for each $\bx^*_i$,  i.e. $k_{f \mid \dset} (\bx^*_i, \bx^*_i)$.
-To draw samples from $\bfntest \! \mid \! \dset$ --- the predictive function evaluated on $\bx^*_1, \ldots, \bx^*_t$, the cross-covariance terms (i.e. $k_{f \mid \dset} (\bx^*_i, \bx^*_j)$) are necessary in addition to the variance terms ($k_{f \mid \dset} (\bx^*_i, \bx^*_i)$).
+%In many applications \eqref{eq:pred_covar} will be used only to compute the predictive variance terms for each $\bxtest_i$,  i.e. $k_{f \mid \dset} (\bxtest_i, \bxtest_i)$.
+To draw samples from $\bfntest \! \mid \! \dset$ --- the predictive function evaluated on $\bxtest_1, \ldots, \bxtest_t$, the cross-covariance terms (i.e. $k_{f \mid \dset} (\bxtest_i, \bxtest_j)$) are necessary in addition to the variance terms ($k_{f \mid \dset} (\bxtest_i, \bxtest_i)$).
 Sampling GP posterior functions is a common operation.
 In Bayesian optimization for example, several popular acquisition functions -- such as predictive entropy search \cite{hernandez2014predictive}, max-value entropy search \cite{wang2017max}, and knowledge gradient \cite{frazier2009knowledge} -- require posterior sampling.
 
@@ -195,8 +195,8 @@ Therefore, drawing $s$ samples (corresponding to $s$ different values of $\mathb
 LOVE{} is applicable even when the KISS-GP approximation is used with an additive composition of kernels,
 %
 \begin{equation}
-  \tilde{k}(\bx_i, \bx_j) =
-  \bw^{(1)\top}_{\bx_i} K^{(1)}_{U \! U} \bw^{(1)}_{\bx_j} + \ldots + \bw^{(d)\top}_{\bx_i} K^{(d)}_{U \! U} \bw^{(d)}_{\bx_j}.
+  \tilde{k}(\bx^{(i)}, \bx^{(j)}) =
+  \bw^{(1)\top}_{\bx^{(i)}} K^{(1)}_{U \! U} \bw^{(1)}_{\bx^{(j)}} + \ldots + \bw^{(d)\top}_{\bx^{(i)}} K^{(d)}_{U \! U} \bw^{(d)}_{\bx^{(j)}}.
   \notag
 \end{equation}
 Additive structure has recently been a focus in several Bayesian optimization settings, since the cumulative regret of additive models depends linearly on the number of dimensions
@@ -205,11 +205,11 @@ Additionally, deep kernel learning GPs \citep{wilson2016stochastic,wilson2016dee
 To apply LOVE{}, we note that additive composition can be re-written as
 %
 \begin{equation}
-  \tilde{k}(\bx_i, \bx_j) =
+  \tilde{k}(\bx^{(i)}, \bx^{(j)}) =
   \begin{bmatrix}
-    \bw^{(1)}_{\bx_i} \\
+    \bw^{(1)}_{\bx^{(i)}} \\
     \vdots \\
-    \bw^{(d)}_{\bx_i}
+    \bw^{(d)}_{\bx^{(i)}}
   \end{bmatrix}^\top
   \!
   \begin{bmatrix}
@@ -219,14 +219,14 @@ To apply LOVE{}, we note that additive composition can be re-written as
   \end{bmatrix}
   \!
   \begin{bmatrix}
-    \bw^{(1)}_{\bx_j} \\
+    \bw^{(1)}_{\bx^{(j)}} \\
     \vdots \\
-    \bw^{(d)}_{\bx_j}
+    \bw^{(d)}_{\bx^{(j)}}
   \end{bmatrix}.
   \label{eq:multi_dimensional_kernel_block}
 \end{equation}
 %
 The block matrices in \eqref{eq:multi_dimensional_kernel_block} are analogs of their 1-dimensional counterparts in \eqref{eq:ski}.
-Therefore, we can directly apply \autoref{alg:fast_pred_var}, replacing $W_X$, $\bw_{\bx^*_i}$, $\bw_{\bx^*_j}$, and $K_{UU}$ with their block forms.
+Therefore, we can directly apply \autoref{alg:fast_pred_var}, replacing $W_X$, $\bw_{\bxtest_i}$, $\bw_{\bxtest_j}$, and $K_{UU}$ with their block forms.
 The block $\bw$ vectors are $\bigo{d}$-sparse, and therefore interpolation takes $\bigo{d}$ time.
 MVMs with the block $K_{UU}$ matrix take $\bigo{dm\log m}$ time by exploiting the block-diagonal structure. With $d$ additive components, predictive variance computations cost only a factor $\bigo{d}$ more than their 1-dimensional counterparts.

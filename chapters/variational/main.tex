@@ -28,10 +28,10 @@ We learn the parameters $\bm$ and $\bS$ (as well as the inducing locations $\bZ$
 We can either optimize the evidence lower bound \cite{hensman2015scalable} for variational inference or the predictive log likelihood \cite{jankowiak2020parametric} for regularized maximum likelihood estimation:
 %
 \begin{align}
-	-\loglik_\text{ELBO} &= -\sum_{i=1}^N \Evover{q(f(\bx_i))}{  \: \log p( y_i \mid f(\bx_i) ) \: } + \kl{ q(\bu) }{ p(\bu) },
+	-\loglik_\text{ELBO} &= -\sum_{i=1}^N \Evover{q(f(\bx^{(i)}))}{  \: \log p( y^{(i)} \mid f(\bx^{(i)}) ) \: } + \kl{ q(\bu) }{ p(\bu) },
 	\label{eqn:elbo}
 	\\
-	-\loglik_\text{Pred.} &= -\sum_{i=1}^N \: \log \Evover{q(f(\bx_i))}{  \: p( y \mid f(\bx) ) \: } + \beta_\text{reg} \kl{ q(\bu) }{ p(\bu) }.
+	-\loglik_\text{Pred.} &= -\sum_{i=1}^N \: \log \Evover{q(f(\bx^{(i)}))}{  \: p( y \mid f(\bx) ) \: } + \beta_\text{reg} \kl{ q(\bu) }{ p(\bu) }.
 	\label{eqn:predll}
 \end{align}
 %
