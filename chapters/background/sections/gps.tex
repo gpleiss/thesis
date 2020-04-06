@@ -438,7 +438,7 @@ The $\bw_\bx$ vectors approximate the training kernel matrix $\bK_{\bX\bX} \appr
   \widetilde \bK_{\bX\bX} &= \:\:
     \left( \overbracket{ \bK_{\bZ\bX}^\top \bK_{\bZ\bZ}^{-1} }^{ \approx \bW_{\bX}^\top} \right)
     \bK_{\bZ\bZ}
-    \left( \overbracket{ \bK_{\bZ\bX}^{-1} \bK_{\bZ\bX} }^{ \approx \bW_{\bX}} \right)
+    \left( \overbracket{ \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bX} }^{ \approx \bW_{\bX}} \right)
   \nonumber{} \\
   &\approx \:\: \bW_{\bX}^\top \: \bK_{\bZ\bZ} \: \bW_{\bX}.
   \label{eqn:ski}
@@ -448,7 +448,7 @@ Here, $\bW_{\bX} = [\bw_{\bx_1}, \ldots, \bw_{\bx_n}]$ contains the interpolatio
 Performing a matrix-vector multiplication with $\widetilde \bK_{\bX\bX}$ (i.e. $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bv$ for any vector $\bv$) takes \emph{near-linear} time.
 To see why, a MVM with the matrix $\bW_\bX$ require $\bigo{N}$ time due to the $\bigo{N}$ sparsity of $\bW_\bX$.
 Moreover, restrictions 2 and 3 (stationary kernel/grided inducing points) endow the inducing kernel matrix $\bK_{\bZ\bZ}$ with Toeplitz structure (or Kronecker/Toeplitz structure if the inputs $\bx_i$ are multi-dimensional).
-By exploiting this structure, $\bK_{\bZ\bZ}$ requires $\bigo{m}$ storage and MVMs with $\bK_{\bZ\bZ}$ require $\bigo{m \log m}$ time \citep[see][for details]{cunningham2008fast,saatcci2012scalable}.
+By exploiting this structure, $\bK_{\bZ\bZ}$ requires $\bigo{M}$ storage and MVMs with $\bK_{\bZ\bZ}$ require $\bigo{M \log M}$ time \citep[see][for details]{cunningham2008fast,saatcci2012scalable}.
 Thus, if we perform $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bv$ from right-to-left, the entire multiplication takes $\bigo{N + M \log M}$ time.
 As we will demonstrate in the next section, exploiting these fasts MVMs results in a near-linear training time complexity for KISS-GP.
 
@@ -491,6 +491,7 @@ It will be used throughout the remaining chapters.
 			$k( \cdot, \cdot )$ & $\reals^\numdim \times \reals^\numdim \rightarrow \reals$ & The GP (prior) covariance/kernel function \\
 			$\sigma_\text{obs}^2$ & $\reals$ & Observational variance of the Gaussian likelihood \\
 			$f( \cdot )$ & $\reals^\numdim \rightarrow \reals$ & Latent function (modelled with a GP prior) \\
+			$\btheta$ &  & Parameters of kernel, likelihood, etc. \\
 			\midrule
 			$\bmu_\bX$ & $\reals^\numdata$ & (Prior) mean vector for training data $\bX$ \\
 			$\bK_{\bX\bX}$ & $\reals^{\numdata \times \numdata}$ & (Prior) kernel matrix for training data $\bX$ \\
