@@ -34,3 +34,19 @@ provides $\bigo{tn \! + \! tm \log m}$ matrix-matrix multiplies \cite{wilson2015
 \paragraph{Compositions of kernels} can often be handled automatically.
 For example, given a BBMM routine for $\bK_{1},\bK_{2},\bK_{3}$, we can automatically perform $(\bK_{1}\bK_{2}+\bK_{3})M = \bK_{1}(\bK_{2}M) + \bK_{3}M$.
 SGPR and KISS-GP are implemented in this fashion. Given some pre-defined basic compositionality strategies, the kernel matrix multiplication $\bK\bM$ in SGPR reduces to defining how to perform $\bK_{\bU\bU}^{-1}M$, and similarly for KISS-GP it reduces to performing multiplication with a Toeplitz matrix $\bK_{\bU\bU}M$. For product kernels one can follow Gardner et al.~\cite{gardner2018product}.
+
+%When applying the SoR approximation ($K_{XX} = K_{XU}K_{UU}^{-1}K_{XU}^{\top}$), we have that $\rho(K)=\bigo{nm}$.
+%Thus, for SGPR, the time complexity of computing the rank $k$ pivoted Cholesky decomposition is $\bigo{nmk^{2}}$ time.
+%Assuming that $k^2 \leq m$ or $k^2 \approx m$, this operation will cost roughly the same as a single MVM.
+
+%When applying the SKI approximation ($K_{XX}=WK_{UU}W^{\top}$), we have that $\rho(K_{XX})=\bigo{n}$.
+%In particular, the ith row of $K_{XX}$ is given by
+%$
+   %\left[K_{XX}\right]_{i} = \bw_{i}K_{UU}W^{\top}.
+%$
+%Rather than explicitly perform these multiplications using Toeplitz matrix arithmetic, we observe that $\bw_{i}K_{UU}$ is equivalent to summing four elements from each column of $K_{UU}$ (corresponding to the four non-zero elements of $\bw_i$).
+%Since elements of $K_{UU}$ can be accessed in $\bigo{1}$ time, this multiplication requires $\bigo{m}$ work.
+%After computing $\bv=\bw_{i}K_{UU}$, computing $\bv W^{\top}$ requires $\bigo{n}$ work due to the sparsity of $W^{\top}$.
+%Therefore, we can compute a pivoted Cholesky decomposition for a SKI kernel matrix in $\bigo{nk^{2}}$ time.
+%This time complexity is comparable to the MVM time complexity, which is also linear in $n$.
+

@@ -23,46 +23,155 @@ $
   \log \vert \trainK \vert = \log \vert \bP^{-1}\trainK \vert + \log \vert \bP \vert.
 $
 
-For one possible preconditioner, we turn to the {\bf pivoted Cholesky decomposition} \cite{harbrecht2012low}.
+For one possible preconditioner, we turn to the {\bf partial pivoted Cholesky decomposition} \cite{harbrecht2012low}.
 The pivoted Cholesky algorithm allows us to compute a low-rank approximation of a positive definite matrix, $\bK_{\bX\bX} \approx \bL_{k} \bL_{k}^{\top}$.
 We precondition mBCG with $(\bL_k \bL_k^\top + \sigma^2 \bI)^{-1}$, where $\sigma^2$ is the Gaussian likelihood's noise term.
 Intuitively, if $\bP_{k}=\bL_{k}\bL_{k}^{\top}$ is a good approximation of $\bK_{\bX\bX}$, then $(\bP_{k} + \sigma^{2}\bI)^{-1}\trainK \approx \bI$.
 
-Before describing the preconditioned and its effect on mBCG convergence, we will first introduce the pivoted Cholesky algorithm and its properties.
+Unlike the standard Cholesky decomposition, which computes an exact factorization in $N$ iterations,
+the partial pivoted Cholesky decomposition produces a \emph{rank-R} factorization in $R \ll N$ iterations.
+Therefore, it does not has the same asymptotic or GPU-acceleration concerns as the standard factorization.
+Before describing the preconditioner and its effect on mBCG convergence, we will first introduce the pivoted Cholesky algorithm and its properties.
 
 
 \subsection{The Pivoted Cholesky Decomposition}
-\gp{Stopped here.}
 
-\paragraph{The Pivoted Cholesky decomposition}
-is an efficient algorithm for computing a low-rank decomposition of a positive definite matrix \cite{harbrecht2012low,bach2013sharp}, which we use in the context of preconditioning.
-\citet{harbrecht2012low} explores the use of the pivoted Cholesky decomposition as a low rank approximation, although primarily in a scientific computing context.
-In proving convergence bounds for our preconditioner we explicitly make use of some theoretical results from \cite{harbrecht2012low} (see \cref{app:theory}).
-\citet{bach2013sharp} considers using random column sampling as well as the pivoted Cholesky decomposition as a low-rank approximation to kernel matrices.
-However, \citet{bach2013sharp} treats this decomposition as an approximate training method, whereas we use the pivoted Cholesky decomposition primarily
-as a preconditioner, which avoids any loss of accuracy from the low rank approximation as well as the complexity of computing derivatives.
+In this section, we review a full derivation of the \emph{pivoted Cholesky decomposition} as used for preconditioning in our paper.
+To begin, observe that the standard Cholesky decomposition can be seen as producing a sequentially more accurate low rank approximation to the input matrix $\bA$.
+In particular, the Cholesky decomposition algorithm seeks to decompose a matrix $\bA$ as:
+%
+\begin{equation}
+ \label{eq:cholesky_full}
+ \begin{bmatrix} \bA^{(11)} & \bA^{(12)} \\ \bA^{(12)^\top} & \bA^{(22)}\end{bmatrix}
+ =
+ \begin{bmatrix} \bL^{(11)} & \bzero \\ \bL^{(12)} & \bL^{(22)}\end{bmatrix}
+ \begin{bmatrix} \bL^{(11)^\top} & \bL^{(12)^\top} \\ \bzero & \bL^{(22)^\top}\end{bmatrix}
+\end{equation}
+%
+%Note that that $\bA^{(11)} = \bL^{(11)} \bL^{(11)^\top}$, $\bA^{(12)} = \bL^{(11)} \bL^{(21)^\top}$, and $\bA^{(22)} = \bL^{(21)} \bL^{(21)^\top} + \bL^{(22)} \bL^{(22)^\top}$.
+From these equations, we can obtain $\bL^{(11)}$ by recursively Cholesky decomposing $\bA^{(11)}$, $\bL^{(21)^\top}$ by computing $\bL^{(21)^\top} = \bL^{(11)^{-1}} \bA^{(12)}$,
+and finally $\bL^{(22)}$ by Cholesky decomposing the Schur complement $\bS_2 = \bA^{(22)} - \bL^{(21)} \bL^{(21)^\top}$.
+
+We can view each iteration of the Cholesky decomposition as producing a slightly higher rank approximation to the matrix $\bA$.
+In particular, if  $ \bA = \left[ K^{(11)}, \:\: \bb^{\top}; \:\:\:\: \bb, \:\: \bA^{(22)} \right], $
+then $\bL^{(11)} = \sqrt{K^{(11)}}$, $\bL^{(21)} = \left( 1 / \sqrt{K^{(11)}} \right) \bb$, and the Schur complement is $\bS_2 = \bA^{(22)} - \left(1/ K^{(11)} \right) \bb \bb^{\top}$.
+Therefore:
+%
+\begin{align}
+  \bA &=
+    \begin{bmatrix} \sqrt{ K^{(11)} } \\ \frac{1}{\sqrt{K^{(11)}}} \bb \end{bmatrix}
+    \begin{bmatrix} \sqrt{ K^{(11)} } & \frac{1}{\sqrt{K^{(11)}}} \bb^\top \end{bmatrix}
+    +
+    \begin{bmatrix} 0 & 0 \\ 0 & \bS_2 \end{bmatrix}
+  \nonumber \\
+  &= \bv_{1}\bv_{1}^{\top} + \begin{bmatrix} 0 & 0 \\ 0 & \bS_2 \end{bmatrix}
+  \label{eq:chol_incomplete}.
+\end{align}
+%
+Because the Schur complement is positive definite, we can continue by recursing on the $(N-1) \times (N - 1)$ Schur complement $\bS_2$ to get another vector.
+In particular, if $\bS_2 = \bv_{2}\bv_{2}^{\top} + \left[0, \:\: 0; \:\:\:\: 0, \:\: \bS_3 \right]$, then:
+%
+\begin{align}
+  \bA  = \bv_{1}\bv_{1}^{\top} + \begin{bmatrix} 0 \\ \bv_{2} \end{bmatrix} \begin{bmatrix} 0 & \bv_2^\top \end{bmatrix} +
+  \begin{bmatrix} 0 & 0 \\ 0 & \bS_3 \end{bmatrix}
+\end{align}
+%
+In general, after $R$ iterations, defining $\hat{\bv}_{i} = \left[ \bzero; \:\: \bv_i \right]$ we obtain
+%
+\begin{align}
+  \bA  = \sum_{i=1}^{R} \hat{\bv}_{i} \hat{\bv}_{i}^{\top} + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix}
+\end{align}
+%
+The matrix $\bP_{R} = \sum_{i=1}^{R}\hat{\bv}_{i}\hat{\bv}_{i}^{\top}$ can be viewed as a rank-$R$ approximation to $\bA$, with
+$$
+  \Vert \bA - \bP_{R} \Vert_{2} = \Vert \bS_{R+1} \Vert_2.
+$$
+
+To improve the accuracy of the low rank approximation, one natural goal is to minimize the norm of the Schur complement, $\Vert \bS_{i} \Vert$, at each iteration.
+\citet{harbrecht2012low} suggest to permute the rows and columns of $\bS_{i}$ (with $\bS_{1} = \bA$) so that the upper-leftmost entry in $\bS_{i}$ is the maximum diagonal element.
+In the first step, this amounts to replacing $\bA$ with $\bPi_{1} \bA \bPi_{1}^\top$, where $\bPi_{1}$ is a permutation matrix that swaps the first row and column with whichever row and column corresponds to the maximum diagonal element of $\bA$.
+Thus:
+%
+\begin{align*}
+  \bPi_{1} \bA \bPi_{1}^\top = \bv_{1}\bv_{1}^{\top} + \begin{bmatrix} 0 & 0 \\ 0 & \bS_2 \end{bmatrix}.
+\end{align*}
+%
+To proceed, one can apply the same pivoting rule to $S$ to achieve $\pi_{2}$:
+%
+\begin{align*}
+  \left( \bPi_{2} \bPi_{1} \right) \bA \left( \bPi_{1}^\top \bPi_{2}^\top \right) = \bPi_{2} \bv_{1}\bv_{1}^{\top} \bPi_2^\top
+  + \hat \bv_2 \hat \bv_2^\top + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_3 \end{bmatrix}.
+\end{align*}
+%
+In general, after $R$ steps, we obtain:
+\begin{align}
+  \bA = \sum_{i=1}^{R} \left( \prod_{j=1}^i \bPi_j \right) \hat{\bv}_{i} \hat{\bv}_{i} \left( \prod_{j=1}^i \bPi_{i-j+1}^\top \right)
+  + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix}.
+\end{align}
+Collecting the $\left( \prod_{j=1}^i \bPi_j \right) \hat{\bv}_{i}$ vectors in to a matrix $\bL_R$ gives us a rank-$R$ approximation of $\bA$:
+%
+\begin{equation}
+  \bA = \bL_{R} \bL_{R}^{\top} + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix} \approx \bL_{R} \bL_{R}^{\top}.
+\end{equation}
+%
+$\bL_{R} \in \reals^{N \times R}$ is referred to as the {\bf partial pivoted Cholesky factor} of $\bA$.
 
 \subsection{Pivoted Cholesky as a Preconditioner}
 
-\paragraph{The Pivoted Cholesky Decomposition.}
+Let $\bL_{R} \in \reals^{N \times R}$ be the rank-$R$ pivoted Cholesky factor of $\bK_{\bX\bX}$.
+To accelerate mBCG for GP training, we introduce the {\bf partial pivoted Cholesky preconditioner} for the matrix $\trainK = \bK_{\bX\bX} + \sigma^2_\text{obs} \bI$
+\begin{equation}
+  \trainP_R = \bL_{R} \bL_{R}^\top + \sigma^2_\text{obs} \bI.
+\end{equation}
+%
+There are three key properties of our preconditioner that we wish to highlight:
+%
+\begin{observation}[Properties of the rank-$R$ pivoted Cholesky preconditioner.]
+  {\ }
+  \begin{enumerate}
+    \item $\bL_{R}$ can be computed in $\bigo{\row{\trainK}R^{2}}$ time, where $\row{\trainK}$ is the time required to retrieve a single row of $\trainK$.
 
-We would like to emphasize three key properties of the pivoted Cholesky decomposition.
-First, it can be computed in $\bigo{\row{\bK_{\bX\bX}}k^{2}}$ time, where $\row{\bK_{\bX\bX}}$ is the time to access a row (nominally this is $\bigo{N}$).
-Second, linear solves with $\trainP = \bL_{k}\bL_{k}^{\top} + \sigma^{2}\bI$ can be performed in $\bigo{nk^{2}}$ time. Finally, the log determinant of $\trainP$ can be computed in $\bigo{nk^{2}}$ time.
-In \cref{sec:results} we empirically show that this preconditioner dramatically accelerates CG convergence.
-Further, in \cref{app:theory}, we prove the following lemma and theorem for univariate RBF kernels:
+    \item Linear solves with $\trainP_R = \bL_{R} \bL_{R}^{\top} + \sigma_\text{obs}^{2} \bI$ can be performed in $\bigo{NR^{2}}$ time using the Woodbury matrix formula.\footnote{
+      The Woodbury matrix formula is a $\bigo{R^2 N}$ formula for ``rank-R plus diagonal'' solves:
+      $$\left( \bL_{R} \bL_{R}^{\top} + \sigma^{2}_\text{obs} \bI \right)^{-1} \bb = {\sigma_\text{obs}^{-2}}\bb - {\sigma_\text{obs}^{-4}} \: \bL_{R} \left( \bI - {\sigma^{-2}_\text{obs}} \bL_{R}^{\top} \bL_{R} \right)^{-1} \bL_{R}^{\top}\bb.$$
+    }
 
+    \item The log determinant of $\trainP_R$ can be computed in $\bigo{NR^{2}}$ time using the matrix determinant lemma.\footnote{
+      The matrix determinant lemma is an analog of the Woodbury formula for determinants:
+      $$\log \vert \bL_{R} \bL_{R}^\top + \sigma^{2}_\text{obs} \bI \vert = \log \vert \bI - {\sigma^{-2}} \bL_{R}^{\top} \bL_{R} \vert + 2 N \log \sigma_\text{obs}.$$
+    }
+  \end{enumerate}
+\end{observation}
+For a standard positive definite matrix, \citet{harbrecht2012low} observes that $\row{\trainK} = \bigo{N}$ running time.
+In general this is also true for low-rank and structured matrices that we don't wish to explicitly compute, this computation time remains roughly linear.
+Therefore, assuming $R \ll N$ (for example, $R \approx 5$, computing and using $\trainP$ is less expensive than a single matrix multiplication with $\trainK$.
+
+More important than its runtime however are its convergence properties.
+In general, the low-rank nature of $\trainP$ is an ideal choice for many kernel matrices with rapidly decaying spectra.
+Such kernels tend to be horribly conditioned yet are well approximated by a low rank matrix.
+We will demonstrate in \cref{sec:results} that $\trainP$ dramatically improves the convergence of mBCG for a wide variety of kernels.
+Below, we will prove some theoretical results for certain classes of kernels.
+
+\gp{Stopped here.}
+
+\paragraph{Theoretical analysis.}
+For univariate RBF kernels, it is possible to show that the conditioning of mBCG improves \emph{super-exponentially} with the rank of partial pivoted Cholesky preconditioner.
+%
 \begin{lemma}
   \label{thm:condition_number}
-  Let $\bK_{\bX\bX} \in \reals^{n \times n}$ be a univariate RBF kernel matrix.
-  Let $\bL_{k} \bL_k^\top$ be the rank $k$ pivoted Cholesky decomposition of $\bK_{\bX\bX}$, and let $\trainP_{k} = \bL_k \bL_k^\top + \sigma^{2}\bI$.
-  Then there exists a constant $b>0$ so that the condition number $\kappa(\trainP^{-1}\trainK)$ satisfies the following inequality:
+  Let $\bK_{\bX\bX} \in \reals^{N \times N}$ be a univariate RBF kernel matrix, and let $\bL_{R}$ be its rank-$R$ pivoted Cholesky factor.
+  Then there exists a constant $B > 0$ so that the condition number $\kappa(\trainP^{-1}\trainK)$ satisfies the following bound:
   \begin{equation}
     \kappa \left( \trainP_{k}^{-1}\trainK \right)
     \triangleq \left\Vert \trainP_{k}^{-1}\trainK \right\Vert_{2} \left\Vert \trainK^{-1}\trainP_{k} \right\Vert_{2}
-    \leq \left( 1 + \bigo{n\exp(-bk)} \right)^2.
+    \leq \Bigl( 1 + \bigo{N e^{-BR}} \Bigr)^2.
   \end{equation}
 \end{lemma}
+%
+\noindent
+(See \cref{app:convergence} for a proof).
+Using \cref{thm:condition_number}
+
 \begin{theorem}[Convergence of pivoted Cholesky-preconditioned CG]
   \label{thm:cg_convergence_rbf}
   Let $\bK_{\bX\bX} \in \reals^{n \times n}$ be a $n \times n$ univariate RBF kernel, and let $\bL_k \bL_k^\top$ be its rank $k$ pivoted Cholesky decomposition.
@@ -93,4 +202,7 @@ This is because $\log \vert \trainP^{-1}\trainK \vert \rightarrow 0$ (since $\tr
 Since our calculation of $\log \vert \trainP \vert$ is exact, our final estimate of $\log \vert \trainK \vert$ becomes more exact as $k$ increases.
 In future work we hope to derive a more general result that covers multivariate settings and other kernels.
 %
-
+\citet{harbrecht2012low} explores the use of the pivoted Cholesky decomposition as a low rank approximation, although primarily in a scientific computing context.
+\citet{bach2013sharp} considers using random column sampling as well as the pivoted Cholesky decomposition as a low-rank approximation to kernel matrices.
+However, \citet{bach2013sharp} treats this decomposition as an approximate training method, whereas we use the pivoted Cholesky decomposition primarily
+as a preconditioner, which avoids any loss of accuracy from the low rank approximation as well as the complexity of computing derivatives.
