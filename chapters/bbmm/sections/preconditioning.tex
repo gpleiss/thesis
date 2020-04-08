@@ -1,18 +1,6 @@
 \section{Preconditioning}
 \label{sec:preconditioning}
 
-\paragraph{Preconditioning} is an effective tool for accelerating the convergence of conjugate gradients.
-These techniques are far too numerous to review adequately here; however, \citet{saad2003iterative} contains two chapters discussing a variety of preconditioning techniques.
-\citet{cutajar2016preconditioning} explores using preconditioned conjugate gradients for exact GP inference, where they use various sparse GP methods (as well as some classical methods) as preconditioners. However, the methods in \citet{cutajar2016preconditioning} do not provide general purpose preconditioners.
-For example, methods like Jacobi preconditioning have no effect when using a stationary kernel \cite{cutajar2016preconditioning,wilson2015thoughts}, and many other preconditioners have $\bigomega{n^{2}}$ complexity, which dominates the complexity of most scalable GP methods.
-
-\paragraph{The Pivoted Cholesky decomposition}
-is an efficient algorithm for computing a low-rank decomposition of a positive definite matrix \cite{harbrecht2012low,bach2013sharp}, which we use in the context of preconditioning.
-\citet{harbrecht2012low} explores the use of the pivoted Cholesky decomposition as a low rank approximation, although primarily in a scientific computing context.
-In proving convergence bounds for our preconditioner we explicitly make use of some theoretical results from \cite{harbrecht2012low} (see \cref{app:theory}).
-\citet{bach2013sharp} considers using random column sampling as well as the pivoted Cholesky decomposition as a low-rank approximation to kernel matrices.
-However, \citet{bach2013sharp} treats this decomposition as an approximate training method, whereas we use the pivoted Cholesky decomposition primarily
-as a preconditioner, which avoids any loss of accuracy from the low rank approximation as well as the complexity of computing derivatives.
 While each iteration of mBCG performs large parallel matrix-matrix operations that utilize hardware efficiently, the iterations themselves are sequential.
 A natural goal for better utilizing hardware is to trade off fewer sequential steps for slightly more effort per step.
 We accomplish this goal using \emph{preconditioning} \cite{golub2012matrix,saad2003iterative,demmel1997applied,van2003iterative}, which introduces a matrix $\bP$ to solve the related linear system
@@ -22,19 +10,44 @@ We accomplish this goal using \emph{preconditioning} \cite{golub2012matrix,saad2
 instead of $\trainK^{-1} \by$.
 Both systems are guaranteed to have the same solution, but the preconditioned system's convergence depends on the conditioning of $\bP^{-1}\trainK$ rather than that of $\trainK$.
 
-We observe two requirements of a preconditioner to be used in general for GP inference. First, in order to ensure that preconditioning operations do not dominate running time when using scalable GP methods, the preconditioner should afford roughly linear time solves and space. Second, we should be able to efficiently compute the log determinant of the preconditioner matrix, $\log \vert P \vert$. This is because the mBCG algorithm applied to the preconditioned system estimates $\log \vert \bP^{-1}\trainK \vert$ rather than $\log \vert \trainK \vert$. We must therefore compute
+\citet{cutajar2016preconditioning} explores using preconditioned conjugate gradients for exact GP training, where they use various sparse GP methods (as well as some classical methods) as preconditioners.
+However, the methods in \citet{cutajar2016preconditioning} do not provide general purpose preconditioners.
+For example, methods like Jacobi preconditioning have no effect when using a stationary kernel \cite{cutajar2016preconditioning,wilson2015thoughts}, and many other preconditioners have $\bigomega{N^{2}}$ complexity, which dominates the complexity of most scalable GP methods.
+
+We observe two requirements of a preconditioner to be used in general for GP training.
+First, in order to ensure that preconditioning operations do not dominate running time when using scalable GP methods, the preconditioner should afford roughly linear time solves and space.
+Second, we should be able to efficiently compute the log determinant of the preconditioner matrix, $\log \vert \bP \vert$.
+This is because the mBCG algorithm applied to the preconditioned system estimates $\log \vert \bP^{-1}\trainK \vert$ rather than $\log \vert \trainK \vert$. We must therefore compute
 $
   \label{eq:logdet_adjusted}
-  \log \vert \trainK \vert = \log \vert \bP^{-1}\trainK \vert + \log \vert P \vert.
+  \log \vert \trainK \vert = \log \vert \bP^{-1}\trainK \vert + \log \vert \bP \vert.
 $
 
-\paragraph{The Pivoted Cholesky Decomposition.}
-For one possible preconditioner, we turn to the \emph{pivoted Cholesky} decomposition.
-The pivoted Cholesky algorithm allows us to compute a low-rank approximation of a positive definite matrix, $\bK_{\bX\bX} \approx \bL_{k} \bL_{k}^{\top}$ \cite{harbrecht2012low}.
+For one possible preconditioner, we turn to the {\bf pivoted Cholesky decomposition} \cite{harbrecht2012low}.
+The pivoted Cholesky algorithm allows us to compute a low-rank approximation of a positive definite matrix, $\bK_{\bX\bX} \approx \bL_{k} \bL_{k}^{\top}$.
 We precondition mBCG with $(\bL_k \bL_k^\top + \sigma^2 \bI)^{-1}$, where $\sigma^2$ is the Gaussian likelihood's noise term.
 Intuitively, if $\bP_{k}=\bL_{k}\bL_{k}^{\top}$ is a good approximation of $\bK_{\bX\bX}$, then $(\bP_{k} + \sigma^{2}\bI)^{-1}\trainK \approx \bI$.
 
-While we review the pivoted Cholesky algorithm fully in \cref{app:pivoted_cholesky}, we would like to emphasize three key properties. First, it can be computed in $\bigo{\row{\bK_{\bX\bX}}k^{2}}$ time, where $\row{\bK_{\bX\bX}}$ is the time to access a row (nominally this is $\bigo{n}$).
+Before describing the preconditioned and its effect on mBCG convergence, we will first introduce the pivoted Cholesky algorithm and its properties.
+
+
+\subsection{The Pivoted Cholesky Decomposition}
+\gp{Stopped here.}
+
+\paragraph{The Pivoted Cholesky decomposition}
+is an efficient algorithm for computing a low-rank decomposition of a positive definite matrix \cite{harbrecht2012low,bach2013sharp}, which we use in the context of preconditioning.
+\citet{harbrecht2012low} explores the use of the pivoted Cholesky decomposition as a low rank approximation, although primarily in a scientific computing context.
+In proving convergence bounds for our preconditioner we explicitly make use of some theoretical results from \cite{harbrecht2012low} (see \cref{app:theory}).
+\citet{bach2013sharp} considers using random column sampling as well as the pivoted Cholesky decomposition as a low-rank approximation to kernel matrices.
+However, \citet{bach2013sharp} treats this decomposition as an approximate training method, whereas we use the pivoted Cholesky decomposition primarily
+as a preconditioner, which avoids any loss of accuracy from the low rank approximation as well as the complexity of computing derivatives.
+
+\subsection{Pivoted Cholesky as a Preconditioner}
+
+\paragraph{The Pivoted Cholesky Decomposition.}
+
+We would like to emphasize three key properties of the pivoted Cholesky decomposition.
+First, it can be computed in $\bigo{\row{\bK_{\bX\bX}}k^{2}}$ time, where $\row{\bK_{\bX\bX}}$ is the time to access a row (nominally this is $\bigo{N}$).
 Second, linear solves with $\trainP = \bL_{k}\bL_{k}^{\top} + \sigma^{2}\bI$ can be performed in $\bigo{nk^{2}}$ time. Finally, the log determinant of $\trainP$ can be computed in $\bigo{nk^{2}}$ time.
 In \cref{sec:results} we empirically show that this preconditioner dramatically accelerates CG convergence.
 Further, in \cref{app:theory}, we prove the following lemma and theorem for univariate RBF kernels:

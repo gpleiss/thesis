@@ -216,65 +216,40 @@ From \cref{obs:lanczos_cg}, the diagonal and subdiagonal entries of $\bT^{(1)}, 
 %Our mBCG algorithm simply exploits this fact.
 The final three lines in {\color{\colornew} \colornew} in \cref{alg:mod_pcg} use the $\balpha_j$ and $\bbeta_j$ coefficients to iteratively compute the Lanczos matrices from \cref{obs:lanczos_cg}.
 Notably, these matrices can be formed with $\bigo{T}$ extra computation, and we are able to avoid running the Lanczos algorithm.
-
-
+This is an advantage over existing MVM-based training methods, as mBCG avoids the numerical instabilities associated with Lanczos (see \cref{sec:lanczos}).
 
 
 \subsection{Runtime and space.}
 As shown above, we are able to approximate all inference terms from \emph{a single call to mBCG}.
 These approximations improve with the number of mBCG iterations.
-Each iteration requires one matrix-matrix multiply with $\trainK$, and the subsequent work to derive these inference terms takes negligible additional time (\cref{app:method_runtime}).
-Therefore, $J$ iterations of mBCG requires $\bigo{nt}$ space (see \cref{app:method_runtime}) and $\bigo{J \: \mmm{\trainK}}$ time,
-where $\mmm{\trainK}$ is the time to multiply $\trainK$ by a $N \times (T + 1)$ matrix.
+Each iteration requires one matrix-matrix multiply with $\trainK$ and element-wise operations on $N \times T$ matrices.
+Therefore, $J$ iterations of mBCG requires $\bigo{NT}$ space and $\bigo{J \: \mmm{\trainK}}$ time,
+where $\mmm{\trainK}$ is the time to multiply $\trainK$ by a $N \times (T + 1)$ matrix.\footnote{
+	There are $J$ matrix multiplications with $\trainK$, resulting in the $\bigo{J \mmm{\trainK}}$ runtime.
+	For the remainder of the algorithm, all matrices involved ($\bU_{j},\bV_j,\bR_j,\bZ_j,\bP_j$) are $n \times t$ matrices.
+	All of the lines involving only these matrices perform operations that require $\bigo{NT}$ time.
+	For example, elementwise multiplying $\bZ_{j} \circ \bZ_{j}$ accesses each element in $\bZ_{j}$ once, and and then multiplying it by the vector of ones similarly accesses every element in the matrix once.
+	Multiplying $\bV_{j}$ by the diagonal matrix with $\ba_{j}$ on the diagonal takes $\bigo{NT}$ time, because we multiply every element $\bV_{j}^{(ik)}$ by $\ba_{j}^{(i)}$.
+	Therefore, all other lines in the algorithm are dominated by the matrix multiply with $\trainK$, and the total running time is also $\bigo{J \mmm{\trainK}}$.
+	Furthermore, because these intermediate matrices are $N \times T$, the space requirement is also $\bigo{NT}$.
+}
 This multiplication takes $\bigo{N^2 T}$ time with a standard matrix.
-It is worth noting that this is a lower asymptotic complexity that standard Cholesky-based inference, which is $\bigo{N^3}$.
-Therefore, BBMM offers a computational speedup for exact GP inference.
+It is worth noting that this is a lower asymptotic complexity that standard Cholesky-based training, which is $\bigo{N^3}$.
+Therefore, \emph{BBMM offers a computational speedup for exact GPs}.
 As we will show in \cref{sec:advantages}, this time complexity can be further reduced with structured data or sparse GP approximations.
 
-It is also worth noting that mBCG offers an advantage over existing MVM-based GP frameworks.
-Rather than requiring separate algorithms for matrix solves and log determinants, mBCG is a unified approach that computes both terms simultaneously.
-Moreover, mBCG obtains the Lanczos tridiagonal matrices without explicitly using \cref{alg:lanczos}, which avoids the numerical instabilities of Gram-Schmidt orthogonalization.
+%We first briefly analyze the running time of mBCG (\cref{alg:mod_pcg}) itself.
+%The algorithm performs matrix multiplies with $\trainK$ once before the loop and once during every iteration of the loop.
+%Therefore, the running time of mBCG is at least $\bigo{J \mmm{\trainK}}$, where $\mmm{\trainK}$ is the time to multiply $\trainK$ by an $N \times T$ matrix.
 
-We first briefly analyze the running time of mBCG (\cref{alg:mod_pcg}) itself.
-The algorithm performs matrix multiplies with $\trainK$ once before the loop and once during every iteration of the loop.
-Therefore, the running time of mBCG is at least $\bigo{p\mmm{\trainK}}$, where $\mmm{\trainK}$ is the time to multiply $\trainK$ by an $n \times t$ matrix.
-
-For the remainder of the algorithm, all matrices involved ($U_{j},V_j,R_j,Z_j,P_j$) are $n \times t$ matrices.
-All of the lines involving only these matrices perform operations that require $\bigo{nt}$ time.
-For example, elementwise multiplying $Z_{j} \circ Z_{j}$ accesses each element in $Z_{j}$ once, and and then multiplying it by the vector of ones similarly accesses every element in the matrix once.
-Multiplying $V_{j}$ by the diagonal matrix with $\ba_{j}$ on the diagonal takes $\bigo{nt}$ time, because we multiply every element $[V_{j}]_{ik}$ by $[\ba_{j}]_{i}$.
-Therefore, all other lines in the algorithm are dominated by the matrix multiply with $\trainK$, and the total running time is also $\bigo{p\mmm{\trainK}}$.
-Furthermore, because these intermediate matrices are $n \times t$, the space requirement (beyond what is required to store $\trainK$) is also $\bigo{nt}$.
-
-We will now show that, after using mBCG to produce the solves and tridiagonal matrices, recovering the three inference terms takes little additional time and space.
-To recap, we run mBCG to recover
-%
-\begin{equation*}
-  \left[\begin{array}{cccc}\bu_{0} & \bu_{1} & \cdots & \bu_{t}\end{array}\right] = \trainK^{-1}\left[\begin{array}{cccc}\by & \bz_{1} & \cdots & \bz_{t}\end{array}\right] \:\:\:\:\: \text{and} \:\:\:\:\: \tilde{\bT}_{1},...,\tilde{\bT}_{t}.
-\end{equation*}
-%
-where $\bz_i$ are random vectors and $\tilde \bT_i$ are their associated Lanczos tridiagonal matrices.
-
-\paragraph{Time complexity of $\trainK^{-1}\by$.}
-This requires no additional work over running mBCG because it is the first output of the algorithm.
-
-\paragraph{Time complexity of $\tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}}$.}
-mBCG gives us access to $\trainK^{-1}[\bz_{1} \: \ldots \: \bz_{t}]$.
-Recall that we compute this trace as:
-\begin{equation}
-  \tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}} \approx \frac{1}{t}\sum_{i=1}^{t}(\bz_{i}\trainK^{-1})(\frac{\partial \trainK}{\partial \btheta}\bz_{i})
-\end{equation}
-We can get $\frac{\partial \trainK}{\partial \btheta}\bz_{i}$ by performing a single matrix multiply $\frac{\partial \trainK}{\partial \btheta}[\bz_{1} \: \ldots \: \bz_{t}]$, requiring $\mmm{\frac{\partial \trainK}{\partial \btheta}}$.
-(We assume that $\mmm{\frac{\partial \trainK}{\partial \btheta}} \approx \mmm{\trainK}$, which is true for exact GPs and all sparse GP approximations.)
-After this, we need to perform $t$ inner products between the columns of this result and the columns of $\trainK^{-1}[\bz_{1} \: \ldots \: \bz_{t}]$, requiring $\bigo{tn}$ additional time.
-Therefore, the running time is still dominated by the running time of mBCG.
-The additional space complexity involves the $2t$ length $n$ vectors involved in the inner products, which is negligible.
-
-\paragraph{Time complexity of $\log \vert \trainK \vert$.}
-mBCG gives us $p \times p$ tridiagonal matrices  $\tilde{T}_{1},...,\tilde{T}_{t}$. To compute the log determinant estimate, we must compute $e_{1}^{\top}\log \tilde{T}_{i} e_{1}$ for each $i$. To do this, we eigendecompose $\tilde{T}_{i}=V_{i}\Lambda_{i}V_{i}^{\top}$, which can be done in $\bigo{p^{2}}$ time for tridiagonal matrices, and compute
-\begin{equation}
-  e_1^\top V_i\log \Lambda_i V_i^\top e_1
-\end{equation}
-where now the $\log$ is elementwise over the eigenvalues. Computing $V_i^\top e_1$ simply gets the first row of $V_i$, and $\log \Lambda$ is diagonal, so this requires only $\bigo{p}$ additional work.
-
-The total running time post-mBCG is therefore dominated by the $\bigo{tp^{2}}$ time required to eigendecompose each matrix. This is again significantly lower than the running time complexity of mBCG itself. The space complexity involves storing $2t$ $p \times p$ matrices (the eigenvectors), or $\bigo{tp^{2}}$.
+After using mBCG to produce the solves and tridiagonal matrices, recovering the three training terms takes little additional time and space.
+$\trainK^{-1}\by$ requires no additional computation because it is the first output of the algorithm.
+The $\tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}}$ estimate is the inner product of the $\trainK^{-1} \bz^{(i)}$ solves with the $\frac{\partial \trainK}{\partial \btheta}[\bz^{(1)} \:\:, \ldots \:\:, \bz^{(T)}]$ vectors.
+This only requires an additional $\mmm{\frac{\partial \trainK}{\partial \btheta}} + \bigo{NT}$ time and $\bigo{NT}$ space.\footnote{
+	We assume that $\mmm{\frac{\partial \trainK}{\partial \btheta}} \approx \mmm{\trainK}$, which is true for exact GPs and GP approximations.
+}
+Computing $\log \vert \trainK \vert$ dominates the post-mBCG running time; however, it negligible assuming $J \ll N$ iterations of mBCG.
+%mBCG gives us $J \times J$ tridiagonal matrices  ${\bT}^{(1)}, \ldots, {\bT}^{(T)}$.
+To compute the log determinant estimate, we must compute $\be^{(1)^\top} \log \bT^{(i)} \be^{(1)}$ for each $i$.
+To do this, we eigendecompose ${\bT}^{(i)} = \bV^{(i)} \bLambda^{(i)} \bV^{(i)^\top}$, which takes $\bigo{J^{2}}$ time for tridiagonal matrices.
+This is again significantly lower than the running time complexity of mBCG itself.
