@@ -112,14 +112,14 @@ Unlike the standard Cholesky algorithm, it is more common to run $R \ll N$ itera
 For matrices with rapidly decaying spectra, the partial pivoted Cholesky factor is a remarkably effective approximation.
 \citet{harbrecht2012low} prove an \emph{exponential} convergence guarantee for matrices with exponentially-decaying eigenvalues:
 %
-\begin{lemma}[Partial Pivoted Cholesky Convergence \citep{harbrecht2012low}]
+\begin{theorem}[Partial Pivoted Cholesky Convergence \citep{harbrecht2012low}]
 \label{thm:harbrecht}
   If the first $R$ eigenvalues $\lambda_1$, $\ldots$, $\lambda_R$ of a positive-definite $\bA \in \reals^{N \times N}$ satisfy $\left( 4^{i}\lambda_{i} \right) \leq \bigo{e^{-Bi}}$ for some $B>0$,
   then the rank-$R$ pivoted Cholesky decomposition $\bar\bL_{R} \bar\bL_R^\top$ gives
   \[
     \textrm{Tr}(\bA -  \bar\bL_A \bar\bL_A^\top) \leq \bigo{N e^{-BR}}.
   \]
-\end{lemma}
+\end{theorem}
 
 
 \paragraph{Runtime and Space.}

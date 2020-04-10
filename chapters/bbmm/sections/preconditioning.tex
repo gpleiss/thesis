@@ -16,7 +16,10 @@ Despite the matrix square roots in \cref{eqn:precond_system}, preconditioned CG 
 However, the methods described in \citet{cutajar2016preconditioning} are not general purpose preconditioners.
 For example, methods like Jacobi preconditioning have no effect when using a stationary kernel \cite{cutajar2016preconditioning,wilson2015thoughts}, and many other preconditioners have $\bigomega{N^{2}}$ complexity, which dominates the complexity of most scalable GP methods.
 
+
+
 \subsection{Modifying mBCG for Preconditioning}
+\label{sec:precond_requirements}
 We have to make some special adjustments to our modified batch CG algorithm in order to use preconditioning.
 While the preconditioned system simply returns $\trainK^{-1} \by$, we need to modify the random probe vectors $\bz^{(1)}$, $\ldots$, $\bz^{(T)}$ to get correct estimates of $\log \vert \trainK \vert$ and $\tr{ \trainK^{-1} ( \partial \trainK / \partial \btheta) }$.
 In particular, we will perform the solves
@@ -28,7 +31,11 @@ In particular, we will perform the solves
 %
 Note that the $\bz^{(i)}$ random vectors in this case have covariance $\Ev{ \bz^{(i)} \bz^{(i)^\top} } = \trainP$ (rather than unit covariance in the un-preconditioned case).
 
-\subsection{Requirements of mBCG preconditioners}
+\gp{FINISH}
+
+
+
+\paragraph{Requirements of mBCG preconditioners.}
 We observe two requirements of a preconditioner to be used in general for GP training.
 First, in order to ensure that preconditioning operations do not dominate running time when using scalable GP methods, the preconditioner should afford roughly linear time solves and space.
 Second, we should be able to efficiently compute the log determinant of the preconditioner matrix, $\log \vert \trainP \vert$.
@@ -38,48 +45,56 @@ $
   \log \vert \trainK \vert = \log \vert \trainP^{-1}\trainK \vert + \log \vert \trainP \vert.
 $
 
-For one possible preconditioner, we turn to the {\bf partial pivoted Cholesky decomposition} \cite{harbrecht2012low}.
-The pivoted Cholesky algorithm allows us to compute a low-rank approximation of a positive definite matrix, $\bK_{\bX\bX} \approx \bL_{k} \bL_{k}^{\top}$.
-We precondition mBCG with $(\bL_k \bL_k^\top + \sigma^2 \bI)^{-1}$, where $\sigma^2$ is the Gaussian likelihood's noise term.
-Intuitively, if $\bP_{k}=\bL_{k}\bL_{k}^{\top}$ is a good approximation of $\bK_{\bX\bX}$, then $(\bP_{k} + \sigma^{2}\bI)^{-1}\trainK \approx \bI$.
+\gp{COME BACK TO THIS}
 
-Unlike the standard Cholesky decomposition, which computes an exact factorization in $N$ iterations,
-the partial pivoted Cholesky decomposition produces a \emph{rank-R} factorization in $R \ll N$ iterations.
-Therefore, it does not has the same asymptotic or GPU-acceleration concerns as the standard factorization.
-Before describing the preconditioner and its effect on mBCG convergence, we will first introduce the pivoted Cholesky algorithm and its properties.
 
 
 \subsection{The Partial Pivoted Cholesky Preconditioner for mBCG}
 
-Let $\bL_{R} \in \reals^{N \times R}$ be the rank-$R$ pivoted Cholesky factor of $\bK_{\bX\bX}$.
-To accelerate mBCG for GP training, we introduce the {\bf partial pivoted Cholesky preconditioner} for the matrix $\trainK = \bK_{\bX\bX} + \sigma^2_\text{obs} \bI:$
+For one possible preconditioner, we turn to the {\bf partial pivoted Cholesky decomposition} \cite{harbrecht2012low}.
+The pivoted Cholesky algorithm allows us to compute a rank-$R$ approximation ($R \ll N$) of the training kernel matrix $\bK_{\bX\bX} \approx \bar\bL_{R} \bar\bL_{R}^{\top}$.
+We precondition mBCG with
 \begin{equation}
-  \trainP_R = \bL_{R} \bL_{R}^\top + \sigma^2_\text{obs} \bI.
+  \trainP_R = \bar\bL_{R} \bar\bL_{R}^\top + \sigma^2_\text{obs} \bI,
 \end{equation}
-%
-There are three key properties of our preconditioner that we wish to highlight:
+where $\sigma_\text{obs}^2$ is the Gaussian likelihood's noise term.
+Intuitively, if $\bar\bL_{R}\bar\bL_{R}^{\top}$ is a good low-rank approximation of $\bK_{\bX\bX}$, then $(\bar\bL_{R} \bar\bL_R^\top + \sigma_\text{obs}^{2}\bI)^{-1}\trainK \approx \bI$.
+
+
+Unlike the standard Cholesky decomposition, which computes an exact factorization in $N$ iterations,
+the partial pivoted Cholesky decomposition produces a \emph{rank-R} factorization in $R \ll N$ iterations, and therefore does not share its asymptotic concerns.
+In particular, there are five asymptotic properties of our preconditioner that we wish to highlight:
 %
 \begin{observation}[Properties of the rank-$R$ pivoted Cholesky preconditioner.]
   {\ }
   \begin{enumerate}
-    \item $\bL_{R}$ can be computed in $\bigo{\row{\trainK}R^{2}}$ time, where $\row{\trainK}$ is the time required to retrieve a single row of $\trainK$.
+    \item $\bar\bL_{R}$ can be computed in $\bigo{\row{\trainK}R^{2}}$ time, where $\row{\trainK}$ is the time required to retrieve a single row of $\trainK$.
+      (see \cref{sec:piv_chol}).
 
-    \item Linear solves with $\trainP_R = \bL_{R} \bL_{R}^{\top} + \sigma_\text{obs}^{2} \bI$ can be performed in $\bigo{NR^{2}}$ time using the Woodbury matrix formula.\footnote{
+    \item Storing $\bar\bL_{R}$ requires $\bigo{NR}$ memory.
+
+    \item Linear solves with $\trainP_R = \bar\bL_{R} \bar\bL_{R}^{\top} + \sigma_\text{obs}^{2} \bI$ can be performed in $\bigo{NR^{2}}$ time using the Woodbury matrix formula.\footnote{
       The Woodbury matrix formula is a $\bigo{R^2 N}$ formula for ``rank-R plus diagonal'' solves:
-      $$\left( \bL_{R} \bL_{R}^{\top} + \sigma^{2}_\text{obs} \bI \right)^{-1} \bb = {\sigma_\text{obs}^{-2}}\bb - {\sigma_\text{obs}^{-4}} \: \bL_{R} \left( \bI - {\sigma^{-2}_\text{obs}} \bL_{R}^{\top} \bL_{R} \right)^{-1} \bL_{R}^{\top}\bb.$$
+      $$\left( \bar\bL_{R} \bar\bL_{R}^{\top} + \sigma^{2}_\text{obs} \bI \right)^{-1} \bb = {\sigma_\text{obs}^{-2}}\bb - {\sigma_\text{obs}^{-4}} \: \bar\bL_{R} \left( \bI - {\sigma^{-2}_\text{obs}} \bar\bL_{R}^{\top} \bar\bL_{R} \right)^{-1} \bar\bL_{R}^{\top}\bb.$$
     }
 
     \item The log determinant of $\trainP_R$ can be computed in $\bigo{NR^{2}}$ time using the matrix determinant lemma.\footnote{
       The matrix determinant lemma is an analog of the Woodbury formula for determinants:
-      $$\log \vert \bL_{R} \bL_{R}^\top + \sigma^{2}_\text{obs} \bI \vert = \log \vert \bI - {\sigma^{-2}} \bL_{R}^{\top} \bL_{R} \vert + 2 N \log \sigma_\text{obs}.$$
+      $$\log \vert \bar\bL_{R} \bar\bL_{R}^\top + \sigma^{2}_\text{obs} \bI \vert = \log \vert \bI - {\sigma^{-2}} \bar\bL_{R}^{\top} \bar\bL_{R} \vert + 2 N \log \sigma_\text{obs}.$$
+    }
+
+  \item Samples from $\normaldist{ \bzero}{ \trainP }$ can be drawn with $\bigo{NR^2}$ computation.\footnote{
+      Draw standard normal vectors $\bepsilon_1 \in \reals^R$ and $\bepsilon_2 \in \reals^N$.
+      Using the reparameterization trick \cite{kingma2014auto}, we have that $\left( \bar\bL_R \bepsilon_1 + \sigma_\text{obs} \bepsilon_2 \right)$ is a sample from $\normaldist{ \bzero}{\trainP}$.
     }
   \end{enumerate}
 \end{observation}
 %
 \noindent
-\citet{harbrecht2012low} observes that $\row{\trainK} = \bigo{N}$ for standard positive definite matrices.
-In general this is also true for low-rank and structured matrices (see \cref{sec:programmability}).
-Therefore, assuming $R \ll N$ (for example, $R \approx 5$, computing and using $\trainP$ is less expensive than a single matrix multiplication with $\trainK$.
+Therefore, the partial pivoted Cholesky preconditioner meets the requirements outlined in \cref{sec:precond_requirements}.
+Assuming $R \ll N$ (for example, $R \approx 5$, computing and using $\trainP$ is less expensive than a single matrix multiplication with $\trainK$.
+While the $R \approx 5$ iterations required to compute $\bar\bL_R$ are inherently sequential, we note that this is far fewer iterations than the standard Cholesky factorization.
+This large reduction in sequential computation improves GPU acceleration.
 
 More important than its runtime however are its convergence properties.
 In general, the low-rank nature of $\trainP$ is an ideal choice for many kernel matrices with rapidly decaying spectra.
@@ -94,7 +109,7 @@ For univariate RBF kernels, it is possible to show that the conditioning of mBCG
 %
 \begin{lemma}
   \label{thm:condition_number}
-  Let $\bK_{\bX\bX} \in \reals^{N \times N}$ be a univariate RBF kernel matrix, and let $\bL_{R}$ be its rank-$R$ pivoted Cholesky factor.
+  Let $\bK_{\bX\bX} \in \reals^{N \times N}$ be a univariate RBF kernel matrix, and let $\bar\bL_{R}$ be its rank-$R$ pivoted Cholesky factor.
   Then there exists a constant $B > 0$ so that the condition number $\kappa(\trainP^{-1}\trainK)$ satisfies the following bound:
   \begin{equation}
     \kappa \left( \trainP_{k}^{-1}\trainK \right)
@@ -109,8 +124,8 @@ Using \cref{thm:condition_number}
 
 \begin{theorem}[Convergence of pivoted Cholesky-preconditioned CG]
   \label{thm:cg_convergence_rbf}
-  Let $\bK_{\bX\bX} \in \reals^{n \times n}$ be a $n \times n$ univariate RBF kernel, and let $\bL_k \bL_k^\top$ be its rank $k$ pivoted Cholesky decomposition.
-  Assume we are using preconditioned CG to solve the system $\trainK^{-1} \by = (\bK_{\bX\bX} + \sigma^2 \bI)^{-1} \by$ with preconditioner $\trainP = (\bL_k \bL_k^\top + \sigma^2 \bI)$.
+  Let $\bK_{\bX\bX} \in \reals^{n \times n}$ be a $n \times n$ univariate RBF kernel, and let $\bar\bL_k \bar\bL_k^\top$ be its rank $k$ pivoted Cholesky decomposition.
+  Assume we are using preconditioned CG to solve the system $\trainK^{-1} \by = (\bK_{\bX\bX} + \sigma^2 \bI)^{-1} \by$ with preconditioner $\trainP = (\bar\bL_k \bar\bL_k^\top + \sigma^2 \bI)$.
   Let $\bc_J$ be the $J^\textrm{th}$ solution of CG, and let $\bc^{*} = \trainK^{-1} \by$ be the exact solution.
   Then there exists some $b > 0$ such that:
   \begin{equation}
@@ -122,7 +137,7 @@ Using \cref{thm:condition_number}
 \cref{thm:cg_convergence_rbf} implies that we should expect the convergence of conjugate gradients to improve \emph{exponentially} with the rank of the pivoted Cholesky decomposition used for RBF kernels. In our experiments we observe significantly improved convergence for other kernels as well (\cref{sec:results}). Furthermore, we can leverage \cref{thm:condition_number} and existing theory from \cite{ubaru2017fast} to argue that preconditioning improves our log determinant estimate. In particular, we restate Theorem 4.1 of \citet{ubaru2017fast} here:
 \begin{theorem}[Theorem 4.1 of \citet{ubaru2017fast}]
   \label{thm:slq_convergence}
-  Let $\bK_{\bX\bX} \in \reals^{n \times n}$, and let $\bL_k \bL_k^\top$ be its rank $k$ pivoted Cholesky decomposition.
+  Let $\bK_{\bX\bX} \in \reals^{n \times n}$, and let $\bar\bL_k \bar\bL_k^\top$ be its rank $k$ pivoted Cholesky decomposition.
   Suppose we run $p \geq \frac{1}{4} \sqrt{ \kappa \left( \trainP_{k}^{-1}\trainK \right) } \log \frac{D}{\epsilon}$ iterations of mBCG,
   where $D$ is a term involving this same condition number that vanishes as $k \to n$ (see \cite{ubaru2017fast}),
   and we use $t \geq \frac{24}{\epsilon^{2}}\log(2/\delta)$ vectors $\bz^{(i)}$ for the solves.
@@ -131,7 +146,7 @@ Using \cref{thm:condition_number}
     \textrm{Pr}\left[\vert \log \vert \trainP^{-1}\trainK \vert - \Gamma \vert \leq \epsilon\vert \log \vert \trainP^{-1}\trainK \vert \vert \right] \geq 1 - \delta.
   \end{equation}
 \end{theorem}
-Because \cref{thm:condition_number} states that the condition number $\kappa \left( \trainP_{k}^{-1}\trainK \right)$ decays exponentially with the rank of $\bL_{k}$, \cref{thm:slq_convergence} implies that we should expect that the number of CG iterations required to accurately estimate $\log \vert \trainP^{-1}\trainK \vert$ decreases quickly as $k$ increases.
+Because \cref{thm:condition_number} states that the condition number $\kappa \left( \trainP_{k}^{-1}\trainK \right)$ decays exponentially with the rank of $\bar\bL_{k}$, \cref{thm:slq_convergence} implies that we should expect that the number of CG iterations required to accurately estimate $\log \vert \trainP^{-1}\trainK \vert$ decreases quickly as $k$ increases.
 In addition, in the limit as $k \rightarrow n$ we have that $\log \vert \trainK \vert = \log \vert \trainP \vert$.
 This is because $\log \vert \trainP^{-1}\trainK \vert \rightarrow 0$ (since $\trainP^{-1}\trainK$ converges to $\bI$) and we have that $\log \vert \trainK \vert = \log \vert \trainP^{-1}\trainK \vert + \log \vert \trainP \vert$.
 Since our calculation of $\log \vert \trainP \vert$ is exact, our final estimate of $\log \vert \trainK \vert$ becomes more exact as $k$ increases.
@@ -141,3 +156,5 @@ In future work we hope to derive a more general result that covers multivariate 
 \citet{bach2013sharp} considers using random column sampling as well as the pivoted Cholesky decomposition as a low-rank approximation to kernel matrices.
 However, \citet{bach2013sharp} treats this decomposition as an approximate training method, whereas we use the pivoted Cholesky decomposition primarily
 as a preconditioner, which avoids any loss of accuracy from the low rank approximation as well as the complexity of computing derivatives.
+
+
