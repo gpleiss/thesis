@@ -9,19 +9,17 @@ Since $\trainK$ is positive definite, both of these operations can computed usin
 \[
   \bL \bL^\top = \trainK, \quad
   (\trainK^{-1}) \by = \bL^{-\top} \bL^{-1} \by, \quad
-  \log \vert \trainK \vert = 2 \sum_{i=1}^N \log L^{(i,i)}
+  \log \vert \trainK \vert = 2 \sum_{i=1}^N \log L^{(ii)}
 \]
 %
 where $\bL$ is the lower-triangular Cholesky factor of $\trainK$.
-Though this the most common way to compute these terms, there are many drawbacks to this approach:
+Though this is a common way to compute these terms, it has drawbacks that were discussed in \cref{chapter:introduction}:
 %
 \begin{enumerate*}
   \item its $\bigo{N^3}$ asymptotic complexity,
   \item its $\bigo{N^2}$ storage requirement, and
   \item its minimal use of GPU acceleration.
 \end{enumerate*}
-%
-We will expand on these drawbacks in the next few chapters.
 
 A primary focus of this thesis is alternatives for GP learning and inference.
 We will instead compute the $(\trainK^{-1}) \by$ and $\log \vert \trainK \vert$ terms (and other non-linear terms) through algorithms that only utilize \emph{matrix-vector multiplication} ({\bf MVMs}) and other simple vector operations.

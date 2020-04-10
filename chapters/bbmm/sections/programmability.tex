@@ -1,13 +1,10 @@
 \section{Programmability with BBMM}
-\label{sec:advantages}
+\label{sec:programmability}
 We have discussed how the BBMM framework is more hardware efficient than existing inference engines, and avoids numerical instabilities with Lanczos. Another key advantage of BBMM is that it can easily be adapted to complex GP models or structured GP approximations.
 
 Indeed BBMM is \emph{blackbox} by nature, only requiring a routine to perform matrix-multiplications with the kernel matrix and its derivative.
 Here we provide examples of how existing GP models and scalable approximations can be easily implemented in this framework.
 The matrix-multiplication routines for the models require at most \emph{50 lines of Python code}.
-All our software, including the following GP implementations with BBMM, are available through our GPyTorch library: \\
-\url{https://gpytorch.ai}.
-%
 
 \paragraph{Bayesian linear regression} can be viewed as GP regression with the special kernel matrix $\trainK = \bX\bX^{\top} + \sigma^{2}I$.
 A matrix multiply with this kernel against an $n \times t$ matrix $\bV$, $(\bX\bX^{\top} + \sigma^{2}I)\bV$ requires $\bigo{tnd}$ time.

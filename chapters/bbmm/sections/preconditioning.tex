@@ -1,26 +1,41 @@
 \section{Preconditioning}
 \label{sec:preconditioning}
 
-While each iteration of mBCG performs large parallel matrix-matrix operations that utilize hardware efficiently, the iterations themselves are sequential.
+While each iteration of mBCG performs large parallel matrix$\times$matrix operations that utilize hardware efficiently, the iterations themselves are sequential.
 A natural goal for better utilizing hardware is to trade off fewer sequential steps for slightly more effort per step.
-We accomplish this goal using \emph{preconditioning} \cite{golub2012matrix,saad2003iterative,demmel1997applied,van2003iterative}, which introduces a matrix $\bP$ to solve the related linear system
-\begin{equation*}
-  \bP^{-1} \trainK \bc = \bP^{-1}\by
-\end{equation*}
-instead of $\trainK^{-1} \by$.
-Both systems are guaranteed to have the same solution, but the preconditioned system's convergence depends on the conditioning of $\bP^{-1}\trainK$ rather than that of $\trainK$.
+We accomplish this goal using \emph{preconditioning} \citep[e.g.][]{demmel1997applied,saad2003iterative,van2003iterative,golub2012matrix}, which introduces a matrix $\bP$ to solve the related linear system
+\begin{equation}
+  \left( \trainP^{- \frac 1 2} \trainK \trainP^{- \frac 1 2}\right) \bC = \trainP^{- \frac 1 2} \left[ \by, \:\:, \bz^{(1)}, \:\:, \ldots, \:\: \bz^{(T)} \right].
+  \label{eqn:precond_system}
+\end{equation}
+instead of $\trainK^{-1} \left[  \by, \:\:, \bz^{(1)}, \:\:, \ldots, \:\: \bz^{(T)} \right].$.
+Both systems are guaranteed to have the same solution, but the preconditioned system's convergence depends on the conditioning of $\trainP^{- \frac 1 2} \trainK \trainP^{- \frac 1 2}$ rather than that of $\trainK$.
+Despite the matrix square roots in \cref{eqn:precond_system}, preconditioned CG only needs access to $\trainP$ and its inverse $\trainP^{-1}$ (see \cref{alg:std_pcg}).
 
-\citet{cutajar2016preconditioning} explores using preconditioned conjugate gradients for exact GP training, where they use various sparse GP methods (as well as some classical methods) as preconditioners.
-However, the methods in \citet{cutajar2016preconditioning} do not provide general purpose preconditioners.
+\citet{cutajar2016preconditioning} explore preconditioned conjugate gradients for GP training, where they use various sparse GP methods (as well as some classical methods) as preconditioners.
+However, the methods described in \citet{cutajar2016preconditioning} are not general purpose preconditioners.
 For example, methods like Jacobi preconditioning have no effect when using a stationary kernel \cite{cutajar2016preconditioning,wilson2015thoughts}, and many other preconditioners have $\bigomega{N^{2}}$ complexity, which dominates the complexity of most scalable GP methods.
 
+\subsection{Modifying mBCG for Preconditioning}
+We have to make some special adjustments to our modified batch CG algorithm in order to use preconditioning.
+While the preconditioned system simply returns $\trainK^{-1} \by$, we need to modify the random probe vectors $\bz^{(1)}$, $\ldots$, $\bz^{(T)}$ to get correct estimates of $\log \vert \trainK \vert$ and $\tr{ \trainK^{-1} ( \partial \trainK / \partial \btheta) }$.
+In particular, we will perform the solves
+%
+\begin{equation}
+  \label{eqn:mod_cg_call}
+  \trainK^{-1} \left[ \by, \:\: \bz^{(1)}, \:\: \cdots, \:\: \bz^{(T)} \right], \quad \bz^{(i)} \sim \normaldist{\bzero}{\trainP}
+\end{equation}
+%
+Note that the $\bz^{(i)}$ random vectors in this case have covariance $\Ev{ \bz^{(i)} \bz^{(i)^\top} } = \trainP$ (rather than unit covariance in the un-preconditioned case).
+
+\subsection{Requirements of mBCG preconditioners}
 We observe two requirements of a preconditioner to be used in general for GP training.
 First, in order to ensure that preconditioning operations do not dominate running time when using scalable GP methods, the preconditioner should afford roughly linear time solves and space.
-Second, we should be able to efficiently compute the log determinant of the preconditioner matrix, $\log \vert \bP \vert$.
-This is because the mBCG algorithm applied to the preconditioned system estimates $\log \vert \bP^{-1}\trainK \vert$ rather than $\log \vert \trainK \vert$. We must therefore compute
+Second, we should be able to efficiently compute the log determinant of the preconditioner matrix, $\log \vert \trainP \vert$.
+This is because the mBCG algorithm applied to the preconditioned system estimates $\log \vert \trainP^{-1}\trainK \vert$ rather than $\log \vert \trainK \vert$. We must therefore compute
 $
   \label{eq:logdet_adjusted}
-  \log \vert \trainK \vert = \log \vert \bP^{-1}\trainK \vert + \log \vert \bP \vert.
+  \log \vert \trainK \vert = \log \vert \trainP^{-1}\trainK \vert + \log \vert \trainP \vert.
 $
 
 For one possible preconditioner, we turn to the {\bf partial pivoted Cholesky decomposition} \cite{harbrecht2012low}.
@@ -34,92 +49,10 @@ Therefore, it does not has the same asymptotic or GPU-acceleration concerns as t
 Before describing the preconditioner and its effect on mBCG convergence, we will first introduce the pivoted Cholesky algorithm and its properties.
 
 
-\subsection{The Pivoted Cholesky Decomposition}
-
-In this section, we review a full derivation of the \emph{pivoted Cholesky decomposition} as used for preconditioning in our paper.
-To begin, observe that the standard Cholesky decomposition can be seen as producing a sequentially more accurate low rank approximation to the input matrix $\bA$.
-In particular, the Cholesky decomposition algorithm seeks to decompose a matrix $\bA$ as:
-%
-\begin{equation}
- \label{eq:cholesky_full}
- \begin{bmatrix} \bA^{(11)} & \bA^{(12)} \\ \bA^{(12)^\top} & \bA^{(22)}\end{bmatrix}
- =
- \begin{bmatrix} \bL^{(11)} & \bzero \\ \bL^{(12)} & \bL^{(22)}\end{bmatrix}
- \begin{bmatrix} \bL^{(11)^\top} & \bL^{(12)^\top} \\ \bzero & \bL^{(22)^\top}\end{bmatrix}
-\end{equation}
-%
-%Note that that $\bA^{(11)} = \bL^{(11)} \bL^{(11)^\top}$, $\bA^{(12)} = \bL^{(11)} \bL^{(21)^\top}$, and $\bA^{(22)} = \bL^{(21)} \bL^{(21)^\top} + \bL^{(22)} \bL^{(22)^\top}$.
-From these equations, we can obtain $\bL^{(11)}$ by recursively Cholesky decomposing $\bA^{(11)}$, $\bL^{(21)^\top}$ by computing $\bL^{(21)^\top} = \bL^{(11)^{-1}} \bA^{(12)}$,
-and finally $\bL^{(22)}$ by Cholesky decomposing the Schur complement $\bS_2 = \bA^{(22)} - \bL^{(21)} \bL^{(21)^\top}$.
-
-We can view each iteration of the Cholesky decomposition as producing a slightly higher rank approximation to the matrix $\bA$.
-In particular, if  $ \bA = \left[ K^{(11)}, \:\: \bb^{\top}; \:\:\:\: \bb, \:\: \bA^{(22)} \right], $
-then $\bL^{(11)} = \sqrt{K^{(11)}}$, $\bL^{(21)} = \left( 1 / \sqrt{K^{(11)}} \right) \bb$, and the Schur complement is $\bS_2 = \bA^{(22)} - \left(1/ K^{(11)} \right) \bb \bb^{\top}$.
-Therefore:
-%
-\begin{align}
-  \bA &=
-    \begin{bmatrix} \sqrt{ K^{(11)} } \\ \frac{1}{\sqrt{K^{(11)}}} \bb \end{bmatrix}
-    \begin{bmatrix} \sqrt{ K^{(11)} } & \frac{1}{\sqrt{K^{(11)}}} \bb^\top \end{bmatrix}
-    +
-    \begin{bmatrix} 0 & 0 \\ 0 & \bS_2 \end{bmatrix}
-  \nonumber \\
-  &= \bv_{1}\bv_{1}^{\top} + \begin{bmatrix} 0 & 0 \\ 0 & \bS_2 \end{bmatrix}
-  \label{eq:chol_incomplete}.
-\end{align}
-%
-Because the Schur complement is positive definite, we can continue by recursing on the $(N-1) \times (N - 1)$ Schur complement $\bS_2$ to get another vector.
-In particular, if $\bS_2 = \bv_{2}\bv_{2}^{\top} + \left[0, \:\: 0; \:\:\:\: 0, \:\: \bS_3 \right]$, then:
-%
-\begin{align}
-  \bA  = \bv_{1}\bv_{1}^{\top} + \begin{bmatrix} 0 \\ \bv_{2} \end{bmatrix} \begin{bmatrix} 0 & \bv_2^\top \end{bmatrix} +
-  \begin{bmatrix} 0 & 0 \\ 0 & \bS_3 \end{bmatrix}
-\end{align}
-%
-In general, after $R$ iterations, defining $\hat{\bv}_{i} = \left[ \bzero; \:\: \bv_i \right]$ we obtain
-%
-\begin{align}
-  \bA  = \sum_{i=1}^{R} \hat{\bv}_{i} \hat{\bv}_{i}^{\top} + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix}
-\end{align}
-%
-The matrix $\bP_{R} = \sum_{i=1}^{R}\hat{\bv}_{i}\hat{\bv}_{i}^{\top}$ can be viewed as a rank-$R$ approximation to $\bA$, with
-$$
-  \Vert \bA - \bP_{R} \Vert_{2} = \Vert \bS_{R+1} \Vert_2.
-$$
-
-To improve the accuracy of the low rank approximation, one natural goal is to minimize the norm of the Schur complement, $\Vert \bS_{i} \Vert$, at each iteration.
-\citet{harbrecht2012low} suggest to permute the rows and columns of $\bS_{i}$ (with $\bS_{1} = \bA$) so that the upper-leftmost entry in $\bS_{i}$ is the maximum diagonal element.
-In the first step, this amounts to replacing $\bA$ with $\bPi_{1} \bA \bPi_{1}^\top$, where $\bPi_{1}$ is a permutation matrix that swaps the first row and column with whichever row and column corresponds to the maximum diagonal element of $\bA$.
-Thus:
-%
-\begin{align*}
-  \bPi_{1} \bA \bPi_{1}^\top = \bv_{1}\bv_{1}^{\top} + \begin{bmatrix} 0 & 0 \\ 0 & \bS_2 \end{bmatrix}.
-\end{align*}
-%
-To proceed, one can apply the same pivoting rule to $S$ to achieve $\pi_{2}$:
-%
-\begin{align*}
-  \left( \bPi_{2} \bPi_{1} \right) \bA \left( \bPi_{1}^\top \bPi_{2}^\top \right) = \bPi_{2} \bv_{1}\bv_{1}^{\top} \bPi_2^\top
-  + \hat \bv_2 \hat \bv_2^\top + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_3 \end{bmatrix}.
-\end{align*}
-%
-In general, after $R$ steps, we obtain:
-\begin{align}
-  \bA = \sum_{i=1}^{R} \left( \prod_{j=1}^i \bPi_j \right) \hat{\bv}_{i} \hat{\bv}_{i} \left( \prod_{j=1}^i \bPi_{i-j+1}^\top \right)
-  + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix}.
-\end{align}
-Collecting the $\left( \prod_{j=1}^i \bPi_j \right) \hat{\bv}_{i}$ vectors in to a matrix $\bL_R$ gives us a rank-$R$ approximation of $\bA$:
-%
-\begin{equation}
-  \bA = \bL_{R} \bL_{R}^{\top} + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix} \approx \bL_{R} \bL_{R}^{\top}.
-\end{equation}
-%
-$\bL_{R} \in \reals^{N \times R}$ is referred to as the {\bf partial pivoted Cholesky factor} of $\bA$.
-
-\subsection{Pivoted Cholesky as a Preconditioner}
+\subsection{The Partial Pivoted Cholesky Preconditioner for mBCG}
 
 Let $\bL_{R} \in \reals^{N \times R}$ be the rank-$R$ pivoted Cholesky factor of $\bK_{\bX\bX}$.
-To accelerate mBCG for GP training, we introduce the {\bf partial pivoted Cholesky preconditioner} for the matrix $\trainK = \bK_{\bX\bX} + \sigma^2_\text{obs} \bI$
+To accelerate mBCG for GP training, we introduce the {\bf partial pivoted Cholesky preconditioner} for the matrix $\trainK = \bK_{\bX\bX} + \sigma^2_\text{obs} \bI:$
 \begin{equation}
   \trainP_R = \bL_{R} \bL_{R}^\top + \sigma^2_\text{obs} \bI.
 \end{equation}
@@ -142,14 +75,16 @@ There are three key properties of our preconditioner that we wish to highlight:
     }
   \end{enumerate}
 \end{observation}
-For a standard positive definite matrix, \citet{harbrecht2012low} observes that $\row{\trainK} = \bigo{N}$ running time.
-In general this is also true for low-rank and structured matrices that we don't wish to explicitly compute, this computation time remains roughly linear.
+%
+\noindent
+\citet{harbrecht2012low} observes that $\row{\trainK} = \bigo{N}$ for standard positive definite matrices.
+In general this is also true for low-rank and structured matrices (see \cref{sec:programmability}).
 Therefore, assuming $R \ll N$ (for example, $R \approx 5$, computing and using $\trainP$ is less expensive than a single matrix multiplication with $\trainK$.
 
 More important than its runtime however are its convergence properties.
 In general, the low-rank nature of $\trainP$ is an ideal choice for many kernel matrices with rapidly decaying spectra.
 Such kernels tend to be horribly conditioned yet are well approximated by a low rank matrix.
-We will demonstrate in \cref{sec:results} that $\trainP$ dramatically improves the convergence of mBCG for a wide variety of kernels.
+We empirically demonstrate in \cref{sec:bbmm_results} that $\trainP$ dramatically improves the convergence of mBCG for a wide variety of kernels.
 Below, we will prove some theoretical results for certain classes of kernels.
 
 \gp{Stopped here.}
