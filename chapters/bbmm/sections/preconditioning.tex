@@ -126,19 +126,19 @@ In particular, there are five beneficial asymptotic properties of our preconditi
 
     \item Storing $\bar\bL_{R}$ requires $\bigo{NR}$ memory.
 
-    \item Linear solves with $\trainP_R = \bar\bL_{R} \bar\bL_{R}^{\top} + \sigma_\text{obs}^{2} \bI$ can be performed in $\bigo{NR^{2}}$ time using the Woodbury matrix formula using the reparameterization trick \cite{kingma2014auto}.\footnote{
+    \item Linear solves with $\trainP_R = \bar\bL_{R} \bar\bL_{R}^{\top} + \sigma_\text{obs}^{2} \bI$ can be performed in $\bigo{NR^{2}}$ time using the Woodbury matrix formula.\footnote{
       The Woodbury matrix formula is a $\bigo{R^2 N}$ formula for ``rank-R plus diagonal'' solves:
       $$\left( \bar\bL_{R} \bar\bL_{R}^{\top} + \sigma^{2}_\text{obs} \bI \right)^{-1} \bb = {\sigma_\text{obs}^{-2}}\bb - {\sigma_\text{obs}^{-4}} \: \bar\bL_{R} \left( \bI - {\sigma^{-2}_\text{obs}} \bar\bL_{R}^{\top} \bar\bL_{R} \right)^{-1} \bar\bL_{R}^{\top}\bb.$$
     }
 
     \item The log determinant of $\trainP_R$ can be computed in $\bigo{NR^{2}}$ time using the matrix determinant lemma.\footnote{
       The matrix determinant lemma is an analog of the Woodbury formula for determinants:
-      $$\log \vert \bar\bL_{R} \bar\bL_{R}^\top + \sigma^{2}_\text{obs} \bI \vert = \log \vert \bI - {\sigma^{-2}} \bar\bL_{R}^{\top} \bar\bL_{R} \vert + 2 N \log \sigma_\text{obs}.$$
+      $$\log \vert \bar\bL_{R} \bar\bL_{R}^\top + \sigma^{2}_\text{obs} \bI \vert = \log \vert \bI - {\sigma_\text{obs}^{-2}} \bar\bL_{R}^{\top} \bar\bL_{R} \vert + 2 N \log \sigma_\text{obs}.$$
     }
 
-  \item Samples from $\normaldist{ \bzero}{ \trainP }$ can be drawn with $\bigo{NR^2}$ computation.\footnote{
+  \item Samples from $\normaldist{ \bzero}{ \trainP }$ can be drawn with $\bigo{NR^2}$ computation using the reparameterization trick \cite{kingma2014auto}.\footnote{
       Draw standard normal vectors $\bepsilon_1 \in \reals^R$ and $\bepsilon_2 \in \reals^N$.
-      By the reparameterization trick, $\left( \bar\bL_R \bepsilon_1 + \sigma_\text{obs} \bepsilon_2 \right)$ is a sample from $\normaldist{ \bzero}{\trainP}$.
+      By the reparameterization trick, $\left( \bar\bL_R \bepsilon_1 + \sigma_\text{obs} \bepsilon_2 \right)$ is a sample from $\normaldist{ \bzero}{( \bar\bL_R \bar\bL_R^\top + \sigma^2_\text{obs} \bI )}$.
     }
   \end{enumerate}
 \end{observation}
@@ -178,7 +178,7 @@ Using \cref{thm:condition_number}
 \begin{theorem}[Convergence of pivoted Cholesky-preconditioned CG]
   \label{thm:cg_convergence_rbf}
   Let $\bK_{\bX\bX} \in \reals^{n \times n}$ be a $n \times n$ univariate RBF kernel, and let $\bar\bL_k \bar\bL_k^\top$ be its rank $k$ pivoted Cholesky decomposition.
-  Assume we are using preconditioned CG to solve the system $\trainK^{-1} \by = (\bK_{\bX\bX} + \sigma^2 \bI)^{-1} \by$ with preconditioner $\trainP = (\bar\bL_k \bar\bL_k^\top + \sigma^2 \bI)$.
+  Assume we are using preconditioned CG to solve the system $\trainK^{-1} \by = (\bK_{\bX\bX} + \sigma_\text{obs}^2 \bI)^{-1} \by$ with preconditioner $\trainP = (\bar\bL_k \bar\bL_k^\top + \sigma_\text{obs}^2 \bI)$.
   Let $\bc_J$ be the $J^\textrm{th}$ solution of CG, and let $\bc^{*} = \trainK^{-1} \by$ be the exact solution.
   Then there exists some $b > 0$ such that:
   \begin{equation}
