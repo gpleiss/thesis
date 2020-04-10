@@ -25,35 +25,88 @@ While the preconditioned system simply returns $\trainK^{-1} \by$, we need to mo
 In particular, we will perform the solves
 %
 \begin{equation}
-  \label{eqn:mod_cg_call}
+  \label{eqn:mod_cg_call_precond}
   \trainK^{-1} \left[ \by, \:\: \bz^{(1)}, \:\: \cdots, \:\: \bz^{(T)} \right], \quad \bz^{(i)} \sim \normaldist{\bzero}{\trainP}
 \end{equation}
+
+The only difference between \cref{eqn:mod_cg_call_precond} and the original set of solves in \cref{eqn:mod_cg_call}
+is that the $\bz^{(i)}$ probe vectors have covariance $\Ev{ \bz^{(i)} \bz^{(i)^\top} } = \trainP$ (rather than unit covariance).
+To understand why this is the case, recall from \cref{sec:method_bbmm} that our log determinant estimate is given by:
 %
-Note that the $\bz^{(i)}$ random vectors in this case have covariance $\Ev{ \bz^{(i)} \bz^{(i)^\top} } = \trainP$ (rather than unit covariance in the un-preconditioned case).
+\begin{align*}
+	\log \left\vert \trainK \right\vert
+	&\approx \Evover{\bz^{(i)} \sim \normaldist{0}{\bI} }{\bz^{(i)^\top} \bQ^{(i)} \left( \log \bT^{(i)} \right) \bQ^{(i)^\top} \bz^{(i)}},
+\end{align*}
+%
+where $\bT^{(1)}$, $\ldots$, $\bT^{(T)}$---the Lanczos tridiagonal matrices corresponding to $\trainK$ and probe vectors $\bz^{(i)}$, $\ldots$, $\bz^{(T)}$---are computed from byproducts of the CG iterations.
+However, if we precondition mBCG with $\trainP$, then the $\bT^{(i)}$ matrices will instead correspond to the \emph{preconditioned system}
+$(\trainP^{- \frac 1 2} \trainK \trainP^{- \frac 1 2})$ and \emph{preconditioned probe vectors} $(\trainP^{- \frac 1 2} \bz^{(i)})$.
+Consequentially, the stochastic Lanczos quadrature estimate will actually return
+%
+\begin{align}
+	\log \left\vert \trainP^{- \frac 1 2} \trainK \trainP^{- \frac 1 2} \right\vert
+	&\approx \!
+	\Evover{\bz^{(i)} \sim \normaldist{0}{\trainP} }{
+		\left( \bz^{(i)^\top} \trainP^{-\frac 1 2} \right) \!
+		\bQ^{(i)} \! \left( \log \bT^{(i)} \right) \! \bQ^{(i)^\top}
+		\!\! \left( \trainP^{-\frac 1 2} \bz^{(i)} \right)
+	}.
+	\label{eqn:slq_precond}
+\end{align}
+%
+\cref{eqn:slq_precond} motivates the use of $\bz^{(i)} \sim \normaldist{\bzero}{\trainP}$ as the probe vectors:
+the resulting preconditioned vectors $\trainP^{- \frac 1 2} \bz^{(i)}$ will be samples from $\normaldist{\bzero}{\bI}$ and can therefore be used for a stochastic trace estimate.
 
-\gp{FINISH}
+\paragraph{Estimating $\log \vert \trainK \vert$ and $\tr{ \trainK^{-1} (\partial \trainK / \partial \btheta) }$ from preconditioned mBCG.}
+To compute $\log \vert \trainK \vert$ from \cref{eqn:slq_precond}, we note that
+\[
+\log \vert \trainK \vert = \log \vert \trainP^{- \frac 1 2} \trainK \trainP^{- \frac 1 2} \vert + \log \vert \trainP \vert.
+\]
+We therefore estimate the first using stochastic Lanczos quadrature (\cref{eqn:slq_precond}) and then ``correct'' this estimate with the log determinant of the preconditioner.
+Note that this will still be an unbiased estimate of $\log \vert \trainK \vert$ if we can exactly compute $\log \vert \trainP \vert$ (in an efficient manner).
 
-
+To estimate $\tr{ \trainK^{-1} (\partial \trainK / \partial \btheta) }$ from the new probe vectors $\bz^{(i)} \sim \normaldist{\bzero}{\trainP}$,
+we note that we can form a stochastic trace estimate from the following:
+\begin{align}
+	\tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}}
+	&=
+	\tr{
+		\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}
+		\Evover{\bz^{(i)} \sim \normaldist{0}{\trainP} }{
+			\trainP^{-1} \bz^{(i)} \bz^{(i)^\top}
+		}
+	}
+  \nonumber \\
+	&\approx
+	\Evover{\bz^{(i)} \sim \normaldist{0}{\trainP} }{
+		\left( \bz^{(i)} \trainK^{-1} \right)
+		\left( \frac{\partial \trainK}{\partial \btheta} \: \trainP^{-1} \bz^{(i)} \right)
+	}.
+	\label{eqn:trace_est_precond}
+\end{align}
+%
+The only differences between \cref{eqn:trace_est_precond} and the non-preconditioned trace estimate in \cref{eqn:trace_deriv_estimate} are
+\begin{enumerate*}
+	\item we use $\bz^{(i)} \sim \normaldist{\bzero}{\trainP}$ as probe vectors, and
+	\item the derivative term $\partial \trainK / \partial \btheta$ is applied to the preconditioned vectors $\trainP^{-1} \bz^{(i)}$.
+\end{enumerate*}
 
 \paragraph{Requirements of mBCG preconditioners.}
-We observe two requirements of a preconditioner to be used in general for GP training.
-First, in order to ensure that preconditioning operations do not dominate running time when using scalable GP methods, the preconditioner should afford roughly linear time solves and space.
-Second, we should be able to efficiently compute the log determinant of the preconditioner matrix, $\log \vert \trainP \vert$.
-This is because the mBCG algorithm applied to the preconditioned system estimates $\log \vert \trainP^{-1}\trainK \vert$ rather than $\log \vert \trainK \vert$. We must therefore compute
-$
-  \label{eq:logdet_adjusted}
-  \log \vert \trainK \vert = \log \vert \trainP^{-1}\trainK \vert + \log \vert \trainP \vert.
-$
-
-\gp{COME BACK TO THIS}
+Based on the above discussion, we observe three requirements of any preconditioner $\trainP$ that can be used with mBCG for GP training.
+First, in order to ensure that preconditioning operations do not dominate running time in \cref{alg:mod_pcg}, the preconditioner should afford roughly linear-time solves and linear space.
+%\footnote{
+	%Recall from \cref{alg:std_pcg} that preconditioned conjugate gradients only requires computing $\trainP^{-1}$ and $\trainP$, not $\trainP^{- \frac 1 2}.$
+%}
+Second, we should be able to efficiently compute the log determinant of the preconditioner matrix $\log \vert \trainP \vert$ to ``correct'' the log determinant estimate in \cref{eqn:slq_precond}.
+Finally, we should be able to efficiently sample probe vectors $\bz^{(i)}$ from the distribution $\normaldist{\bzero}{\trainP}$.
 
 
 
 \subsection{The Partial Pivoted Cholesky Preconditioner for mBCG}
 
-For one possible preconditioner, we turn to the {\bf partial pivoted Cholesky decomposition} \cite{harbrecht2012low}.
+For one possible preconditioner, we turn to the {\bf partial pivoted Cholesky decomposition} (as introduced in \cref{sec:piv_chol}).
 The pivoted Cholesky algorithm allows us to compute a rank-$R$ approximation ($R \ll N$) of the training kernel matrix $\bK_{\bX\bX} \approx \bar\bL_{R} \bar\bL_{R}^{\top}$.
-We precondition mBCG with
+Our mBCG preconditioner will be
 \begin{equation}
   \trainP_R = \bar\bL_{R} \bar\bL_{R}^\top + \sigma^2_\text{obs} \bI,
 \end{equation}
@@ -63,17 +116,17 @@ Intuitively, if $\bar\bL_{R}\bar\bL_{R}^{\top}$ is a good low-rank approximation
 
 Unlike the standard Cholesky decomposition, which computes an exact factorization in $N$ iterations,
 the partial pivoted Cholesky decomposition produces a \emph{rank-R} factorization in $R \ll N$ iterations, and therefore does not share its asymptotic concerns.
-In particular, there are five asymptotic properties of our preconditioner that we wish to highlight:
+In particular, there are five beneficial asymptotic properties of our preconditioner that we wish to highlight:
 %
-\begin{observation}[Properties of the rank-$R$ pivoted Cholesky preconditioner.]
+\begin{observation}[Properties of the rank-$R$ pivoted Cholesky preconditioner]
   {\ }
   \begin{enumerate}
-    \item $\bar\bL_{R}$ can be computed in $\bigo{\row{\trainK}R^{2}}$ time, where $\row{\trainK}$ is the time required to retrieve a single row of $\trainK$.
+    \item $\bar\bL_{R}$ can be computed in $\bigo{\row{\trainK}R^{2}}$ time, where $\row{\trainK}$ is the time required to retrieve a single row of $\trainK$
       (see \cref{sec:piv_chol}).
 
     \item Storing $\bar\bL_{R}$ requires $\bigo{NR}$ memory.
 
-    \item Linear solves with $\trainP_R = \bar\bL_{R} \bar\bL_{R}^{\top} + \sigma_\text{obs}^{2} \bI$ can be performed in $\bigo{NR^{2}}$ time using the Woodbury matrix formula.\footnote{
+    \item Linear solves with $\trainP_R = \bar\bL_{R} \bar\bL_{R}^{\top} + \sigma_\text{obs}^{2} \bI$ can be performed in $\bigo{NR^{2}}$ time using the Woodbury matrix formula using the reparameterization trick \cite{kingma2014auto}.\footnote{
       The Woodbury matrix formula is a $\bigo{R^2 N}$ formula for ``rank-R plus diagonal'' solves:
       $$\left( \bar\bL_{R} \bar\bL_{R}^{\top} + \sigma^{2}_\text{obs} \bI \right)^{-1} \bb = {\sigma_\text{obs}^{-2}}\bb - {\sigma_\text{obs}^{-4}} \: \bar\bL_{R} \left( \bI - {\sigma^{-2}_\text{obs}} \bar\bL_{R}^{\top} \bar\bL_{R} \right)^{-1} \bar\bL_{R}^{\top}\bb.$$
     }
@@ -85,18 +138,18 @@ In particular, there are five asymptotic properties of our preconditioner that w
 
   \item Samples from $\normaldist{ \bzero}{ \trainP }$ can be drawn with $\bigo{NR^2}$ computation.\footnote{
       Draw standard normal vectors $\bepsilon_1 \in \reals^R$ and $\bepsilon_2 \in \reals^N$.
-      Using the reparameterization trick \cite{kingma2014auto}, we have that $\left( \bar\bL_R \bepsilon_1 + \sigma_\text{obs} \bepsilon_2 \right)$ is a sample from $\normaldist{ \bzero}{\trainP}$.
+      By the reparameterization trick, $\left( \bar\bL_R \bepsilon_1 + \sigma_\text{obs} \bepsilon_2 \right)$ is a sample from $\normaldist{ \bzero}{\trainP}$.
     }
   \end{enumerate}
 \end{observation}
 %
 \noindent
 Therefore, the partial pivoted Cholesky preconditioner meets the requirements outlined in \cref{sec:precond_requirements}.
-Assuming $R \ll N$ (for example, $R \approx 5$, computing and using $\trainP$ is less expensive than a single matrix multiplication with $\trainK$.
+Assuming $R \ll N$ (for example, $R \approx 5$), computing and using $\trainP$ is less expensive than a single matrix multiplication with $\trainK$.
 While the $R \approx 5$ iterations required to compute $\bar\bL_R$ are inherently sequential, we note that this is far fewer iterations than the standard Cholesky factorization.
-This large reduction in sequential computation improves GPU acceleration.
+This large reduction in sequential computation makes this preconditioner rather amenable to GPU acceleration.
 
-More important than its runtime however are its convergence properties.
+Perhaps more important than its runtime are its convergence properties.
 In general, the low-rank nature of $\trainP$ is an ideal choice for many kernel matrices with rapidly decaying spectra.
 Such kernels tend to be horribly conditioned yet are well approximated by a low rank matrix.
 We empirically demonstrate in \cref{sec:bbmm_results} that $\trainP$ dramatically improves the convergence of mBCG for a wide variety of kernels.
