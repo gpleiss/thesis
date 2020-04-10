@@ -1,0 +1,258 @@
+%!TEX root=../main.tex
+\chapter{Convergence Analysis of Pivoted Cholesky Preconditioned CG}
+\label{app:theory}
+
+In this section we prove \autoref{thm:cg_convergence_rbf}, which bounds the convergence of pivoted Cholesky-preconditioned CG for univariate RBF kernels.
+%
+\newtheorem*{thm:cg_convergence_rbf}{\autoref{thm:cg_convergence_rbf} (Restated)}
+\begin{thm:cg_convergence_rbf}
+  Let $K_{XX} \in \reals^{n \times n}$ be a $n \times n$ univariate RBF kernel, and let $L_k L_k^\top$ be its rank $k$ pivoted Cholesky decomposition.
+  Assume we are using preconditioned CG to solve the system $\trainK^{-1} \by = (K_{XX} + \sigma^2 I)^{-1} \by$ with preconditioner $\trainP = (L_k L_k^\top + \sigma^2 I)$.
+  Let $\bu_k$ be the $k^\textrm{th}$ solution of CG, and let $\bu^{*} = \trainK^{-1} \by$ be the exact solution.
+  Then there exists some $b > 0$ such that:
+  \begin{equation}
+    \Vert \bu^{*} - \bu_{k} \Vert_{\trainK}
+    \leq 2 \left(\frac{1}{1 + \bigo{n^{-1/2} \exp(kb/2)}}\right)^{p} \left\Vert \bu^{*} - \bu_{0} \right\Vert_{\trainK}.
+  \end{equation}
+\end{thm:cg_convergence_rbf}
+
+\begin{proof}
+Let $L_k L_k^\top$ be the rank $k$ pivoted Cholesky decomposition of a univariate RBF kernel $K_{XX}$.
+  We begin by stating a well-known CG convergence result, which bounds error in terms of the \emph{conditioning number} $\kappa$ (see \autoref{obs:cg_convergence}):
+\begin{equation}
+  \label{eq:condition_number_convergence}
+  \left\Vert \bu^* - \bu_{k} \right\Vert_{\trainK}
+  \leq 2 \left( \frac {\sqrt{\kappa\left(\trainP_{k}^{-1}\trainK\right)} - 1}{\sqrt{\kappa\left(\trainP_{k}^{-1}\trainK\right)} + 1} \right)^{p} \left\Vert \bu^* - \bu_{0} \right\Vert_{\trainK}.
+\end{equation}
+Our goal is therefore to bound the condition number of $(L_k L_k^\top + \sigma^2 I)^{-1} (K_{XX} + \sigma^2 I)$.
+To do so, we will first show that $L_k L_k^\top$ rapidly converges to $K_{XX}$ as the rank $k$ increases.
+We begin by restating the primary convergence result of \cite{harbrecht2012low}:
+%
+\begin{lemma}[\citet{harbrecht2012low}]
+\label{thm:harbrecht}
+  If the eigenvalues of a positive definite matrix $K_{XX} \in \reals^{n \times n}$ satisfy $4^{k}\lambda_{k} \lesssim \exp(-bk)$ for some $b>0$, then
+  the rank $k$ pivoted Cholesky decomposition $L_{k} L_k^\top$ satisfies
+  $$
+    \textrm{Tr}(K_{XX} -  L_k L_k^\top) \lesssim n\exp(-bk).
+  $$
+\end{lemma}
+%
+(See \citet{harbrecht2012low} for proof.)
+Intuitively, if the eigenvalues of a matrix decay very quickly (exponentially), then it is very easy to approximate with a low rank matrix, and the pivoted Cholesky algorithm rapidly constructs such a matrix.
+While there has been an enormous amount of work understanding the eigenvalue distributions of kernel functions (e.g., \cite{wathen2015spectral}), in this paper we prove the following useful bound on the eigenvalue distribution of univariate RBF kernel matrices:
+%
+\begin{lemma}
+\label{thm:eigenvalue_bound}
+Given $x_1, \ldots, x_n \in [0, 1]$, the univariate RBF kernel matrix $K_{XX} \in \mathbb{R}^{n \times n}$ with $K_{ij} = \exp \left(-\gamma(x_i - x_j)^{2}\right)$ has eigenvalues bounded by:
+\begin{equation*}
+  \lambda_{2l+1} \leq
+  2n e^{-\gamma/4} I_{l+1}(\gamma/4) \sim
+  \frac{2n e^{-\gamma/4}}{\sqrt{\pi\gamma}}
+  \left( \frac{e\gamma}{8(l+1)} \right)^{l+1}
+\end{equation*}
+where $I_j$ denotes the modified Bessel function of the first kind with parameter $j$.
+\end{lemma}
+%
+(See \autoref{sec:proofs} for proof.)
+Thus, the eigenvalues of an RBF kernel matrix $K_{XX}$ decay \emph{super-exponentially}, and so the bound given by \autoref{thm:harbrecht} applies.
+
+\autoref{thm:eigenvalue_bound} lets us argue for the pivoted Cholesky decomposition as a preconditioner.
+%To bound the condition number of the matrix $\trainP^{-1} \trainK$, we begin bounding the difference between a linear solve with the $\trainP$ and the full matrix $\trainK$.
+%
+%\begin{theorem}
+%Let $\by$ be any vector, and let $\bu^{*} = \trainK^{-1}\by$ and $\tilde{\bu} = \trainP_{k}^{-1}\by$, where $\trainP_{k}=L_{k} L_K^\top + \sigma^{2}I$ and $L_{k} L_k^\top$ is the rank $k$ pivoted Cholesky decomposition of $K_{XX}$.
+%There exists some $b>0$ so that
+%$$
+  %\frac{\Vert \bu^{*} - \tilde{\bu}\Vert_{2}}{\Vert\bu^{*}\Vert_{2}} \lesssim \frac{n\exp(-bk)}{\sigma}.
+%$$
+%\end{theorem}
+%
+Intuitively, this theorem states that the pivoted Cholesky $L_k L_k$ converges rapidly to $K_{XX}$.
+Alternatively, the preconditioner $(L_k L_k^\top + \sigma^2 I)^{-1}$ converges rapidly to $\trainK^{-1} = (K_{XX} + \sigma^2 I)^{-1}$ -- the optimal preconditioner in terms of the number of CG iterations.
+We explicitly relate \autoref{thm:eigenvalue_bound} to the rate of convergence of CG by bounding the condition number:
+%
+\newtheorem*{thm:condition_number}{\autoref{thm:condition_number} (Restated)}
+\begin{thm:condition_number}
+  Let $K_{XX} \in \reals^{n \times n}$ be a univariate RBF kernel matrix.
+  Let $L_{k} L_k^\top$ be the rank $k$ pivoted Cholesky decomposition of $K_{XX}$, and let $\trainP_{k} = L_k L_k^\top + \sigma^{2}I$.
+  Then there exists a constant $b>0$ so that the condition number $\kappa(\trainP^{-1}\trainK)$ satisfies the following inequality:
+  \begin{equation}
+    \kappa \left( \trainP_{k}^{-1}\trainK \right)
+    \triangleq \left\Vert \trainP_{k}^{-1}\trainK \right\Vert_{2} \left\Vert \trainK^{-1}\trainP_{k} \right\Vert_{2}
+    \leq \left( 1 + \bigo{n\exp(-bk)} \right)^2.
+  \end{equation}
+\end{thm:condition_number}
+%
+(See \autoref{sec:proofs} for proof.)
+\autoref{thm:condition_number} lets us directly speak about the impact of the pivoted Cholesky preconditioner on CG convergence.
+Plugging \autoref{thm:condition_number} into standard CG convergence bound \eqref{eq:condition_number_convergence}:
+%
+\begin{align*}
+  \left\Vert \bu^* - \bu_{k} \right\Vert_{\trainK}
+  &\leq 2 \left( \frac{\sqrt{\kappa\left(\trainP_{k}^{-1}\trainK\right)} - 1}{\sqrt{\kappa\left(\trainP_{k}^{-1}\trainK\right)} + 1} \right)^{p} \left\Vert \bu^* - \bu_{0} \right\Vert_{\trainK}
+  \\
+  &\leq 2 \left( \frac{{{1 + \bigo{n\exp(-bk)}} - 1}} { {{1 + \bigo{n\exp(-bk)}} + 1}} \right)^{p} \left\Vert \bu^* - \bu_{0} \right\Vert_{\trainK}
+  \\
+  &= 2 \left(\frac{1}{1 + \bigo{\exp(kb) / n }}\right)^{p} \left\Vert \bu^{*} - \bu_{0} \right\Vert_{\trainK}.
+\end{align*}
+\end{proof}
+
+
+
+\section{Proofs of Lemmas}
+\label{sec:proofs}
+
+\subsection{Proof of \autoref{thm:condition_number}}
+
+\begin{proof}
+  Let $K_{XX} \in \reals^{n \times n}$ be a univariate RBF kernel matrix, and let $L_{k} L_k^\top$ be its rank $k$ pivoted Cholesky decomposition.
+  Let $E$ be the difference between $K_{XX}$ and its low-rank pivoted Cholesky approximation -- i.e. $E = K_{XX} - L_k L_k^\top$.
+  We have:
+  %
+  \begin{align*}
+    \kappa \left( \trainP_{k}^{-1}\trainK \right)
+    &\triangleq \left\Vert \trainP_{k}^{-1}\trainK \right\Vert_{2} \left\Vert \trainK^{-1}\trainP_{k} \right\Vert_{2}
+    \\
+    &= \left\Vert \left( L_k L_k^\top + \sigma^2 I \right)^{-1} \left(K_{XX} + \sigma^2 I \right) \right\Vert_{2}
+    \left\Vert \left( L_k L_k^\top + \sigma^2 I \right) \left(K_{XX} + \sigma^2 I \right)^{-1} \right\Vert_{2}
+    \\
+    &= \left\Vert \left( L_k L_k^\top + \sigma^2 I \right)^{-1} \left(L_k L_K^\top + E + \sigma^2 I \right) \right\Vert_{2}
+    \left\Vert \left( K_{XX} - E + \sigma^2 I \right) \left(K_{XX} + \sigma^2 I \right)^{-1} \right\Vert_{2}
+    \\
+    &= \left\Vert I + \left( L_k L_k^\top + \sigma^2 I \right)^{-1} E \right\Vert_{2}
+    \left\Vert I - \left(K_{XX} + \sigma^2 I \right)^{-1} E \right\Vert_{2}
+  \end{align*}
+  %
+  Applying Cauchy-Schwarz and the triangle inequality we have
+  %
+  \begin{align*}
+    \kappa \left( \trainP_{k}^{-1}\trainK \right)
+    &\leq \left( 1 + \left\Vert \left( L_k L_k^\top + \sigma^2 I \right)^{-1} \right\Vert_2 \left\Vert E \right\Vert_{2} \right)
+      \left( 1 + \left\Vert \left( K_{XX} + \sigma^2 I \right)^{-1} \right\Vert_2 \left\Vert E \right\Vert_{2} \right)
+  \end{align*}
+  %
+  Let $c$ be some constant such that $c \geq \left\Vert \left( L_k L_k^\top + \sigma^2 I \right)^{-1} \right\Vert_{2}$
+  and $c \geq \left\Vert \left( K_{XX} + \sigma^2 I \right)^{-1} \right\Vert_{2}$. Then:
+  \begin{align*}
+    \kappa \left( \trainP_{k}^{-1}\trainK \right)
+    &\leq \left( 1 + c \left\Vert E \right\Vert_{2} \right)^2
+  \end{align*}
+  %
+  \citet{harbrecht2012low} show that $E$ is guaranteed to be positive semi-definite, and therefore $\Vert E \Vert_2 \leq \tr{E}$.
+  Recall from \autoref{thm:harbrecht} and \autoref{thm:eigenvalue_bound} that $\tr{E} = \tr{K_{XX} - L_k L_k^\top} \lesssim n\exp(-bk)$ for some $b > 0$.
+  Therefore:
+  \begin{align*}
+    \kappa \left( \trainP_{k}^{-1}\trainK \right)
+    &\leq \left(1 + \bigo{n\exp(-bk)}\right)^2.
+  \end{align*}
+\end{proof}
+
+\subsection{Proof of \autoref{thm:eigenvalue_bound}}
+\begin{proof}
+  We organize the proof into a series of lemmata.  First, we observe
+  that if there is a degree $d$ polynomial that approximates
+  $\exp(-\gamma r^2)$ to within some $\epsilon$ on $[-1,1]$,
+  then $\lambda_{d+1}(K_{XX}) \leq n\epsilon$
+  (\autoref{lemma:interpbound}).
+  Then in \autoref{lemma:errbnd}, we show that if $p_l$ is a
+  truncated Chebyshev expansions of degree $2l$, then
+  $|p_l(r)-\exp(-\gamma r^2)| < 2 e^{-\gamma/4} I_{l+1}(\gamma/4)$;
+  the argument involves a fact about sums of modified Bessel functions
+  which we prove in \autoref{lemma:Isum}.
+  Combining these two lemmas yields the theorem.
+\end{proof}
+%
+\begin{lemma}\label{lemma:interpbound}
+  Given nodes $x_1, \ldots, x_n \in [0,1]$, define the kernel matrix
+  $K \in \reals^{n \times n}$ with $k_{ij} = \phi(x_i-x_j)$.  Suppose
+  the degree $d$ polynomial $q$ satisfies $|\phi(r)-q(r)| \leq
+  \epsilon$ for $|r| \leq 1$.  Then
+  \[
+    \lambda_{d+1}(K) \leq n \epsilon.
+  \]
+\end{lemma}
+\begin{proof}
+  Define $\tilde{K} \in \reals^{n \times n}$ with $\tilde{k}_{ij} = q(x_i-x_j)$.
+  Each column is a sampling at the $X$ grid of a $\deg(q)$ polynomial, so
+  $\tilde{K}$ has rank at most $\deg(q)$.  The entries of the
+  error matrix $E = K-\tilde{K}$ are bounded in magnitude by
+  $\epsilon$, so $\|E\|_2 \leq n\epsilon$ (e.g.~by Gershgorin's circle theorem).
+  Thus, $\lambda_{d+1}(K) \leq \lambda_{d+1}(\tilde{K}) + \|E\|_2 = n\epsilon$.
+\end{proof}
+
+
+
+\begin{lemma}~\label{lemma:errbnd}
+  For $x \in [-1,1]$,
+  \[
+    |\exp(-\gamma x^2)-p_l(x)| \leq 2 e^{-\gamma/4} I_{l+1}(\gamma/4).
+  \]
+\end{lemma}
+\begin{proof}
+Given that
+$|(-1)^j T_{2j}(x)| \leq 1$ for any $x \in [-1,1]$, the tail
+admits the bound
+\[
+  |\exp(-\gamma x^2)-p_l(x)| \leq
+  2 e^{-\gamma/2} \sum_{j=l+1} I_j(\gamma/2).
+\]
+Another computation (\autoref{lemma:Isum}) bounds the sum of the
+modified Bessel functions to yield
+\[
+  |\exp(-\gamma x^2)-p_l(x)| \leq
+  2 e^{-\gamma/4} I_{l+1}(\gamma/4).
+\]
+\end{proof}
+
+
+\begin{lemma}\label{lemma:Isum}
+  \[
+    \sum_{j=l+1}^\infty I_j(\eta) \leq \exp(\eta/2) I_{l+1}(\eta/2)
+  \]
+\end{lemma}
+\begin{proof}
+Take the power series expansion
+\[
+  I_j(\eta) =
+    \sum_{m=0}^\infty \frac{1}{m! (m+j)!} \left(\frac{\eta}{2}\right)^{2m+j}
+\]
+and substitute to obtain
+\[
+  \sum_{j=l+1}^\infty I_j(\eta) =
+    \sum_{j=l+1}^\infty \sum_{m=0}^\infty
+    \frac{1}{m! (m+j)!} \left(\frac{\eta}{2}\right)^{2m+j}.
+\]
+All sums involved converge absolutely, and so we may reorder to obtain
+\[
+  \sum_{j=l+1}^\infty I_j(\eta) =
+  \sum_{m=0}^\infty \frac{1}{m!} \left(\frac{\eta}{2}\right)^m
+  \sum_{j=l+1}^\infty
+    \frac{1}{(m+j)!} \left(\frac{\eta}{2}\right)^{m+j}.
+\]
+Because it is the tail of a series expansion for the exponential, we
+can rewrite the inner sum as
+\[
+  \sum_{j=l+1}^\infty
+  \frac{1}{(m+j)!} \left(\frac{\eta}{2}\right)^{m+j} =
+  \frac{\exp(\xi_m/2)}{(m+l+1)!} \left(\frac{\xi_m}{2}\right)^{m+l+1}
+\]
+for some $\xi_m$ in $[0,\eta]$, and thus
+\[
+  \sum_{j=l+1}^\infty
+  \frac{1}{(m+j)!} \left(\frac{\eta}{2}\right)^{m+j} \leq
+  \frac{\exp(\eta/2)}{(m+l+1)!} \left(\frac{\eta}{2}\right)^{m+l+1}.
+\]
+Substituting into the previous expression gives
+\begin{align*}
+  \sum_{j=l+1}^\infty I_j(\eta)
+  &\leq
+  \sum_{m=0}^\infty \frac{1}{m!} \left(\frac{\eta}{2}\right)^m
+  \frac{\exp(\eta/2)}{(m+l+1)!} \left(\frac{\eta}{2}\right)^{m+l+1} \\
+  &=
+  \exp\left(\frac{\eta}{2}\right)
+  \sum_{m=0}^\infty \frac{1}{m! (m+l+1)!}
+  \left(\frac{\eta}{2}\right)^{2m+l+1} \\
+  &=
+  \exp(\eta/2) I_{l+1}(\eta/2).
+\end{align*}
+\end{proof}
