@@ -55,11 +55,11 @@ Equally important, these models are simple and computational efficient, in large
 These advantages have made gradient-boosted decision trees a workhorse algorithm for many practitioners in a variety of application domains.
 According to a survey collected by \citet{kaggle2019kaggle}, $75\%$ of the responding data scientists regularly use gradient-boosted decision trees and the XGBoost software.
 
-However, for many machine learning algorithms there is still a trade-off between predictive potential and its practical limitations.
+Nevertheless, for many machine learning algorithms there is still a trade-off between predictive potential and its practical limitations.
 The focus of this thesis is {\bf Gaussian process models} (GPs), which perhaps best exemplify this tension.
 Within the machine learning community, GPs have been well-regarded as a powerful model class with many desirable properties---such as calibrated uncertainty estimates and interpretable model priors.
 Recent work on hierarchical modelling \citep[e.g.][]{damianou2013deep} and scalability \citep[e.g.][]{wilson2015kernel} have furthered their applicability to increasingly complex tasks.
-However, Gaussian processes have historically not scaled to large datasets, and the tools most commonly used for inference do not effectively utilize modern compute hardware.
+However, Gaussian processes have historically only been used on small datasets, and the tools most commonly used for inference do not effectively utilize modern compute hardware.
 %Scalable approximations can remedy these concerns to some extent, yet such approximations can sometimes bias the model's predictions \cite{turner2011two,bauer2016understanding}.
 %Finally, new
 Using GPs requires significant implementation effort, as simple modifications like an additional output dimension might require different learning/inference procedures.
@@ -70,7 +70,7 @@ This thesis aims to address these limitations so that Gaussian processes can be 
 
 \section{The Predictive Power of Gaussian Processes Models}
 
-Before addressing these issues, it is worth discussing why Gaussian processes are an invaluable model class blackbox optimization \cite{snoek2012practical}, robotics \cite{deisenroth2011pilco}, health care \cite{schulam2015framework}, and many other domains:
+Before addressing these issues, it is worth discussing why Gaussian processes are an invaluable model class for blackbox optimization \citep[e.g.][]{snoek2012practical}, robotics \citep[e.g.][]{deisenroth2011pilco}, health care \citep[e.g.][]{schulam2015framework}, and many other domains:
 \begin{enumerate}
   \item {\bf Closed-form marginalization over hypotheses.}
     Many machine learning algorithms (such as neural networks) construct a single model by optimizing over thousands or millions of parameters.
@@ -155,9 +155,9 @@ Small modifications, such as adding an additional output dimension, often requir
 Gaussian processes models on the other hand require significant implementation effort.
 Often, the \emph{model} and the \emph{learning/inference procedures} are tightly coupled.
 As an example, consider converting a standard Gaussian process into a Gaussian process over multiple output dimensions \cite{bonilla2008multi}.
-While this is seemingly a simple modelling change, it requires a completely different implementation since the additional output dimension changes the structure of the prior covariance matrix (see \cref{sec:advantages}), modifying the equations used for efficient inference.
+While this is seemingly a simple modelling change, it requires a completely different implementation since the additional output dimension changes the structure of the prior covariance matrix (see \cref{sec:programmability}), modifying the equations used for efficient inference.
 In the popular \citet{gpy2014} software package, multi-output GPs and standard GPs are implemented as separate models, with multi-output GPs requiring an additional 100 lines of code.
-Compared to the one-line change required for multi-output neural networks, GPs are significantly more difficult to implement, which impedes the rapid prototyping of new models.
+Compared to the one-line change required for multi-output neural networks, GPs are significantly more difficult to implement.
 
 
 
@@ -165,7 +165,7 @@ Compared to the one-line change required for multi-output neural networks, GPs a
 This thesis introduces a framework that addresses these issues without sacrificing the desirable properties of GPs.
 Our approach is centered on a \emph{single} critical design decision:
 taking inspiration from neural networks, we build GP training and inference algorithms \emph{using only matrix-multiplication} and element-wise operations.
-As we will demonstrate, this reduces the asymptotic complexity of GPs, improves their GPU utilization, expands the applicability of exact methods, and simplifies implementation of specialty models.
+As we will demonstrate, this single design choice reduces the asymptotic complexity of GPs, improves their GPU utilization, expands the applicability of exact methods, and simplifies implementation of specialty models.
 The following chapters introduce the components of our matrix-multiplication-based framework:
 
 \begin{itemize}
@@ -194,7 +194,7 @@ The following chapters introduce the components of our matrix-multiplication-bas
   \item This thesis culminates with with {\bf \cref{chapter:largeexact}}, which utilizes the prior chapter's methods to scale GP regression to extremely large datasets.
     Combining BBMM and LOVE with partitioned matrix-multiplication routines, we demonstrate that Gaussian processes can be trained \emph{without approximation} on datasets with \emph{over 1 million data points}.
     GPU-acceleration makes these large-scale GPs roughly as fast as approximate methods, despite their larger asymptotic complexity.
-    We perform the first-ever comparison of exact GPs against scalable approximations on datasets with $10^4$---$10^6$ data points, showing dramatic performance improvements.
+    We perform the first-ever comparison of exact GPs against scalable approximations on datasets with $10^4$---$10^6$ data ps oints, showing dramatic performance improvements.
 
 \end{itemize}
 

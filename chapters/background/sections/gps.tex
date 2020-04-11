@@ -3,39 +3,38 @@
 
 %For someone without much prior knowledge (pun intended) about Gaussian processes, the terminology can appear confusing and overloaded.
 In the machine learning literature the term \emph{Gaussian process} describes two different objects.
-In one context it refers to a distribution over functions that is used to define a prior over $f(\cdot)$.
+In one context it refers to a distribution over functions that can define a prior over $f(\cdot)$.
 It can also refer the class of predictive models that make use of Gaussian process priors on $f(\cdot)$.
-As we will soon see, these two uses refer to the same family of distributions.
-However, for clarity in this section we will distinguish when ``Gaussian process'' is describing a prior distribution over functions and when it is describing a class of predictive models.
+As we will soon see, these two uses are relatively interchangeable.
+However, for clarity in this section we will explicitly distinguish when ``Gaussian process'' is describing a prior distribution over functions and when it is describing a class of predictive models.
 
 \subsection{Gaussian Process Distributions}
-A \emph{Gaussian process distribution} $f(\cdot) \sim \mathcal{GP}$ extends the multivariate-Gaussian distribution from finite-dimensional vectors to (infinite-dimensional) functions.
-It is defined by a \emph{mean function} $\mu(\cdot)$ and a \emph{covariance function} or \emph{kernel function} $k(\cdot, \cdot)$.\footnote{
+A {\bf Gaussian process distribution} $f(\cdot) \sim \mathcal{GP}$ extends the multivariate-Gaussian distribution from finite-dimensional vectors to (infinite-dimensional) functions.
+It is defined by a \emph{mean function} $\mu(\cdot)$ and a {\bf covariance function} or {\bf kernel function} $k(\cdot, \cdot)$.\footnote{
 
   Throughout this thesis we will use the two terms interchangeably.
 }
 %It can only be realized by applying $f$ to some finite set of points.
 Given $N$ data points $\bX = [ \bx^{(1)}, \ldots, \bx^{(N)} ] \in \reals^{\numdata \times \numdim}$ (e.g. the $D$-dimensional features of $N$ different children in our running example),
 the distribution over $\bfn = [ f(\bx^{(1)}), \ldots, f(\bx^{(N)}) ] \in \reals^\numdata$ is a multivariate Normal distribution:
-%The multivariate Normal's mean $\bmu_\bX$ comes from a \emph{mean function} $\mu(\cdot)$ applied to each $\bx^{(i)}$, and its covariance matrix $\bK_{\bX\bX}$ comes from a \emph{covariance function} $k(\cdot, \cdot)$ (also referred to as a \emph{kernel function}) applied to every pair of data points:
 \begin{equation}
  p \left( \bfn \right) = \normaldist{ \bfn ; \bmu_\bX}{ \bK_{\bX\bX} },
  \label{eqn:prior_finite}
 \end{equation}
 where $f^{(i)} = f(\bx^{(i)})$, $\mu^{(i)}_\bX = \mu( \bx^{(i)} )$ and $K_{\bX\bX}^{(i,j)} = k(\bx^{(i)}, \bx^{(j)})$.
 (We will be using the above short-hand notations $\bfn$, $\bmu_\bX$, and $\bK_{\bX\bX}$ throughout the remainder of this thesis.)
-The matrix $\bK_{\bX\bX} \in \reals^{\numdata \times \numdata}$ is often referred to as the \emph{kernel matrix} of $\bX$.
+The matrix $\bK_{\bX\bX} \in \reals^{\numdata \times \numdata}$ is often referred to as the {\bf kernel matrix} of $\bX$.
 
 %Analogously to its finite-dimensional counterpart, a Gaussian process is completely defined by its mean and covariance functions $\mu(\cdot)$ and $k(\cdot, \cdot)$.
 $\mu(\cdot)$ can be any real-valued function, though it is common simply to choose the zero-function (i.e. $\mu(\cdot) = 0$).
 The covariance function $k(\cdot, \cdot)$ must be a valid kernel function, which means that all kernel matrices $\bK$ must be positive definite.
 See \cref{sec:common_kernels} for common choices of $k(\cdot, \cdot)$.
 
-\subsection{Gaussian Process Models}
+\subsection{Gaussian Process Regression Models}
 \label{sec:gp_models}
 
 Recall our high-level regression model from \cref{eqn:regression}: $y = f \left( \bx \right) + \epsilon$.
-\emph{Gaussian process regression models} are a class of predictive models where
+{\bf Gaussian process regression models} are a class of predictive models where
 %
 \begin{enumerate}
   \item $f ( \cdot )$ is modelled by a Gaussian process prior: $f (\cdot) \sim \GP{\mu(\cdot)}{k(\cdot, \cdot)}$, and
@@ -166,10 +165,10 @@ In fact, any (finite) set of test points will be jointly Gaussian with the above
 
 The predictive distribution of Gaussian process regression model is non-parametric, which leaves us few terms that need to be learned.
 However, we wish to pick the best mean function, kernel function, and observational noise that define a Gaussian process which best fits our training data $\dset_\text{train} = (\bX, \by)$.
-Let $\btheta$ be the set of learnable \emph{hyperparameters} of these functions.
+Let $\btheta$ be the set of learnable {\bf hyperparameters} of these functions.
 For example, $\btheta$ might include the lengthscale $\ell$ and outputscale $o^2$ of the kernel function (see \cref{sec:common_kernels}) as well as the observational noise parameter $\sigma_\text{obs}$.
 In more complex Gaussian process models, $\btheta$ may also include inducing point locations \cite{titsias2009variational} or neural network parameters for deep kernel learning \cite{wilson2016deep}.
-We can measure the fit of these parameters through the \emph{marginal log likelihood} of the Gaussian process applied to the training data $\bX, \by$:
+We can measure the fit of these parameters through the {\bf marginal log likelihood} of the Gaussian process applied to the training data $\bX, \by$:
 %
 \begin{align}
   -\log p( \by \mid \bX, \btheta)
@@ -263,8 +262,8 @@ We will describe their functional form and their properties:
     %
     \[ k_\text{RBF}(\bx, \bx') = o^2 \exp \left( \sum_{d=1}^D \frac{\left( x^{(d)} - x^{(d)\prime} \right)^2}{\ell_d^2}  \right) \]
     %
-    where $o^2$ is referred to as the \emph{outputscale} parameter and the $\ell_1, \ldots, \ell_D$ are the \emph{lengthscales} for each dimension $d \in [1, D]$.
-    When the $\ell_d$ parameter is different across all dimensions, the kernel is referred to as the {\bf RBF-ARD } kernel, where ARD stands for \emph{ automatic relevance determination }.
+    where $o^2$ is referred to as the {\bf outputscale} parameter and the $\ell_1, \ldots, \ell_D$ are the {\bf lengthscales} for each dimension $d \in [1, D]$.
+    When the $\ell_d$ parameter is different across all dimensions, the kernel is referred to as the {\bf RBF-ARD } kernel, where ARD stands for {\bf automatic relevance determination }.
     To reduce the number of learned parameters, it is sometimes common to share the same $\ell$ parameter across all dimensions.
 
     The RBF kernel is commonly considered to be a ``general'' kernel, since it is able to universally approximate any function given enough training data \cite{micchelli2006universal}.
@@ -314,7 +313,7 @@ and our second prior assumption (children from a similar socioeconomic backgroun
 
 
 \paragraph{Stationary kernels.}
-The RBF and Mat\'ern kernels belong to an important class of kernels known as \emph{stationary kernels}.
+The RBF and Mat\'ern kernels belong to an important class of kernels known as {\bf stationary kernels}.
 This class more generally includes all kernels that are simply a function of the distance between two points:
 \begin{equation}
   k_\text{stationary} (\bx, \bx') = \phi( \vert \bx - \bx' \vert ),
@@ -368,7 +367,7 @@ This has motivated the development of several approximate Gaussian process regre
 Many of these methods approximate the training kernel matrix $\bK_{\bX\bX}$ with a structured or low-rank matrix $\approxK$ that affords faster matrix operations and requires less storage.
 
 \paragraph{Inducing Points.}
-A common mechanism for scalable methods is to introduce a set of pseudo-inputs, or \emph{inducing points}, which function as a sufficient statistic for the predictive distribution.
+A common mechanism for scalable methods is to introduce a set of pseudo-inputs, or {\bf inducing points}, which function as a sufficient statistic for the predictive distribution.
 The kernel function for \emph{real}-inputs $\bx$, $\bx'$ is approximated by interpolating against the kernel matrix for the \emph{pseudo}-inputs $\bZ = [\bz^{(1)}, \ldots, \bz^{(M)}]$.
 %
 \begin{align}
