@@ -102,6 +102,7 @@ Collecting the $\left( \prod_{j=1}^i \bPi_j \right) {\bl}_{i}$ vectors in to a m
 %
 \begin{equation}
   \bA = \bar\bL_{R} \bar\bL_{R}^{\top} + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix} \approx \bar\bL_{R} \bar\bL_{R}^{\top}.
+  \label{eqn:chol_error}
 \end{equation}
 %
 $\bar\bL_{R} \in \reals^{N \times R}$ is referred to as the {\bf partial pivoted Cholesky factor} of $\bA$.
@@ -117,7 +118,7 @@ For matrices with rapidly decaying spectra, the partial pivoted Cholesky factor 
   If the first $R$ eigenvalues $\lambda_1$, $\ldots$, $\lambda_R$ of a positive-definite $\bA \in \reals^{N \times N}$ satisfy $\left( 4^{i}\lambda_{i} \right) \leq \bigo{e^{-Bi}}$ for some $B>0$,
   then the rank-$R$ pivoted Cholesky decomposition $\bar\bL_{R} \bar\bL_R^\top$ gives
   \[
-    \textrm{Tr}(\bA -  \bar\bL_A \bar\bL_A^\top) \leq \bigo{N e^{-BR}}.
+    \tr{\bA -  \bar\bL_R \bar\bL_R^\top} \leq \bigo{N e^{-BR}}.
   \]
 \end{theorem}
 

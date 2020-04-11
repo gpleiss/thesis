@@ -169,10 +169,10 @@ From this perspective, one can derive CG's famous (though loose) convergence bou
   \begin{equation*}
     \Vert \bc_J - (\bA^{-1} \bb) \Vert_\bA
     \leq
-    2 \Bigg[ \frac{ \sqrt \kappa - 1 }{\sqrt \kappa + 1} \Biggr]^J \Vert \bb \Vert_\bA,
+    2 \Bigg[ \frac{ \sqrt \kappa(\bA) - 1 }{\sqrt \kappa(\bA) + 1} \Biggr]^J \Vert \bb \Vert_\bA,
   \end{equation*}
   %
-  where $\kappa = \Vert \bA \Vert_2 / \Vert \bA^{-1} \Vert_2$ is the \emph{condition number} of $\bA$.
+  where $\kappa(\bA) = \Vert \bA \Vert_2 / \Vert \bA^{-1} \Vert_2$ is the \emph{condition number} of $\bA$.
 \end{theorem}
 %
 Thus CG converges exponentially to the true solve $\bA \bb^{-1}$.
@@ -356,7 +356,26 @@ Then we apply \cref{eqn:f_lanczos}:
 \end{align}
 %
 Combining \cref{eqn:logdet_sta} and \cref{eqn:slq} gives us an unbiased estimate of $\log \vert \bA \vert$.
-\citet{ubaru2017fast} demonstrate that this estimate converges exponentially in $J$ (the number of Lanczos iterations).
+This estimate, referred to as the {\bf stochastic Lanczos quadrature} estimate of $\log \vert \bA \vert$, converges exponentially in $J$ (the number of Lanczos iterations):
+%
+\begin{theorem}[Corrolary 4.5 of \citet{ubaru2017fast}]
+  \label{thm:slq_convergence}
+  Let $\bA \in \reals^{N \times N}$ be a positive definite matrix with condition number $\kappa( \bA )$.
+	Suppose we estimate $\Gamma \approx \log \vert \bA \vert$ using \cref{eqn:logdet_sta,eqn:slq} with:
+	\begin{itemize}
+		\item $J \geq \frac{1}{4} \sqrt{ 3 \kappa(\bA) } \log \left( \bigo{\kappa(\bA)} / \epsilon \right)$ iterations of Lanczos,\footnote{
+			The exact value for the $\bigo{\kappa(\bA)}$ constant is $\left( 5 \kappa(\bA) \log ( 2 (\kappa(\bA) + 1)) / \sqrt{ 2(\kappa(\bA) + 1) } \right)$.
+		} and
+		\item $T \geq \frac{32}{\epsilon^2} \log \left( \frac 2 \delta \right)$ random $\bz^{(i)} \sim \normaldist{\bzero}{\bI}$ vectors.\footnote{
+			The constant originally used by \citet{ubaru2017fast} assumes that the $\bz^{(i)}$ are Rademacher random variables rather than Gaussian random variables.
+			The variance of stochastic trace estimation with Gaussian variables is bounded with a factor of $32$ rather than $24$ (see \citep[][Eqs. 4 and 5]{roosta2015improved}), and so we have adjusted the constant accordingly.
+		}
+	\end{itemize}
+  Then the error of the stochastic Lanczos quadrature estimate $\Gamma$ is probabilistically bounded by:
+  \begin{equation*}
+    \textrm{Pr}\left[\Bigl\vert \log \vert \bA \vert - \Gamma \Bigr\vert \leq \epsilon N \right] \geq \left( 1 - \delta \right).
+  \end{equation*}
+\end{theorem}
 
 \paragraph{Computing matrix solves.}
 Another common application of Lanczos tridiagonalization is computing $\bA^{-1} \bb$.
@@ -400,6 +419,7 @@ However, one advantage of Lanczos is that the $\bQ_J$ and $\bT_J$ matrices can b
 \end{equation}
 %
 where $\bQ_J$ and $\bT_J$ come from a previous solve $\bA^{-1} \bb$.
+We will use this fact in \cref{chapter:love}.
 
 \paragraph{Deriving Lanczos from CG.}
 Additionally, one can recover part of the Lanczos tridiagonalization from conjugate gradients.
@@ -407,7 +427,7 @@ Additionally, one can recover part of the Lanczos tridiagonalization from conjug
 In particular, we will store the $\alpha_j$ and $\beta_j$ coefficients from \autoref{alg:std_pcg}.
 %
 \begin{observation}[Recovering Lanczos tridiagonal matrices from PCG \cite{saad2003iterative}]
-  Assume we use $p$ iterations of standard preconditioned conjugate gradients to solve $\bA^{-1} \bb$ with preconditioner $\bP$.
+  Assume we use $J$ iterations of standard preconditioned conjugate gradients to solve $\bA^{-1} \bb$ with preconditioner $\bP$.
   Let $\alpha_1, \ldots, \alpha_p$ and $\beta_1, \ldots, \beta_p$ be the scalar coefficients from each iteration (defined in \autoref{alg:std_pcg}).
   The matrix
   %

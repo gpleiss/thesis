@@ -1,45 +1,180 @@
 %!TEX root=../main.tex
-\chapter{Convergence Analysis of Pivoted Cholesky Preconditioned CG}
+\chapter{Convergence Analysis of Partial Pivoted Cholesky Preconditioned mBCG}
 \label{app:theory}
 
-In this section we prove \autoref{thm:cg_convergence_rbf}, which bounds the convergence of pivoted Cholesky-preconditioned CG for univariate RBF kernels.
-%
-\newtheorem*{thm:cg_convergence_rbf}{\autoref{thm:cg_convergence_rbf} (Restated)}
-\begin{thm:cg_convergence_rbf}
-  Let $K_{XX} \in \reals^{n \times n}$ be a $n \times n$ univariate RBF kernel, and let $L_k L_k^\top$ be its rank $k$ pivoted Cholesky decomposition.
-  Assume we are using preconditioned CG to solve the system $\trainK^{-1} \by = (K_{XX} + \sigma^2 I)^{-1} \by$ with preconditioner $\trainP = (L_k L_k^\top + \sigma^2 I)$.
-  Let $\bu_k$ be the $k^\textrm{th}$ solution of CG, and let $\bu^{*} = \trainK^{-1} \by$ be the exact solution.
-  Then there exists some $b > 0$ such that:
-  \begin{equation}
-    \Vert \bu^{*} - \bu_{k} \Vert_{\trainK}
-    \leq 2 \left(\frac{1}{1 + \bigo{n^{-1/2} \exp(kb/2)}}\right)^{p} \left\Vert \bu^{*} - \bu_{0} \right\Vert_{\trainK}.
-  \end{equation}
-\end{thm:cg_convergence_rbf}
+\section{Proof of Theorems in \cref{sec:piv_chol_precond}}
+
+
+\subsection{Proof of \cref{thm:condition_number}.}
+\newtheorem*{thm:condition_number}{\cref{thm:condition_number} (Restated)}
+\begin{thm:condition_number}
+  Let $\bar\bL_{R}$ be the rank-$R$ pivoted Cholesky factor of kernel matrix $\bK_{\bX\bX} \in \reals^{N \times N}$.
+  If the first $R$ eigenvalues $\lambda_1$, $\ldots$, $\lambda_R$ of $\bK_{\bX\bX}$ satisfy
+	\begin{equation*}
+		4^{i}\lambda_{i} \leq \bigo{e^{-Bi}}, \quad i \in \{ 1, \:\: \ldots, \:\: R \},
+		\tag{\ref{eqn:pcp_condition}}
+	\end{equation*}
+	for some $B>0$, then the condition number $\kappa(\trainP^{-1}\trainK) \triangleq \Vert \trainP_{k}^{-1}\trainK \Vert_{2} \Vert \trainK^{-1}\trainP_{k} \Vert_{2}$
+	satisfies the following bound:
+  \begin{align}
+    \kappa \left( \trainP^{-1}\trainK \right)
+    &\leq \Bigl( 1 + \bigo{\sigma^{-2}_\text{obs} N e^{-BR}} \Bigr)^2
+		\nonumber
+  \end{align}
+	where $\trainP = \left( \bar\bL_R \bar\bL_R^\top + \sigma^2_\text{obs} \bI \right)$ and $\trainK = \left( \bK_{\bX\bX} + \sigma^2_\text{obs} \bI \right)$.
+\end{thm:condition_number}
 
 \begin{proof}
-Let $L_k L_k^\top$ be the rank $k$ pivoted Cholesky decomposition of a univariate RBF kernel $K_{XX}$.
-  We begin by stating a well-known CG convergence result, which bounds error in terms of the \emph{conditioning number} $\kappa$ (see \autoref{obs:cg_convergence}):
-\begin{equation}
-  \label{eq:condition_number_convergence}
-  \left\Vert \bu^* - \bu_{k} \right\Vert_{\trainK}
-  \leq 2 \left( \frac {\sqrt{\kappa\left(\trainP_{k}^{-1}\trainK\right)} - 1}{\sqrt{\kappa\left(\trainP_{k}^{-1}\trainK\right)} + 1} \right)^{p} \left\Vert \bu^* - \bu_{0} \right\Vert_{\trainK}.
-\end{equation}
-Our goal is therefore to bound the condition number of $(L_k L_k^\top + \sigma^2 I)^{-1} (K_{XX} + \sigma^2 I)$.
-To do so, we will first show that $L_k L_k^\top$ rapidly converges to $K_{XX}$ as the rank $k$ increases.
-We begin by restating the primary convergence result of \cite{harbrecht2012low}:
+  Let $\bE$ be the difference between $\bK_{\bX\bX}$ and its rank-$R$ pivoted Cholesky approximation $\bar\bL_R \bar\bL_R^\top$:
+  \[
+    \bE = \bK_{\bX\bX} - \bar\bL_R \bar\bL_R^\top = \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix}
+  \]
+  where $\bS_{R+1}$ is the Schur compliment that arises as the Cholesky error term (see \cref{eqn:chol_error}).
+  Therefore, the error $\bE$ is a positive semi definite matrix.
+
+  By definition, the condition number $\kappa ( \trainP^{-1}\trainK )$ is given by
+  \begin{align*}
+    \kappa \left( \trainP^{-1}\trainK \right)
+    &\triangleq \left\Vert \trainP^{-1}\trainK \right\Vert_{2} \left\Vert \trainK^{-1}\trainP \right\Vert_{2}
+  \end{align*}
+  %
+  The left term can be rewritten as:
+  %
+  \begin{align*}
+    \\
+    \left\Vert \trainP^{-1}\trainK \right\Vert_{2}
+    &= \left\Vert \left( \bar\bL_R \bar\bL_R^\top + \sigma^2_\text{obs} \bI \right)^{-1} \left(\bK_{\bX\bX} + \sigma^2_\text{obs} \bI \right) \right\Vert_{2}
+    \\
+    &= \left\Vert \left( \bar\bL_R \bar\bL_R^\top + \sigma^2_\text{obs} \bI \right)^{-1} \left(\bar\bL_R \bar\bL_R^\top + \bE + \sigma^2_\text{obs} \bI \right) \right\Vert_{2}
+    \\
+    &= \left\Vert \bI + \left( \bar\bL_R \bar\bL_R^\top + \sigma^2_\text{obs} \bI \right)^{-1} \bE \right\Vert_{2}
+  \end{align*}
+  %
+  Similarly, the right term is:
+  %
+  \begin{align*}
+    \left\Vert \trainK^{-1}\trainP \right\Vert_{2}
+    &= \left\Vert \left( \bar\bL_R \bar\bL_R^\top + \sigma^2_\text{obs} \bI \right) \left(\bK_{\bX\bX} + \sigma^2_\text{obs} \bI \right)^{-1} \right\Vert_{2}
+    \\
+    &= \left\Vert \left( \bK_{\bX\bX} - \bE + \sigma^2_\text{obs} \bI \right) \left(\bK_{\bX\bX} + \sigma^2_\text{obs} \bI \right)^{-1} \right\Vert_{2}
+    \\
+    &= \left\Vert \bI - \left(\bK_{\bX\bX} + \sigma^2_\text{obs} \bI \right)^{-1} \bE \right\Vert_{2}
+  \end{align*}
+  %
+  Since $\bK_{\bX\bX}$ and $\bar\bL_R \bar\bL_R^\top$ are both positive (semi-)definite,
+  $(\bK_{\bX\bX} + \sigma^2_\text{obs})$ and $(\bar\bL_R \bar\bL_R^\top + \sigma^2_\text{obs})$ will both have a minimum eigenvalue $\lambda_\text{min} \geq \sigma^2_\text{obs}$.
+  Therefore,
+  %
+  \[
+    \left\Vert \left(\bK_{\bX\bX} + \sigma^2_\text{obs} \right)^{-1} \right\Vert_2 \leq \sigma^{-2}_\text{obs},
+    \quad
+    \left\Vert \left(\bar\bL_R \bar\bL_R^\top + \sigma^2_\text{obs} \right)^{-1} \right\Vert_2 \leq \sigma^{-2}_\text{obs}.
+  \]
+  %
+  Applying these bound, along with Cauchy-Schwarz and the triangle inequality, gives us
+  %
+  \begin{align}
+    \kappa \left( \trainP^{-1}\trainK \right) \!
+    &\leq \! \left( 1 + \left\Vert \left( \bar\bL_R \bar\bL_R^\top + \sigma^2_\text{obs} \bI \right)^{-1} \right\Vert_2 \left\Vert \bE \right\Vert_{2} \right)
+      \!\!
+      \left( 1 + \left\Vert \left( \bK_{\bX\bX} + \sigma^2_\text{obs} \bI \right)^{-1} \right\Vert_2 \left\Vert \bE \right\Vert_{2} \right)
+    \nonumber \\
+    &\leq
+    \left( 1 + \sigma^{-2}_\text{obs} \Vert \bE \Vert_2 \right)
+    \left( 1 + \sigma^{-2}_\text{obs} \Vert \bE \Vert_2 \right)
+    \nonumber \\
+    &= \left( 1 + \sigma^{-2}_\text{obs} \Vert \bE \Vert_2 \right)^2.
+    \label{eqn:cond_number_bound}
+  \end{align}
+
+  Since $\bE$ is positive semi-definite, we have that $\Vert \bE \Vert_2 \leq \tr{\bE}$.
+  The eigenvalue condition from \cref{eqn:pcp_condition} allows us to bound $\tr{\bE}$ using \cref{thm:harbrecht}:
+  %
+  \begin{equation}
+    \Vert \bE \Vert_2 \leq \tr{\bE}
+    =
+    \tr{ \bK_{\bX\bX} - \bar\bL_R \bar\bL_R^\top } \leq \bigo{N e^{-BR}}.
+    \label{eqn:error_trace_bound}
+  \end{equation}
+  %
+  Plugging \cref{eqn:error_trace_bound} into \cref{eqn:cond_number_bound} completes the proof.
+\end{proof}
+
+
+
+
+\subsection{Proof of \cref{thm:precond_mbcg_solves}}
+\newtheorem*{thm:precond_mbcg_solves}{\cref{thm:precond_mbcg_solves} (Restated)}
+\begin{thm:precond_mbcg_solves}
+  Let $\bK_{\bX\bX} \in \reals^{N \times N}$ be a $N \times N$ kernel that satisfies the eigenvalue condition of \cref{eqn:pcp_condition},
+	and let $\bar\bL_R$ be its rank-$R$ pivoted Cholesky factor.
+	After $J$ iterations of mBCG with preconditioner $\trainP = (\bar\bL_R \bar\bL_R^\top + \sigma_\text{obs}^2 \bI)$,
+	the difference between $\bc_J$ and true solution $\trainK^{-1} \by$ is bounded by:
+	%
+  \begin{equation*}
+    \left \Vert \trainK^{-1} \by - \bc_{J} \right \Vert_{\trainK}
+    \leq \Bigg[ \frac 1 {1 + \bigo{\sigma^{2}_\text{obs} e^{RB}/N}} \Bigg]^{J}
+    \left \Vert \trainK^{-1} \by \right \Vert_{\trainK},
+		\nonumber
+  \end{equation*}
+	%
+	where $\trainK = (\bK_{\bX\bX} + \sigma^2_\text{obs} \bI)$ and $B > 0$ is a constant.
+\end{thm:precond_mbcg_solves}
+
+\begin{proof}
+Since \cref{eqn:pcp_condition} holds, we can simply plug \cref{thm:condition_number} into the standard CG convergence bound (\cref{thm:cg_convergence}):
 %
-\begin{lemma}[\citet{harbrecht2012low}]
-\label{thm:harbrecht}
-  If the eigenvalues of a positive definite matrix $K_{XX} \in \reals^{n \times n}$ satisfy $4^{k}\lambda_{k} \lesssim \exp(-bk)$ for some $b>0$, then
-  the rank $k$ pivoted Cholesky decomposition $L_{k} L_k^\top$ satisfies
-  $$
-    \textrm{Tr}(K_{XX} -  L_k L_k^\top) \lesssim n\exp(-bk).
-  $$
-\end{lemma}
-%
-(See \citet{harbrecht2012low} for proof.)
-Intuitively, if the eigenvalues of a matrix decay very quickly (exponentially), then it is very easy to approximate with a low rank matrix, and the pivoted Cholesky algorithm rapidly constructs such a matrix.
-While there has been an enormous amount of work understanding the eigenvalue distributions of kernel functions (e.g., \cite{wathen2015spectral}), in this paper we prove the following useful bound on the eigenvalue distribution of univariate RBF kernel matrices:
+\begin{align*}
+  \left \Vert \trainK^{-1} \by - \bc_{J} \right \Vert_{\trainK}
+  &\leq
+  2 \left[ \frac{ \sqrt{ \kappa\left( \trainP^{-1} \trainK \right)}  - 1 }{\sqrt{ \kappa \left( \trainP^{-1} \trainK \right)} + 1} \right]^J
+  \left \Vert \trainK^{-1} \by \right \Vert_{\trainK}
+  \\
+  &\leq
+  2 \Bigg[ \frac{ 1 + \bigo{ \sigma^{-2}_\text{obs} N e^{-BR} } - 1 }{ 1 + \bigo{ \sigma^{-2}_\text{obs} N e^{-BR} } + 1} \Bigg]^J
+  \left \Vert \trainK^{-1} \by \right \Vert_{\trainK}
+  \\
+  &=
+  \Bigg[ \frac 1 {1 + \bigo{\sigma^{2}_\text{obs} e^{RB}/N}} \Bigg]^{J}
+  \left \Vert \trainK^{-1} \by \right \Vert_{\trainK}.
+\end{align*}
+\end{proof}
+
+
+
+
+\subsection{Proof of \cref{thm:precond_mbcg_logdet}}
+\newtheorem*{thm:precond_mbcg_logdet}{\cref{thm:precond_mbcg_logdet} (Restated)}
+\begin{thm:precond_mbcg_logdet}
+  Assume $\bK_{\bX\bX} \in \reals^{N \times N}$ satisfies the eigenvalue condition of \cref{eqn:pcp_condition}.
+	Suppose we estimate $\Gamma \approx \log \vert \trainP^{-1} \trainK \vert$ using \cref{eqn:slq_precond} with:
+	\begin{itemize}
+		\item $J \geq \mathcal{O} \left[ (1 + \sigma^{-2}_\text{obs} N e^{-BR}) \log \left( ( 1 + \sigma^{-2}_\text{obs} N e^{-BR} ) / \epsilon \right) \right]$ iterations of mBCG (for some constant $B > 0$), and
+		\item $T \geq \frac{32}{\epsilon^2} \log \left( \frac 2 \delta \right)$ random $\bz^{(i)} \sim \normaldist{\bzero}{\trainP}$ vectors.
+	\end{itemize}
+  Then the error of the stochastic Lanczos quadrature estimate $\Gamma$ is probabilistically bounded by:
+  \begin{equation*}
+    \textrm{Pr}\left[\Bigl\vert \log \vert \trainP^{-1} \trainK \vert - \Gamma \Bigr\vert \leq \epsilon N \right] \geq \left( 1 - \delta \right).
+  \end{equation*}
+\end{thm:precond_mbcg_logdet}
+
+\begin{proof}
+Since \cref{eqn:pcp_condition} holds, we can simply plug \cref{thm:condition_number} into the stochastic Lanczos quadrature bound of \citet{ubaru2017fast} (\cref{thm:slq_convergence}).
+\end{proof}
+
+
+
+
+
+
+
+
+
+\section{Applying \cref{thm:precond_mbcg_solves,thm:precond_mbcg_logdet} to Univariate RBF Kernels}
+
+\gp{REDO}
+While there has been an enormous amount of work understanding the eigenvalue distributions of kernel functions (e.g., \cite{wathen2015spectral}),
+in this paper we prove the following useful bound on the eigenvalue distribution of univariate RBF kernel matrices:
 %
 \begin{lemma}
 \label{thm:eigenvalue_bound}
@@ -53,112 +188,20 @@ Given $x_1, \ldots, x_n \in [0, 1]$, the univariate RBF kernel matrix $K_{XX} \i
 where $I_j$ denotes the modified Bessel function of the first kind with parameter $j$.
 \end{lemma}
 %
-(See \autoref{sec:proofs} for proof.)
-Thus, the eigenvalues of an RBF kernel matrix $K_{XX}$ decay \emph{super-exponentially}, and so the bound given by \autoref{thm:harbrecht} applies.
+In other words, the eigenvalues of an RBF kernel matrix $K_{XX}$ decay \emph{super-exponentially}, meeting the requirements of \cref{eqn:pcp_condition} in \cref{thm:condition_number}.
+Therefore, the bounds given by \cref{thm:precond_mbcg_solves,thm:precond_mbcg_logdet} apply.
 
-\autoref{thm:eigenvalue_bound} lets us argue for the pivoted Cholesky decomposition as a preconditioner.
-%To bound the condition number of the matrix $\trainP^{-1} \trainK$, we begin bounding the difference between a linear solve with the $\trainP$ and the full matrix $\trainK$.
-%
-%\begin{theorem}
-%Let $\by$ be any vector, and let $\bu^{*} = \trainK^{-1}\by$ and $\tilde{\bu} = \trainP_{k}^{-1}\by$, where $\trainP_{k}=L_{k} L_K^\top + \sigma^{2}I$ and $L_{k} L_k^\top$ is the rank $k$ pivoted Cholesky decomposition of $K_{XX}$.
-%There exists some $b>0$ so that
-%$$
-  %\frac{\Vert \bu^{*} - \tilde{\bu}\Vert_{2}}{\Vert\bu^{*}\Vert_{2}} \lesssim \frac{n\exp(-bk)}{\sigma}.
-%$$
-%\end{theorem}
-%
-Intuitively, this theorem states that the pivoted Cholesky $L_k L_k$ converges rapidly to $K_{XX}$.
-Alternatively, the preconditioner $(L_k L_k^\top + \sigma^2 I)^{-1}$ converges rapidly to $\trainK^{-1} = (K_{XX} + \sigma^2 I)^{-1}$ -- the optimal preconditioner in terms of the number of CG iterations.
-We explicitly relate \autoref{thm:eigenvalue_bound} to the rate of convergence of CG by bounding the condition number:
-%
-\newtheorem*{thm:condition_number}{\autoref{thm:condition_number} (Restated)}
-\begin{thm:condition_number}
-  Let $K_{XX} \in \reals^{n \times n}$ be a univariate RBF kernel matrix.
-  Let $L_{k} L_k^\top$ be the rank $k$ pivoted Cholesky decomposition of $K_{XX}$, and let $\trainP_{k} = L_k L_k^\top + \sigma^{2}I$.
-  Then there exists a constant $b>0$ so that the condition number $\kappa(\trainP^{-1}\trainK)$ satisfies the following inequality:
-  \begin{equation}
-    \kappa \left( \trainP_{k}^{-1}\trainK \right)
-    \triangleq \left\Vert \trainP_{k}^{-1}\trainK \right\Vert_{2} \left\Vert \trainK^{-1}\trainP_{k} \right\Vert_{2}
-    \leq \left( 1 + \bigo{n\exp(-bk)} \right)^2.
-  \end{equation}
-\end{thm:condition_number}
-%
-(See \autoref{sec:proofs} for proof.)
-\autoref{thm:condition_number} lets us directly speak about the impact of the pivoted Cholesky preconditioner on CG convergence.
-Plugging \autoref{thm:condition_number} into standard CG convergence bound \eqref{eq:condition_number_convergence}:
-%
-\begin{align*}
-  \left\Vert \bu^* - \bu_{k} \right\Vert_{\trainK}
-  &\leq 2 \left( \frac{\sqrt{\kappa\left(\trainP_{k}^{-1}\trainK\right)} - 1}{\sqrt{\kappa\left(\trainP_{k}^{-1}\trainK\right)} + 1} \right)^{p} \left\Vert \bu^* - \bu_{0} \right\Vert_{\trainK}
-  \\
-  &\leq 2 \left( \frac{{{1 + \bigo{n\exp(-bk)}} - 1}} { {{1 + \bigo{n\exp(-bk)}} + 1}} \right)^{p} \left\Vert \bu^* - \bu_{0} \right\Vert_{\trainK}
-  \\
-  &= 2 \left(\frac{1}{1 + \bigo{\exp(kb) / n }}\right)^{p} \left\Vert \bu^{*} - \bu_{0} \right\Vert_{\trainK}.
-\end{align*}
-\end{proof}
-
-
-
-\section{Proofs of Lemmas}
-\label{sec:proofs}
-
-\subsection{Proof of \autoref{thm:condition_number}}
-
-\begin{proof}
-  Let $K_{XX} \in \reals^{n \times n}$ be a univariate RBF kernel matrix, and let $L_{k} L_k^\top$ be its rank $k$ pivoted Cholesky decomposition.
-  Let $E$ be the difference between $K_{XX}$ and its low-rank pivoted Cholesky approximation -- i.e. $E = K_{XX} - L_k L_k^\top$.
-  We have:
-  %
-  \begin{align*}
-    \kappa \left( \trainP_{k}^{-1}\trainK \right)
-    &\triangleq \left\Vert \trainP_{k}^{-1}\trainK \right\Vert_{2} \left\Vert \trainK^{-1}\trainP_{k} \right\Vert_{2}
-    \\
-    &= \left\Vert \left( L_k L_k^\top + \sigma^2 I \right)^{-1} \left(K_{XX} + \sigma^2 I \right) \right\Vert_{2}
-    \left\Vert \left( L_k L_k^\top + \sigma^2 I \right) \left(K_{XX} + \sigma^2 I \right)^{-1} \right\Vert_{2}
-    \\
-    &= \left\Vert \left( L_k L_k^\top + \sigma^2 I \right)^{-1} \left(L_k L_K^\top + E + \sigma^2 I \right) \right\Vert_{2}
-    \left\Vert \left( K_{XX} - E + \sigma^2 I \right) \left(K_{XX} + \sigma^2 I \right)^{-1} \right\Vert_{2}
-    \\
-    &= \left\Vert I + \left( L_k L_k^\top + \sigma^2 I \right)^{-1} E \right\Vert_{2}
-    \left\Vert I - \left(K_{XX} + \sigma^2 I \right)^{-1} E \right\Vert_{2}
-  \end{align*}
-  %
-  Applying Cauchy-Schwarz and the triangle inequality we have
-  %
-  \begin{align*}
-    \kappa \left( \trainP_{k}^{-1}\trainK \right)
-    &\leq \left( 1 + \left\Vert \left( L_k L_k^\top + \sigma^2 I \right)^{-1} \right\Vert_2 \left\Vert E \right\Vert_{2} \right)
-      \left( 1 + \left\Vert \left( K_{XX} + \sigma^2 I \right)^{-1} \right\Vert_2 \left\Vert E \right\Vert_{2} \right)
-  \end{align*}
-  %
-  Let $c$ be some constant such that $c \geq \left\Vert \left( L_k L_k^\top + \sigma^2 I \right)^{-1} \right\Vert_{2}$
-  and $c \geq \left\Vert \left( K_{XX} + \sigma^2 I \right)^{-1} \right\Vert_{2}$. Then:
-  \begin{align*}
-    \kappa \left( \trainP_{k}^{-1}\trainK \right)
-    &\leq \left( 1 + c \left\Vert E \right\Vert_{2} \right)^2
-  \end{align*}
-  %
-  \citet{harbrecht2012low} show that $E$ is guaranteed to be positive semi-definite, and therefore $\Vert E \Vert_2 \leq \tr{E}$.
-  Recall from \autoref{thm:harbrecht} and \autoref{thm:eigenvalue_bound} that $\tr{E} = \tr{K_{XX} - L_k L_k^\top} \lesssim n\exp(-bk)$ for some $b > 0$.
-  Therefore:
-  \begin{align*}
-    \kappa \left( \trainP_{k}^{-1}\trainK \right)
-    &\leq \left(1 + \bigo{n\exp(-bk)}\right)^2.
-  \end{align*}
-\end{proof}
-
-\subsection{Proof of \autoref{thm:eigenvalue_bound}}
 \begin{proof}
   We organize the proof into a series of lemmata.  First, we observe
   that if there is a degree $d$ polynomial that approximates
   $\exp(-\gamma r^2)$ to within some $\epsilon$ on $[-1,1]$,
   then $\lambda_{d+1}(K_{XX}) \leq n\epsilon$
-  (\autoref{lemma:interpbound}).
-  Then in \autoref{lemma:errbnd}, we show that if $p_l$ is a
+  (\cref{lemma:interpbound}).
+  Then in \cref{lemma:errbnd}, we show that if $p_l$ is a
   truncated Chebyshev expansions of degree $2l$, then
   $|p_l(r)-\exp(-\gamma r^2)| < 2 e^{-\gamma/4} I_{l+1}(\gamma/4)$;
   the argument involves a fact about sums of modified Bessel functions
-  which we prove in \autoref{lemma:Isum}.
+  which we prove in \cref{lemma:Isum}.
   Combining these two lemmas yields the theorem.
 \end{proof}
 %
@@ -196,7 +239,7 @@ admits the bound
   |\exp(-\gamma x^2)-p_l(x)| \leq
   2 e^{-\gamma/2} \sum_{j=l+1} I_j(\gamma/2).
 \]
-Another computation (\autoref{lemma:Isum}) bounds the sum of the
+Another computation (\cref{lemma:Isum}) bounds the sum of the
 modified Bessel functions to yield
 \[
   |\exp(-\gamma x^2)-p_l(x)| \leq
