@@ -1,8 +1,10 @@
 %!TEX root=../main.tex
-\chapter{Convergence Analysis of Partial Pivoted Cholesky Preconditioned mBCG}
-\label{app:theory}
+\chapter{Detailed Convergence Analysis of Preconditioned mBCG}
 
 \section{Proof of Theorems in \cref{sec:piv_chol_precond}}
+\label{app:proofs}
+Here we include theorems and proofs about the partial pivoted Cholesky preconditioner applied to mBCG.
+All theorems are restated from \cref{sec:piv_chol_precond}.
 
 
 \subsection{Proof of \cref{thm:condition_number}.}
@@ -29,8 +31,8 @@
   \[
     \bE = \bK_{\bX\bX} - \bar\bL_R \bar\bL_R^\top = \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix}
   \]
-  where $\bS_{R+1}$ is the Schur compliment that arises as the Cholesky error term (see \cref{eqn:chol_error}).
-  Therefore, the error $\bE$ is a positive semi definite matrix.
+  where $\bS_{R+1}$ is the Schur compliment that arises as the Cholesky error term---\cref{eqn:chol_error}.
+  The error $\bE$ is therefore a positive semi definite matrix.
 
   By definition, the condition number $\kappa ( \trainP^{-1}\trainK )$ is given by
   \begin{align*}
@@ -171,131 +173,35 @@ Since \cref{eqn:pcp_condition} holds, we can simply plug \cref{thm:condition_num
 
 
 \section{Applying \cref{thm:precond_mbcg_solves,thm:precond_mbcg_logdet} to Univariate RBF Kernels}
+\label{app:univariate_rbf}
 
-\gp{REDO}
-While there has been an enormous amount of work understanding the eigenvalue distributions of kernel functions (e.g., \cite{wathen2015spectral}),
-in this paper we prove the following useful bound on the eigenvalue distribution of univariate RBF kernel matrices:
+Our convergence theory depends on the assumption in \cref{thm:condition_number} that the eigenvalues of $\bK_{\bX\bX}$ decay exponentially.
+A natural question is when this assumption holds in practice.
+%There has been an enormous amount of work understanding the spectra of kernel functions (e.g., \cite{wathen2015spectral}).
+It so happens that one can prove a concrete bound on the eigenvalue distribution of univariate RBF kernels:
 %
-\begin{lemma}
+\begin{lemma}[Lemma 3 of \citet{gardner2018gpytorch}]
 \label{thm:eigenvalue_bound}
-Given $x_1, \ldots, x_n \in [0, 1]$, the univariate RBF kernel matrix $K_{XX} \in \mathbb{R}^{n \times n}$ with $K_{ij} = \exp \left(-\gamma(x_i - x_j)^{2}\right)$ has eigenvalues bounded by:
+Given $x^{(1)}, \ldots, x^{(N)} \in [0, 1]$, the univariate RBF kernel matrix\footnote{
+  Here we drop the multiplicative outputscale parameter $o^2$ without loss of generality.
+}
+$\bK_{\bX\bX} \in \reals^{N \times N}$ with $K^{(ij)} = \exp \left(-(x^{(i)} - x^{(j)})^{2} / \ell^2 \right)$ has eigenvalues $\lambda_1, \ldots, \lambda_k, \ldots, \lambda_N$ bounded by:
 \begin{equation*}
-  \lambda_{2l+1} \leq
-  2n e^{-\gamma/4} I_{l+1}(\gamma/4) \sim
-  \frac{2n e^{-\gamma/4}}{\sqrt{\pi\gamma}}
-  \left( \frac{e\gamma}{8(l+1)} \right)^{l+1}
+  \lambda_{2k+1} \leq
+  2N e^{-\ell^2/4} I_{k+1}(\gamma/4) \sim
+  \frac{2N e^{-\ell^2/4}}{\sqrt{\pi}\ell}
+  \left( \frac{e\ell^2}{8(k+1)} \right)^{k+1},
 \end{equation*}
-where $I_j$ denotes the modified Bessel function of the first kind with parameter $j$.
+where $I_{k+1}$ denotes the modified Bessel function of the first kind with parameter $k + 1$.
 \end{lemma}
 %
-In other words, the eigenvalues of an RBF kernel matrix $K_{XX}$ decay \emph{super-exponentially}, meeting the requirements of \cref{eqn:pcp_condition} in \cref{thm:condition_number}.
+\noindent
+In other words, the eigenvalues of an RBF kernel matrix $\bK_{\bX\bX}$ decay \emph{super-exponentially}, meeting the requirements of \cref{eqn:pcp_condition} in \cref{thm:condition_number}.
 Therefore, the bounds given by \cref{thm:precond_mbcg_solves,thm:precond_mbcg_logdet} apply.
 
-\begin{proof}
-  We organize the proof into a series of lemmata.  First, we observe
-  that if there is a degree $d$ polynomial that approximates
-  $\exp(-\gamma r^2)$ to within some $\epsilon$ on $[-1,1]$,
-  then $\lambda_{d+1}(K_{XX}) \leq n\epsilon$
-  (\cref{lemma:interpbound}).
-  Then in \cref{lemma:errbnd}, we show that if $p_l$ is a
-  truncated Chebyshev expansions of degree $2l$, then
-  $|p_l(r)-\exp(-\gamma r^2)| < 2 e^{-\gamma/4} I_{l+1}(\gamma/4)$;
-  the argument involves a fact about sums of modified Bessel functions
-  which we prove in \cref{lemma:Isum}.
-  Combining these two lemmas yields the theorem.
-\end{proof}
-%
-\begin{lemma}\label{lemma:interpbound}
-  Given nodes $x_1, \ldots, x_n \in [0,1]$, define the kernel matrix
-  $K \in \reals^{n \times n}$ with $k_{ij} = \phi(x_i-x_j)$.  Suppose
-  the degree $d$ polynomial $q$ satisfies $|\phi(r)-q(r)| \leq
-  \epsilon$ for $|r| \leq 1$.  Then
-  \[
-    \lambda_{d+1}(K) \leq n \epsilon.
-  \]
-\end{lemma}
-\begin{proof}
-  Define $\tilde{K} \in \reals^{n \times n}$ with $\tilde{k}_{ij} = q(x_i-x_j)$.
-  Each column is a sampling at the $X$ grid of a $\deg(q)$ polynomial, so
-  $\tilde{K}$ has rank at most $\deg(q)$.  The entries of the
-  error matrix $E = K-\tilde{K}$ are bounded in magnitude by
-  $\epsilon$, so $\|E\|_2 \leq n\epsilon$ (e.g.~by Gershgorin's circle theorem).
-  Thus, $\lambda_{d+1}(K) \leq \lambda_{d+1}(\tilde{K}) + \|E\|_2 = n\epsilon$.
-\end{proof}
+A proof of \cref{thm:eigenvalue_bound} was included in a version of \cref{chapter:bbmm} that was published at NeurIPS 2018 \citep{gardner2018gpytorch}.
+The proof itself is the work of my co-authors David Bindel and Jacob R. Gardner---therefore I choose not to claim credit for it as part of this thesis.
+It can be found in Appendix E of \citep{gardner2018gpytorch}.
 
-
-
-\begin{lemma}~\label{lemma:errbnd}
-  For $x \in [-1,1]$,
-  \[
-    |\exp(-\gamma x^2)-p_l(x)| \leq 2 e^{-\gamma/4} I_{l+1}(\gamma/4).
-  \]
-\end{lemma}
-\begin{proof}
-Given that
-$|(-1)^j T_{2j}(x)| \leq 1$ for any $x \in [-1,1]$, the tail
-admits the bound
-\[
-  |\exp(-\gamma x^2)-p_l(x)| \leq
-  2 e^{-\gamma/2} \sum_{j=l+1} I_j(\gamma/2).
-\]
-Another computation (\cref{lemma:Isum}) bounds the sum of the
-modified Bessel functions to yield
-\[
-  |\exp(-\gamma x^2)-p_l(x)| \leq
-  2 e^{-\gamma/4} I_{l+1}(\gamma/4).
-\]
-\end{proof}
-
-
-\begin{lemma}\label{lemma:Isum}
-  \[
-    \sum_{j=l+1}^\infty I_j(\eta) \leq \exp(\eta/2) I_{l+1}(\eta/2)
-  \]
-\end{lemma}
-\begin{proof}
-Take the power series expansion
-\[
-  I_j(\eta) =
-    \sum_{m=0}^\infty \frac{1}{m! (m+j)!} \left(\frac{\eta}{2}\right)^{2m+j}
-\]
-and substitute to obtain
-\[
-  \sum_{j=l+1}^\infty I_j(\eta) =
-    \sum_{j=l+1}^\infty \sum_{m=0}^\infty
-    \frac{1}{m! (m+j)!} \left(\frac{\eta}{2}\right)^{2m+j}.
-\]
-All sums involved converge absolutely, and so we may reorder to obtain
-\[
-  \sum_{j=l+1}^\infty I_j(\eta) =
-  \sum_{m=0}^\infty \frac{1}{m!} \left(\frac{\eta}{2}\right)^m
-  \sum_{j=l+1}^\infty
-    \frac{1}{(m+j)!} \left(\frac{\eta}{2}\right)^{m+j}.
-\]
-Because it is the tail of a series expansion for the exponential, we
-can rewrite the inner sum as
-\[
-  \sum_{j=l+1}^\infty
-  \frac{1}{(m+j)!} \left(\frac{\eta}{2}\right)^{m+j} =
-  \frac{\exp(\xi_m/2)}{(m+l+1)!} \left(\frac{\xi_m}{2}\right)^{m+l+1}
-\]
-for some $\xi_m$ in $[0,\eta]$, and thus
-\[
-  \sum_{j=l+1}^\infty
-  \frac{1}{(m+j)!} \left(\frac{\eta}{2}\right)^{m+j} \leq
-  \frac{\exp(\eta/2)}{(m+l+1)!} \left(\frac{\eta}{2}\right)^{m+l+1}.
-\]
-Substituting into the previous expression gives
-\begin{align*}
-  \sum_{j=l+1}^\infty I_j(\eta)
-  &\leq
-  \sum_{m=0}^\infty \frac{1}{m!} \left(\frac{\eta}{2}\right)^m
-  \frac{\exp(\eta/2)}{(m+l+1)!} \left(\frac{\eta}{2}\right)^{m+l+1} \\
-  &=
-  \exp\left(\frac{\eta}{2}\right)
-  \sum_{m=0}^\infty \frac{1}{m! (m+l+1)!}
-  \left(\frac{\eta}{2}\right)^{2m+l+1} \\
-  &=
-  \exp(\eta/2) I_{l+1}(\eta/2).
-\end{align*}
-\end{proof}
+We would also note that, while many kernels do not meet the eigenvalue criterion of \cref{thm:condition_number}, most kernels have rapidly decaying eigenvalues and therefore achieve significantly faster convergence with the partial pivoted Cholesky preconditioner.
+This is demonstrated by the empirical results in \cref{sec:bbmm_results} and \cref{sec:largeexact_results}.
