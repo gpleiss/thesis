@@ -7,26 +7,28 @@ We evaluate the BBMM framework, demonstrating: (1) the BBMM inference engine pro
 \paragraph{Baseline methods.} We test BBMM on three types of GPs:
 1. {\bf Exact} GP models,
 2. {\bf SGPR} inducing point models \cite{titsias2009variational,hensman2013gaussian},
-and 3. {\bf SKI} models with Toeplitz $\bK_{UU}$ and deep kernels \cite{wilson2015kernel,wilson2016deep}.
+and 3. {\bf SKI} models with Toeplitz $\bK_{\bZ\bZ}$ and deep kernels \cite{wilson2015kernel,wilson2016deep}.
 For Exact and SGPR, we compare BBMM against Cholesky-based inference engines implemented in GPFlow \cite{matthews2017gpflow}.
 GPFlow is presently the fastest implementation of these models with a Cholesky inference engine.
 Since SKI is not intended for Cholesky inference, we compare BBMM to the inference procedure of \citet{dong2017scalable}, implemented in our GPyTorch package.
 This procedure differers from BBMM in that it computes $\trainK^{-1} \by$ without a preconditioner and computes $\log \vert \trainK \vert$ and its derivative with the Lanczos algorithm.
 
 \paragraph{Datasets.}
-We test Exact models on five datasets from the UCI dataset repository \cite{asuncion2007uci} with up to 3500 training examples (the largest possible before all implementations exhausted GPU memory): Skillcraft, Gas, Airfoil, Autompg, and Wine.
-We test SGPR on larger datasets ($n$ up to 50000): KEGG, Protein, Elevators, Kin40k, and PoleTele.
-For SKI we test five of the largest UCI datasets ($n$ up to 515000): Song, Buzz, Protein, Kin40k, and KEGG.
+We test Exact GPs on five datasets from the UCI dataset repository \cite{asuncion2007uci} with up to 3500 training examples: Skillcraft, Gas, Airfoil, Autompg, and Wine.
+We test SGPR on larger datasets ($N$ up to 50000): KEGG, Protein, Elevators, Kin40k, and PoleTele.
+For SKI we test five large UCI datasets ($N$ up to 515000): Song, Buzz, Protein, Kin40k, and KEGG.
 
 \begin{figure}[t]
+  \centering
   \includegraphics[width=\textwidth]{figures/sparse_gp_results}
-  \caption{
-    Speedup of GPU-accelerated inference engines.
+  \caption[Speedup of GPU-accelerated GP training.]{
+    Speedup of GPU-accelerated GP training.
     BBMM is in blue, and competing GPU methods are in gray.
-    {\bf Left:} Exact GPs. {\bf Middle:} SGPR \cite{titsias2009variational,hensman2013gaussian} -- speedup over CPU Cholesky-based inference engines.
-    {\bf Right:} SKI+DKL \cite{wilson2015kernel,wilson2016deep} -- speedup over CPU inference of \citet{dong2017scalable}.
+    {\bf Left:} Exact GPs speedup over CPU Cholesky-based training.
+    {\bf Middle:} SGPR \cite{titsias2009variational,hensman2013gaussian} speedup over CPU Cholesky-based training.
+    {\bf Right:} SKI+DKL \cite{wilson2015kernel,wilson2016deep} speedup over CPU training of \citet{dong2017scalable}.
+    \label{fig:timing_results}
   }
-  \label{fig:timing_results}
 \end{figure}
 
 \paragraph{Experiment details.} All methods use the same optimizer (Adam) with identical hyperparameters.

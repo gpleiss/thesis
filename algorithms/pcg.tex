@@ -16,7 +16,10 @@
   \SetKwFunction{mvmkxx}{mvm\_$\bA$}
   \SetKwFunction{mvmprec}{$\color{\colorpcg} \bP^{-1}$}
   \SetKwFunction{size}{size}
-  \caption{Preconditioned conjugate gradients (PCG). Terms in {\color{\colorpcg} \colorpcg} differ from standard CG (\cref{alg:cg}).}
+  \caption[Preconditioned conjugate gradients (PCG).]{
+    Preconditioned conjugate gradients (PCG).
+    Terms in {\color{\colorpcg} \colorpcg} differ from standard CG (\cref{alg:cg}).
+  }
   \label{alg:std_pcg}
     \Input{\mvmkxx{$\cdot$} -- function for matrix-vector multiplication (MVM) with matrix $\bA$}
     \NextInput{$\bb$ -- vector to solve against}

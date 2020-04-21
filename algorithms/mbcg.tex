@@ -1,7 +1,7 @@
 \newcommand{\colormat}{green}
 \newcommand{\colornew}{red}
 
-\begin{algorithm2e}[p!]
+\begin{algorithm2e}[t!]
   \SetAlgoLined
   \SetKwInOut{Input}{Input}
   \SetKwInOut{Output}{Output}
@@ -18,7 +18,7 @@
   \SetKwFunction{mmmprec}{$\trainP^{-1}$}
   \SetKwFunction{size}{size}
   \SetKwFunction{diag}{diag}
-  \caption{
+  \caption[Modified batch conjugate gradients (mBCG).]{
     Modified batch conjugate gradients (mBCG).
     Terms in {\color{\colormat} \colormat} represent matrix operations that were originally vector operations in standard PCG (\cref{alg:std_pcg}).
     Terms in {\color{\colornew} \colornew} compute the Lanczos tridiagonalization matrices.
