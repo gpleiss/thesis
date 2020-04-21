@@ -13,23 +13,23 @@ We evaluate the BBMM framework, demonstrating:
 We test BBMM on three types of GPs:
 1. {\bf Exact} GP models,
 2. {\bf SGPR} inducing point models \cite{titsias2009variational,hensman2013gaussian},
-and 3. {\bf SKI} models with Toeplitz $\bK_{\bZ\bZ}$ and deep kernels \cite{wilson2015kernel,wilson2016deep}.
+and 3. {\bf KISS-GP} models with Toeplitz $\bK_{\bZ\bZ}$ and deep kernels \cite{wilson2015kernel,wilson2016deep}.
 For Exact and SGPR, we compare BBMM against Cholesky-based inference engines implemented in GPFlow \cite{matthews2017gpflow}.
 GPFlow is presently the fastest implementation of these models with a Cholesky inference engine.
-Since SKI is not intended for Cholesky inference, we compare BBMM to the inference procedure of \citet{dong2017scalable}, implemented in our GPyTorch package.
+Since KISS-GP is not intended for Cholesky inference, we compare BBMM to the inference procedure of \citet{dong2017scalable}, implemented in our GPyTorch package.
 This procedure differers from BBMM in that it computes $\trainK^{-1} \by$ without a preconditioner and computes $\log \vert \trainK \vert$ and its derivative with the Lanczos algorithm.
 
 \paragraph{Datasets.}
 We test Exact GPs on five datasets from the UCI dataset repository \cite{asuncion2007uci} with up to 3500 training examples: Skillcraft, Gas, Airfoil, Autompg, and Wine.
 We test SGPR on larger datasets ($N$ up to 50000): KEGG, Protein, Elevators, Kin40k, and PoleTele.
-For SKI we test five large UCI datasets ($N$ up to 515000): Song, Buzz, Protein, Kin40k, and KEGG.
+For KISS-GP we test five large UCI datasets ($N$ up to 515000): Song, Buzz, Protein, Kin40k, and KEGG.
 
 \paragraph{Experiment details.} All methods use the same optimizer (Adam) with identical hyperparameters.
 In BBMM experiments we use rank $R\!=\!5$ pivoted Cholesky preconditioners unless otherwise stated.
 We use a maximum of $J\!=\!20$ iterations of CG for each solve, and
 we use $T\!=\!10$ probe vectors filled with Rademacher random variables to estimate the log determinant and trace terms.
 SGPR models use $M\!=\!300$ inducing points.
-SKI models use $M\!=\!10,\!000$ inducing points and the deep kernels described in \cite{wilson2016deep}.
+KISS-GP models use $M\!=\!10,\!000$ inducing points and the deep kernels described in \cite{wilson2016deep}.
 BBMM training is implemented in our GPyTorch package.
 All speed experiments are run on an Intel Xeon E5-2650 CPU and an NVIDIA Titan XP GPU.
 
@@ -41,7 +41,7 @@ All speed experiments are run on an Intel Xeon E5-2650 CPU and an NVIDIA Titan X
     BBMM is in blue; competing GPU methods are in gray.
     {\bf Left:} Exact GPs speedup over CPU Cholesky-based training.
     {\bf Middle:} SGPR \cite{titsias2009variational,hensman2013gaussian} speedup over CPU Cholesky-based training.
-    {\bf Right:} SKI+DKL \cite{wilson2015kernel,wilson2016deep} speedup over CPU training of \citet{dong2017scalable}.
+    {\bf Right:} KISS-GP+DKL \cite{wilson2015kernel,wilson2016deep} speedup over CPU training of \citet{dong2017scalable}.
     \label{fig:timing_results}
   }
 \end{figure}
@@ -54,17 +54,17 @@ All speed experiments are run on an Intel Xeon E5-2650 CPU and an NVIDIA Titan X
 		The left two plots compare errors using Exact GPs with RBF and Mat\'ern-5/2 kernels,
 		and the final plot compares error using SGPR with a Mat\'ern-5/2 kernel on significantly larger datasets.
 	}
-  \label{fig:error_results}
+  \label{fig:bbmm_error_results}
 \end{figure}
 
 \paragraph{Speed comparison.}
-\cref{fig:timing_results} shows the speedup obtained by GPU-accelerated BBMM over CPU-based training methods (Cholesky for Exact/SGPR, \citet{dong2017scalable} for SKI).
+\cref{fig:timing_results} shows the speedup obtained by GPU-accelerated BBMM over CPU-based training methods (Cholesky for Exact/SGPR, \citet{dong2017scalable} for KISS-GP).
 As would be expected, GPU-accelerated BBMM is faster than CPU-based inference.
-On Exact and SKI, BBMM is up to \emph{32 times faster} than CPU inference, and up to 10 times faster on SGPR.
+On Exact and KISS-GP, BBMM is up to \emph{32 times faster} than CPU inference, and up to 10 times faster on SGPR.
 The largest speedups occur on the biggest datasets, since smaller datasets experience larger GPU overhead.
 Notably, BBMM achieves a much larger speedup than GPU accelerated Cholesky methods (Exact, SGPR), which only achieve a roughly $4\times$ speedup.
 This result underscores the fact that Cholesky methods are not as well suited for GPU acceleration.
-Additionally, BBMM performs better than the GPU-accelerated version of \cite{dong2017scalable} on SKI.
+Additionally, BBMM performs better than the GPU-accelerated version of \cite{dong2017scalable} on KISS-GP.
 This speedup is because BBMM is able to calculate all inference terms in parallel, while \cite{dong2017scalable} computes the terms in series.
 
 \begin{figure}[t!]
@@ -77,8 +77,8 @@ This speedup is because BBMM is able to calculate all inference terms in paralle
 \paragraph{Predictive error comparison.}
 The predictive mean, given by \cref{eqn:predictive_mean}, requires computing the solve $\trainK^{-1} \by$.
 Therefore, the mBCG algorithm can be used to compute this term with preconditioning and GPU acceleration.
-In \cref{fig:error_results} we compare the mean average error (MAE) computed using mBCG verses Cholesky.\footnote{
-  SKI models are excluded from \cref{fig:error_results}, as the SKI predictive mean is computed using CG.
+In \cref{fig:bbmm_error_results} we compare the mean average error (MAE) computed using mBCG verses Cholesky.\footnote{
+  KISS-GP models are excluded from \cref{fig:bbmm_error_results}, as the KISS-GP predictive mean is computed using CG.
 }
 We demonstrate results using both the RBF kernel and a Mat\'ern-5/2 kernel.
 Across all datasets, our method is at least as accurate in terms of final test MAE.

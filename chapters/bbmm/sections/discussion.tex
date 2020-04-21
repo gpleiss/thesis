@@ -1,22 +1,32 @@
 %!TEX root=main_arxiv.tex
 \section{Discussion}
-In this paper, we discuss a novel framework for Gaussian process inference (BBMM) based on blackbox matrix-matrix multiplication routines with kernel matrices.
-We have implemented this framework and several state-of-the-art GP models in our new publicly available {\href{https://gpytorch.ai}{GPyTorch}} package.
-
-\paragraph{Non-Gaussian likelihoods.}
-Although this paper primarily focuses on the regression setting, BBMM is fully compatible with variational techniques such as \cite{hensman2015scalable,wilson2016stochastic}, which are also supported in GPyTorch.
-These approaches require computing the variational lower bound (or ELBO) rather than the GP marginal log likelihood \eqref{eq:log_lik_and_deriv}. We leave the exact details of the ELBO derivation to other papers (e.g. \cite{hensman2015scalable}).
-However, we note that a single call to mBCG can be used to compute the KL divergence between two multivariate Gaussians, which is the most computationally intensive term of the ELBO.
+In this chapter, we discuss a novel framework for Gaussian process training (BBMM) based on blackbox matrix-matrix multiplication routines with kernel matrices.
+We have implemented this framework and several state-of-the-art GP models in the {\href{https://gpytorch.ai}{GPyTorch}} package.
+Below we discuss our findings and discuss extensions of BBMM that will be explored in future chapters.
 
 \paragraph{Avoiding the Cholesky decomposition.}
-A surprising and important take-away of this paper is that it is beneficial to avoid the Cholesky decomposition for GP inference, even in the exact GP setting.
-The basic algorithm for the Cholesky decomposition (described in \cref{app:pivoted_cholesky}) involves a divide-and conquer approach that can prove ill-suited for parallel hardware.
-Additionally, the Cholesky decomposition performs a large amount of computation to get a linear solve when fast approximate methods suffice.
-Ultimately, the Cholesky decomposition of a full matrix takes $\bigo{n^3}$ time while CG takes $\bigo{n^2}$ time.
+An important takeaway of this chapter is that it is beneficial to avoid the Cholesky decomposition for GP training, even when no structured approximations are made.
+We will explore the exact GP setting in more detail in \cref{chapter:largeexact} and further demonstrate the computational benefits of BBMM.
+
+The basic algorithm for the Cholesky decomposition involves a divide-and-conquer approach that can prove ill-suited for parallel hardware.
+Additionally, the Cholesky decomposition performs a large amount of computation to get a linear solve when fast iterative methods suffice.
+Ultimately, the Cholesky decomposition of a full matrix takes $\bigo{N^3}$ time while CG takes $\bigo{N^2}$ time.
 Indeed, as shown in \cref{fig:cg_error}, CG may even provide \emph{better} linear solves than the Cholesky decomposition.
 %We liken this difference to the practical speed differences observed between second order methods like Newton's method and SGD in other settings.
-While we use a pivoted version of this algorithm for preconditioning, we only compute the first five rows of this decomposition.
+While we use a partial pivoted version of Cholesky for preconditioning, we only compute the first five rows of this decomposition.
 By terminating the algorithm very early, we avoid the computational bottleneck and many of the numerical instabilities.
 
-It is our hope that this work dramatically reduces the complexity of implementing new Gaussian process models,
-while allowing for inference to be performed as efficiently as possible.
+\paragraph{Non-Gaussian likelihoods.}
+When GP models are used with non-conjugate likelihoods (e.g. classification GPs or regression GPs with heavier-tailed noise models), we cannot compute the GP's marginal log likelihood (i.e. \cref{eqn:log_lik,eqn:log_lik_deriv} do not apply).
+We must instead use variational approximations of the marginal log likelihood, which requires a different set of training and inference equations.
+Importantly, it also requires computing the inverse square root of the kernel matrix times a vector ($\trainK^{- \frac 1 2} \bb$), which is not an output of the mBCG algorithm.
+We will discuss how matrix-multiplication techniques can be applied to this problem in \cref{chapter:variational}.
+
+\paragraph{Computing predictive distributions.}
+The focus of this chapter has been training GP regression models by optimizing the marginal log likelihood of \cref{eqn:log_lik,eqn:log_lik_deriv}.
+The next chapter will focus on making GP predictions after a model has been trained.
+The equations for computing predictive distributions---\cref{eqn:predictive_mean,eqn:predictive_var}---require computing matrix solves.
+As suggested in this chapter, using matrix-multiplication-based methods (e.g. preconditioned CG) for these solves will avoid the $\bigo{N^3}$ pitfalls of the Cholesky method.
+In the next chapter, we will introduce a matrix-multiplication based method that \emph{pre-computes and caches} most of the required CG computation.
+This is especially beneficial when the trained GP has to be applied to large test sets.
+With this pre-computation strategy, \cref{eqn:log_lik,eqn:log_lik_deriv} can both be reduced to $\bigo{N}$ computation, and $\bigo{1}$ computation when used in conjunction with KISS-GP.
