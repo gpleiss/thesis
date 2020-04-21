@@ -123,16 +123,16 @@ Under the Gaussian noise observation model of \cref{eqn:regression}, it happens 
 %
 \begin{align*}
   p \left(
-    \begin{bmatrix} \by \\ \ytest \end{bmatrix} \mid
+    \begin{bmatrix} \by \\ \ytest \end{bmatrix} \: \middle| \:
     \begin{bmatrix} \bX \\ \bxtest \end{bmatrix}
   \right)
   &= \int
     p \left(
-      \begin{bmatrix} \by \\ \ytest \end{bmatrix} \mid
+      \begin{bmatrix} \by \\ \ytest \end{bmatrix} \: \middle| \:
       \begin{bmatrix} \bfn \\ f(\bxtest) \end{bmatrix}
     \right)
     p \left(
-      \begin{bmatrix} \bfn \\ f(\bxtest) \end{bmatrix} \mid
+      \begin{bmatrix} \bfn \\ f(\bxtest) \end{bmatrix} \: \middle| \:
       \begin{bmatrix} \bX \\ \bxtest \end{bmatrix}
     \right)
     \intd { \begin{bmatrix} \bfn \\ f(\bxtest) \end{bmatrix} }
@@ -149,7 +149,6 @@ Under the Gaussian noise observation model of \cref{eqn:regression}, it happens 
   }.
 \end{align*}
 where the $\sigma_\text{obs}^2$ terms come from the observational noise (which we assume is independent for all data points).
-\gp{TODO: fix mid sign}
 %
 Therefore, the predictive distribution $p(\ytest \: \vert \: \bxtest, \bX, \by)$ is simply the conditional of a multivariate Gaussian.
 Applying standard Gaussian conditioning rules \citep[see e.g.][]{bishop2006pattern,rasmussen2006gaussian} results in \cref{eqn:predictive_mean} and \cref{eqn:predictive_var}.
@@ -344,7 +343,7 @@ The spectral-mixture kernel (in one dimension) is defined by a mixture of $Q$ fu
 %
 where $w_q$, $v_q$, and $\mu_q$ are learnable parameters.
 It is well-suited for interpolation and extrapolation tasks of time series or spatial data \cite{wilson2013gaussian}.
-Deep kernels \cite{wilson2016deep} \gp{one more} are kernels where the inputs $\bx$, $\bx'$ are first transformed using a deep neural network $\phi$:
+Deep kernels \cite{wilson2016deep,wilson2016stochastic,calandra2016manifold} are kernels where the inputs $\bx$, $\bx'$ are first transformed using a deep neural network $\phi$:
 %
 \[
   k_\text{deep} (x, x') = k_\text{base} \left( \phi(\bx), \phi(\bx') \right),
@@ -465,7 +464,7 @@ After pre-computing $\blue \ba$, the multiplication $\bw_{\bx^{*}}^\top \blue \b
 All the notation of this section is summarized in \cref{tab:gp_notation}.
 It will be used throughout the remaining chapters.
 
-\begin{table}[t!]
+\begin{table}[b!]
   \centerfloat
   \caption{Summary of Gaussian process notation.}
   \label{tab:gp_notation}
