@@ -5,21 +5,21 @@ source := $(shell ls **/*.tex *.sty figures/*pdf figures/*png figures/*jpg 2>/de
 sourcebib := $(shell ls *.bib)
 
 all:
-	pdflatex ${paper}.tex
+	pdflatex -shell-escape ${paper}.tex
 	bibtex ${paper}.aux
-	pdflatex ${paper}.tex
-	pdflatex ${paper}.tex
+	pdflatex -shell-escape ${paper}.tex
+	pdflatex -shell-escape ${paper}.tex
 
 ${paper}.bbl: ${sourcebib}
-	pdflatex ${paper}.tex
+	pdflatex -shell-escape ${paper}.tex
 	bibtex ${paper}.aux
-	pdflatex ${paper}.tex
+	pdflatex -shell-escape ${paper}.tex
 
 ${paper}.pdf: ${paper}.bbl ${source}
-	pdflatex ${paper}.tex
+	pdflatex -shell-escape ${paper}.tex
 
 quick:
-	pdflatex ${paper}.tex
+	pdflatex -shell-escape ${paper}.tex
 
 watch:
 	while true; do if [ sections -nt ${paper}.pdf ] || [ ${paper}.tex -nt ${paper}.pdf ] || [ figures -nt ${paper}.pdf ]; then make quick; fi; sleep 1; done

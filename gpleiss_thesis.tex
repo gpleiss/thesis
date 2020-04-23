@@ -17,6 +17,9 @@
 \usepackage{makecell}  % thead, other vertical alignment options
 \usepackage{hhline}  % double horizontal lines for tables
 \usepackage{longtable}  % long tables
+\usepackage{minted}  % for code examples
+\usepackage[most]{tcolorbox}  % boxes around code examples
+\usepackage{etoolbox}  % more minted customizing
 
 
 %%%%%%%%%%%%%% Custom comments stuff
@@ -40,6 +43,23 @@
 %if you're having problems with overfull boxes, you may need to increase
 %the tolerance to 9999
 \tolerance=9999
+
+
+%%%%%%%%%%%%% Code examples
+\newif\iflongcode
+\longcodefalse
+\BeforeBeginEnvironment{minted}{%
+  \iflongcode
+    \begin{tcolorbox}[enhanced,breakable]
+  \else
+    \begin{tcolorbox}
+  \fi
+    \singlespacing
+    \footnotesize
+}
+\AfterEndEnvironment{minted}{%
+  \end{tcolorbox}
+}
 
 
 %%%%%%%%%%%%% For too large figures/tables
@@ -126,8 +146,10 @@
 
 \appendix
 
-\input{chapters/bbmm/supplementary/proofs}
+\input{supplementary/proofs}
+\input{supplementary/code_example}
 
+\addcontentsline{toc}{chapter}{Bibliography}
 \bibliography{gpleiss_thesis}
 
 

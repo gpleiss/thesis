@@ -1,49 +1,225 @@
 \section{Programmability with BBMM}
 \label{sec:programmability}
-We have discussed how the BBMM framework is more hardware efficient than existing inference engines, and avoids numerical instabilities with Lanczos. Another key advantage of BBMM is that it can easily be adapted to complex GP models or structured GP approximations.
+We have discussed how the BBMM framework is more hardware efficient than existing training engines, and avoids numerical instabilities with Lanczos.
+Another key advantage of BBMM is that it can easily be adapted to complex GP models or structured GP approximations.
 
 Indeed BBMM is \emph{blackbox} by nature, only requiring a routine to perform matrix-multiplications with the kernel matrix and its derivative.
 Here we provide examples of how existing GP models and scalable approximations can be easily implemented in this framework.
 The matrix-multiplication routines for the models require at most \emph{50 lines of Python code}.
 
-\paragraph{Bayesian linear regression} can be viewed as GP regression with the special kernel matrix $\trainK = \bX\bX^{\top} + \sigma^{2}I$.
-A matrix multiply with this kernel against an $n \times t$ matrix $\bV$, $(\bX\bX^{\top} + \sigma^{2}I)\bV$ requires $\bigo{tnd}$ time.
-Therefore, BBMM requires $\bigo{ptnd}$ time, and is exact in $\bigo{tnd^2}$ time.
+\subsection{GPyTorch's {\tt LazyTensor} construct.}
+In GPyTorch, we use the construct of a {\tt LazyTensor} object (or lazily-evaluated tensor) to represent kernel matrices $\bK_{\bX\bX}$.
+A {\tt LazyTensor} object represents a (potentially) structured matrix $\bK \in \reals^{N \times N}$ which is defined through some $\bigo{n^2}$ representation $\br$.
+As an example, a diagonal matrix $\bK$ can be represented by its diagonal vector.
+Consequentially, for the {\tt DiagLazyTensor} class, the input $\br$ is simply a $\reals^N$ vector of diagonal entries.
+
+Each {\tt LazyTensor} sub-class defines a {\tt \_matmul($\cdot$)} method (for performing $\bK \left( \bB \right)$ for some matrix $\bB$) and a {\tt \_deriv($\cdot,\cdot$)} method for computing $\partial \tr{ \bA^\top \bK \bB }/{\partial \br}$,
+where $\bA$ and $\bB$ are arbitrary matrices.
+The {\tt \_matmul($\cdot$)} method is used by mBCG, and exploits any structure of the {\tt LazyTensor} for fast matrix multiplication.
+The {\tt \_deriv($\cdot,\cdot$)} function can be used to compute an unbiased estimate \cref{eqn:log_lik_deriv}:
+\begin{itemize}
+  \item The $\frac{1}{T}\sum_{i=1}^{T}\left(\bz^{(i)^\top} \trainK^{-1}\right)\left(\frac{\partial \trainK}{\partial \btheta}\bz^{(i)} \right)$ term,
+    which approximates the trace term in \cref{eqn:log_lik_deriv},
+    can be rewritten as
+    \[
+      \frac{1}{T} \:\: \frac{ \partial \tr{ (\bZ^\top \trainK^{-1}) \trainK (\bZ) }}{ \partial \br } \:\: \frac{ \partial \br }{\partial \btheta},
+    \]
+    which can be computed by calling {\tt \_deriv($\trainK^{-1} \bZ$, $\bZ$)}.
+
+  \item The $(\by^\top \trainK^{-1}) \frac{\partial \trainK}{\partial \btheta} (\trainK^{-1} \by)$ term in \cref{eqn:log_lik_deriv}
+    can be rewritten as
+    \[
+      \frac{\partial (\by^\top \trainK^{-1}) \trainK (\trainK^{-1} \by) }{\partial \br} \:\: \frac{\partial \br}{\partial \btheta},
+    \]
+    which can be computed by calling {\tt \_deriv($\trainK^{-1} \by$, $\trainK^{-1} \by$)}.
+\end{itemize}
+
+While all {\tt LazyTensor} subclasses define {\tt \_matmul($\cdot$)} and {\tt \_deriv($\cdot$, $\cdot$}),
+the superclass defines additional methods necessary for GP training, such as
+%
+\begin{itemize}
+  \item {\tt inv\_matmul($\cdot$)} (for computing matrix solves $\trainK^{-1} \by$)
+  \item {\tt logdet()} (for computing the log determinant $\log \vert \trainK \vert$)
+  \item {\tt inv\_quad\_logdet($\cdot$)} (for simultaneously computing $\by^\top \trainK^{-1} \by$ and $\log \vert \trainK \vert$).
+\end{itemize}
+%
+Each of these methods uses the outputs of mBCG algorithm using the subclass' appropriate {\tt \_matmul($\cdot$)} method.
+Moreover, each method uses the {\tt \_deriv($\cdot$,$\cdot$)} calls in conjunction with PyTorch's autograd \cite{paszke2017automatic} to compute the appropriate derivatives.
+In GPyTorch, we use the {\tt inv\_quad\_logdet($\cdot$)} method to compute \cref{eqn:log_lik}---as it can compute all log likelihood and derivative terms with a single mBCG call.
+
+For standard GP regression (with no approximations), there is no structure for the kernel matrix.
+We therefore use the aptly named {\tt NonLazyTensor} which simply represents an arbitrary matrix---i.e. $\br = \bK_{\bX\bX}$.
+In this standard case, the {\tt \_matmul($\cdot$)} and {\tt \_deriv($\cdot$, $\cdot$)} routines are as follows:
+%
+\begin{minted}{python3}
+class NonLazyTensor(LazyTensor):
+    def __init__(self, matrix):
+        self.matrix = matrix
+
+    def _matmul(self, B):
+        return self.matrix @ B
+
+    def _deriv(self, A, B):
+        # d(tr(A^T K B)) / d(K) = A B^T
+        return A @ B.transpose(-1, -2)
+\end{minted}
+%
+\noindent
+For a full GP code example that uses {\tt LazyTensors} under the hood, see \cref{app:standard_gp_example} or \url{http://github.com/cornellius-gp/gpytorch}.
+
+
+\subsection{Examples of {\tt LazyTensor}s and Specialty GP Models.}
+\paragraph{Bayesian linear regression} can be viewed as GP regression with the special kernel matrix
+\[
+  \bK_{\bX\bX}^{(\text{lin})} = \bX\bX^{\top}.
+\]
+A matrix multiply with this kernel against an $N \times T$ matrix $\bV$, $(\bX\bX^{\top})\bV$ requires $\bigo{TND}$ time.
+Therefore, BBMM requires $\bigo{JTND}$ time, and is exact in $\bigo{TND^2}$ time.
 This running time complexity matches existing efficient algorithms for Bayesian linear regression, \emph{with no additional derivation}.
-Multi-task Gaussian processes \cite{bonilla2008multi} can be adapted in the same fashion \cite{gardner2018product}.
 
-\paragraph{Sparse Gaussian Process Regression (SGPR)} \cite{titsias2009variational} and many other sparse GP techniques \cite{quinonero2005unifying,snelson2006sparse,hensman2013gaussian} use the subset of regressors (SoR) approximation for the kernel:
-$
-  \trainK \approx (K_{XU}K_{UU}^{-1}K_{UX} + \sigma^{2}I).
-$
-Performing a matrix-matrix multiply with this matrix requires $\bigo{tnm + tm^{3}}$ time by distributing the vector multiply and grouping terms correctly.
-This computation is \emph{asymptotically faster} than the $\bigo{nm^{2} + m^{3}}$ time required by Cholesky based inference. Augmenting the SoR approximation with a diagonal correction, e.g. as in FITC \cite{snelson2006sparse}, is similarly straightforward.
+GPyTorch implements BBMM Bayesian linear regression simply as a standard GP.
+The {\tt LinearKernel} object returns a {\tt RootLazyTensor}:
+%
+\begin{minted}{python3}
+class RootLazyTensor(LazyTensor):
+    """ The output of gpytorch.kernels.LinearKernel """
+    def __init__(self, X):
+        self.X = X  # X is a (N X D) matrix
 
-\paragraph{Structured Kernel Interpolation (SKI)} \cite{wilson2015kernel}, also known as KISS-GP, is an inducing point method designed to provide fast matrix vector multiplies (MVMs) for use with Krylov subspace methods. SKI is thus a natural candidate for BBMM and can benefit greatly from hardware acceleration.
-SKI is a generalization of SoR, which specifies $\bK_{XU} \approx W\bK_{UU}$, where $W$ is a sparse matrix. For example $W$ can correspond to the coefficients of sparse local cubic convolution interpolation.
-The SKI approximation applied to the training covariance matrix gives us
-$
-\trainK \approx (WK_{UU}W^{\top} \! + \! \sigma^{2}I).
-$
-Assuming no structure in $\bK_{UU}$ a matrix multiply requires $\bigo{tn \! + \! tm^{2}}$ time. In KISS-GP \citep{wilson2015kernel,wilson2015thoughts}, the matrix $\bK_{\bU\bU}$ is also chosen to have algebraic structure, such as Kronecker or Toeplitz structure, which further accelerates MVMs. For example, MVMs with a Toeplitz $\bK_{UU}$ only require $\bigo{m \log m}$ time. Thus KISS-GP
-provides $\bigo{tn \! + \! tm \log m}$ matrix-matrix multiplies \cite{wilson2015kernel}.
+    def _matmul(self, B):
+        # If B is a (N X T) matrix, this is O(T N D)
+        return (self.X @ self.X.transpose(-1, -2) @ B
+
+    def _deriv(self, A, B):
+        # d(tr(A^T K B)) / d(X) = A B^T X + B A^T X
+        # if A and B are (N X T), this is O(T N D)
+        return A @ B.transpose(-1, -2) @ X + \
+            B @ A.transpose(-1, -2) @ X
+\end{minted}
+
+\paragraph{Multi-task Gaussian processes} \cite{bonilla2008multi} use a kernel function that combines covariance between inputs $\bx, \bx'$ and covariance between tasks $c, c'$:
+$k^{(\text{input})} \left( \bx, \bx' \right) \: k^{(\text{task})} \left( c, c' \right)$.
+Constructing the kernel matrix over all training inputs $\bX$ and tasks $[1, C]$ results in Kronecker structure:
+%
+\[
+  \bK_{\bX\bX, \bc\bc}^{(\text{multi})} = \bK^{(\text{task})}_{\bX\bX} \otimes \bK^{(\text{task})}_{\bc\bc},
+\]
+%
+where $\otimes$ represents the Kronecker product.
+Though $\bK_{\bX\bX, \bc\bc}^{(\text{multi})}$ is a $(NC) \times (NC)$ matrix (for $C$ tasks), exploiting the Kronecker structure results in $\bigo{N C^2 + N^2 C}$ matrix-vector multiplications.
+(This can be reduced further if $\bK^{(\text{input})}_{\bX\bX}$ is structured and affords fast multiplications.)
+Thus, multi-task Gaussian processes can be implemented simply by using a Kronecker matrix multiplication routine, with a time complexity that matches state-of-the-art \citep{bonilla2008multi}.
+
+\emergencystretch 2em
+The {\tt MultitaskKernel} object in GPyTorch returns a {\tt KroneckerProductLazyTensor}.
+(The forward and backward pass methods are adopted from \citet{saatcci2012scalable}.)
+Here, we assume that the $\bK^{(\text{input})}_{\bX\bX}$ and $\bK^{(\text{task})}_{\bc\bc}$ matrices are themselves represented as {\tt LazyTensors}.
+%
+\begin{minted}{python3}
+class KroneckerProductLazyTensor(LazyTensor):
+    """ The output of gpytorch.kernels.MultitaskKernel """
+    def __init__(self, K_input, K_task):
+        self.K_input = K_input  # a (N X N) LazyTensor
+        self.K_task = K_task  # a (C X C) LazyTensor
+
+    def _matmul(self, B):
+        # Kronecker prod, adapted from Saatci, 2012
+        # O(N C^2 + N C^2), less if inputs are structured
+        # B is (CN X T)
+        out = B.clone().view(self.K_task.size(-1), -1)  # C X NT
+        out = self.K_task._matmul(out)
+        out = out.view(self.K_task.size(-1), -1, B.size(-1))
+        out = out.transpose(-3, -2)  # N X C X T
+        out = out.view(self.K_input.size(-1), -1)  # N X CT
+        out = self.K_input._matmul(out)
+        out = out.view(-1, B.size(-1))  # CN X T
+        return out
+
+    def _deriv(self, A, B):
+        # Kronecker deriv
+        # O(N C^2 + N C^2), less if inputs are structured
+        # See Saatci, 2012, or github.com/cornellius-gp/gpytorch
+\end{minted}
+%
+\noindent
+Importantly, implementing multitask GPs simply requires changing the kernel module (which changes the {\tt LazyTensor})---no additional implementation is required.
+This is demonstrated by the code example in \cref{app:multitask_gp_example}.
 
 \paragraph{Compositions of kernels} can often be handled automatically.
-For example, given a BBMM routine for $\bK_{1},\bK_{2},\bK_{3}$, we can automatically perform $(\bK_{1}\bK_{2}+\bK_{3})M = \bK_{1}(\bK_{2}M) + \bK_{3}M$.
-SGPR and KISS-GP are implemented in this fashion. Given some pre-defined basic compositionality strategies, the kernel matrix multiplication $\bK\bM$ in SGPR reduces to defining how to perform $\bK_{\bU\bU}^{-1}M$, and similarly for KISS-GP it reduces to performing multiplication with a Toeplitz matrix $\bK_{\bU\bU}M$. For product kernels one can follow Gardner et al.~\cite{gardner2018product}.
+For example, given a BBMM routine for $\bK_{1},\bK_{2},\bK_{3}$, we can automatically perform $(\bK_{1}\bK_{2}+\bK_{3}) \bV = \bK_{1}(\bK_{2} \bV ) + \bK_{3} \bV$.
+To handle the sum of two kernels, we can define a {\tt SumLazyTensor} that takes two {\tt LazyTensor}s and distributes their matrix-multiplication.
+For the product of kernels, one can use the method of \citet{gardner2018product}.
+%
+\begin{minted}{python3}
+class SumLazyTensor(LazyTensor):
+    def __init__(self, *Ks):
+        self.Ks = Ks  # list of (N X N) LazyTensors
 
-%When applying the SoR approximation ($K_{XX} = K_{XU}K_{UU}^{-1}K_{XU}^{\top}$), we have that $\rho(K)=\bigo{nm}$.
-%Thus, for SGPR, the time complexity of computing the rank $k$ pivoted Cholesky decomposition is $\bigo{nmk^{2}}$ time.
-%Assuming that $k^2 \leq m$ or $k^2 \approx m$, this operation will cost roughly the same as a single MVM.
+    def _matmul(self, B):
+        return sum(K._matmul(B) for K in self.Ks)
 
-%When applying the SKI approximation ($K_{XX}=WK_{UU}W^{\top}$), we have that $\rho(K_{XX})=\bigo{n}$.
-%In particular, the ith row of $K_{XX}$ is given by
-%$
-   %\left[K_{XX}\right]_{i} = \bw_{i}K_{UU}W^{\top}.
-%$
-%Rather than explicitly perform these multiplications using Toeplitz matrix arithmetic, we observe that $\bw_{i}K_{UU}$ is equivalent to summing four elements from each column of $K_{UU}$ (corresponding to the four non-zero elements of $\bw_i$).
-%Since elements of $K_{UU}$ can be accessed in $\bigo{1}$ time, this multiplication requires $\bigo{m}$ work.
-%After computing $\bv=\bw_{i}K_{UU}$, computing $\bv W^{\top}$ requires $\bigo{n}$ work due to the sparsity of $W^{\top}$.
-%Therefore, we can compute a pivoted Cholesky decomposition for a SKI kernel matrix in $\bigo{nk^{2}}$ time.
-%This time complexity is comparable to the MVM time complexity, which is also linear in $n$.
+    def _deriv(self, A, B):
+        return [K._deriv(A, B) for K in self.Ks]
+\end{minted}
 
+\paragraph{Sparse Gaussian Process Regression (SGPR)}
+\cite{titsias2009variational} and many other sparse GP techniques \cite{quinonero2005unifying,snelson2006sparse,hensman2013gaussian} use the subset of regressors (SoR) approximation for the kernel (see \cref{sec:approx_gps}):
+\[
+  \bK_{\bX\bX}^{(\text{SGPR})} = \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bX}.
+\]
+Performing a matrix-matrix multiply with this matrix requires $\bigo{TNM + TM^{3}}$ time by distributing the vector multiply and grouping terms correctly.
+This computation is \emph{asymptotically faster} than the $\bigo{NM^{2} + M^{3}}$ time required by Cholesky based inference.
+Augmenting the SoR approximation with a diagonal correction, e.g. as in FITC \cite{snelson2006sparse}, is similarly straightforward.
+(We omit the code example here: see \url{http://github.com/cornellius-gp/gpytorch}.)
+
+\paragraph{KISS-GP}
+\cite{wilson2015kernel}---see \cref{sec:kissgp}---also known as SKI, is an inducing point method designed to provide fast matrix vector multiplies (MVMs) for use with Krylov subspace methods.
+KISS-GP is thus a natural candidate for BBMM and can benefit greatly from hardware acceleration.
+The KISS-GP approximation applied to the training covariance matrix gives us
+\[
+  \bK_{\bX\bX}^{(\text{KISS-GP})} = \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}.
+\]
+where $\bW$ is a $\bigo{N}$ sparse interpolation matrix and $\bK_{\bZ\bZ}$ has Toeplitz structure for $\bigo{M \log M}$ matrix-vector multiplies.
+Thus KISS-GP provides $\bigo{TN \! + \! TM \log M}$ matrix-matrix multiplies.
+(We omit the code example here.)
+
+
+
+\subsection{{\tt LazyTensor}s and Pivoted Cholesky Preconditioning.}
+In order to compute the partial pivoted Cholesky preconditioner for arbitrary {\tt LazyTensor}s, we need routines for
+\begin{enumerate*}
+  \item computing the row of a matrix, and
+  \item computing the matrix diagonal.
+\end{enumerate*}
+%
+Each {\tt LazyTensor} can optionally implement its own {\tt \_get\_row($\cdot$)} method; however, a simple default implementation uses the {\tt \_matmul} function:
+$
+  \bk^{(i)} = \bK_{\bX\bX} \be_i
+$
+($\be_i$ is the $i^\text{th}$ unit vector).
+There is no standard default for the {\tt diagonal()} function; however, they tend to be straightforward to write.
+We include some examples for various {\tt LazyTensor} sub-classes below.
+%
+\begin{minted}{python3}
+# For NonLazyTensor
+def diagonal(self):
+    return K.diagonal(dim1=-1, dim2=-2)
+
+# For RootLazyTensor
+def diagonal(self):
+    # diag(X X^T) = (X \cdot X) e_1
+    # where \cdot is elementwise multiplication
+    return self.X.pow(2).sum(dim=-1)
+
+# For KroneckerProductLazyTensor
+def diagonal(self):
+    # A neat trick: the KP-diagonal is a flattened
+    # outer product of the K_input/K_task diagonals
+    return torch.ger(
+        self.K_input.diagonal(), self.K_task.diagonal(),
+    ).view(-1)
+
+# For SumLazyTensor
+def diagonal(self):
+    return sum(K.diag for K in self.Ks)
+\end{minted}

@@ -416,6 +416,8 @@ In the next section we will discuss a fourth variant---Kernel Interpolation for 
 We will discuss how to exploit this low-rank kernel matrix structure for faster inference in the next chapter.
 
 \subsection{Kernel Interpolation for Scalable Structured Gaussian Processes (KISS-GP)}
+\label{sec:kissgp}
+
 Kernel Interpolation for Scalable Structured Gaussian Processes (KISS-GP) \cite{wilson2015kernel} utilizes inducing points in a fundamentally different way.
 While other methods tend to use $M \ll N$ inducing points, \citet{wilson2015kernel} demonstrate that it is possible to set $M \gg N$ by making the following restrictions:
 \begin{enumerate}
