@@ -74,18 +74,18 @@ Given the Gaussian process prior on $f(\cdot)$ and the Gaussian noise observatio
   p \left(
     \ytest \mid \bxtest, \dset_\text{train}
   \right)
-  = \normaldist{ \ytest ; \meantest{\bxtest}}{ \covtest{\bxtest} }
+  = \normaldist{ \ytest ; \meantest{\bxtest}}{ \vartest{\bxtest} }
   \label{eqn:predictive}
 \end{equation}
 %
-where $\meantest{\cdot}$ and $\covtest{\cdot}$ are given by:
+where $\meantest{\cdot}$ and $\vartest{\cdot}$ are given by:
 %
 \begin{align}
   \meantest{\bxtest}
   &= \mu\left( \bxtest \right) + \bk_{\bX \bxtest}^\top \left( \bK_{\bX\bX} + \sigma_\text{obs}^2 \bI \right)^{-1} \left( \by - \bmu \right)
   \label{eqn:predictive_mean}
   \\
-  \covtest{\bxtest}
+  \vartest{\bxtest}
   &= k ( \bxtest, \bxtest) + \sigma^2_\text{obs} - \bk_{\bX \bxtest}^\top \left( \bK_{\bX\bX} + \sigma_\text{obs}^2 \bI \right)^{-1} \bk_{\bX \bxtest}.
   \label{eqn:predictive_var}
 \end{align}
@@ -156,7 +156,7 @@ Applying standard Gaussian conditioning rules \citep[see e.g.][]{bishop2006patte
 \paragraph{Predictions on multiple test points.}
 If there are multiple test points $\bxtest$, $\bxtestprime$ of interest, the predictions $p([\ytest, \ytestprime] \mid [\bxtest, \bxtestprime], \dset_\text{train})$ are jointly Gaussian distributed.
 The mean is given by \cref{eqn:predictive_mean} and the covariance between the two points is given as
-\[ \covtest{\bxtest, \bxtestprime} = k(\bxtest, \bxtestprime) - \bk_{\bX\bxtest}^\top ( \bK_{\bX\bX} + \sigma_\text{obs}^2 \bI )^{-1} \bk_{\bX\bxtestprime}. \]
+\[ \covtest{\bxtest}{\bxtestprime} = k(\bxtest, \bxtestprime) - \bk_{\bX\bxtest}^\top ( \bK_{\bX\bX} + \sigma_\text{obs}^2 \bI )^{-1} \bk_{\bX\bxtestprime}. \]
 In fact, any (finite) set of test points will be jointly Gaussian with the above covariance, meaning that the predictive distribution is also a Gaussian process.
 
 \subsection{Training Gaussian Process Models}
@@ -455,12 +455,12 @@ As we will demonstrate in the next section, exploiting these fasts MVMs results 
 One advantage of KISS-GP's structure is the ability to perform constant time predictive mean calculations \cite{wilson2015thoughts}.
 Substituting the KISS-GP approximate kernel into \cref{eqn:predictive_mean} and assuming a prior mean of 0 for notational brevity, the predictive mean is given by
 \begin{equation}
-  \meantest{\bxtest} = \bw_{\bxtest}^\top {\blue{\underbracket{\bK_{\bZ\bZ} \bW_{\bX}(\bW_{\bX}^{\top}\bK_{\bZ\bZ}\bW_{\bX} + \sigma_\text{obs}^{2} \bI)^{-1} \by}_{\ba}}}.
+  \meantest{\bxtest} = \bw_{\bxtest}^\top {\blue{\underbracket{\bK_{\bZ\bZ} \bW_{\bX}(\bW_{\bX}^{\top}\bK_{\bZ\bZ}\bW_{\bX} + \sigma_\text{obs}^{2} \bI)^{-1} \by}_{\ba'}}}.
   \label{eqn:pred_mean_ski}
 \end{equation}
 (Here {\color{blue} blue} highlights computations that don't depend on test data.)
-Because $\bw_{\bx^{*}}$ is the only term in \eqref{eqn:pred_mean_ski} that depends on $\bx^{*}$, the remainder of the equation (denoted as $\blue\ba$) can be pre-computed: $\meantest{\bxtest} = \bw_{\bxtest}^\top \blue \ba$.
-After pre-computing $\blue \ba$, the multiplication $\bw_{\bx^{*}}^\top \blue \ba$ requires $\bigo{1}$ time, as $\bw_{\bx^{*}}$ is sparse and has only four nonzero elements.
+Because $\bw_{\bx^{*}}$ is the only term in \eqref{eqn:pred_mean_ski} that depends on $\bx^{*}$, the remainder of the equation (denoted as $\blue \ba'$) can be pre-computed: $\meantest{\bxtest} = \bw_{\bxtest}^\top \blue \ba'$.
+After pre-computing $\blue \ba'$, the multiplication $\bw_{\bxtest}^\top \blue \ba'$ requires $\bigo{1}$ time, as $\bw_{\bxtest}$ is sparse and has only four nonzero elements.
 
 \subsection{Summary of Notation}
 All the notation of this section is summarized in \cref{tab:gp_notation}.
@@ -507,7 +507,8 @@ It will be used throughout the remaining chapters.
 			$\widetilde \bK_{\bX\bX}$ & $\reals^{\numdata \times \numdata}$ & Approximate training kernel matrix (using \cref{eqn:inducing_interpolation}) \\
 			\midrule
 			$\meantest{ \cdot }$ & $\reals^\numdim \rightarrow \reals$ & Predictive mean function of the GP model \\
-			$\covtest{ \cdot }$ & $\reals^\numdim \rightarrow \reals$ & Predictive variance function of the GP model\\
+			$\vartest{ \cdot }$ & $\reals^\numdim \rightarrow \reals$ & Predictive variance function of the GP model\\
+      $\covtest{ \cdot }{ \cdot }$ & $\reals^\numdim \rightarrow \reals$ & Predictive co-variance function of the GP model\\
 			\bottomrule
 		\end{tabular}
 	}

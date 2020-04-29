@@ -10,16 +10,16 @@ For an arbitrary point $\bxtest$, the predictive distribution for the approximat
 %
 \begin{equation}
   q \left( f(\bxtest) \right) = \Evover{q(\bu)}{ \: p\left( f(\bxtest) \mid \bu \right) \: }
-  = \normaldist{ \bxtest; \ameantest{ \bxtest }} { \acovtest{ \bxtest }}
+  = \normaldist{ \bxtest; \ameantest{ \bxtest }} { \avartest{ \bxtest }}
   \label{eqn:approx_pred}
 \end{equation}
 %
-where $\ameantest{\cdot}$ and $\acovtest{\cdot}$ are the (approximate) predictive mean and covariance functions, given by:
+where $\ameantest{\cdot}$ and $\avartest{\cdot}$ are the (approximate) predictive mean and covariance functions, given by:
 %
 \begin{align}
   \ameantest{\bxtest} &= \bk_{\bZ\bxtest}^\top \bK_{\bZ\bZ}^{-1} \bm
   \label{eqn:approx_pred_mean} \\
-  \acovtest{\bxtest} &= k(\bxtest, \bxtest) -
+  \avartest{\bxtest} &= k(\bxtest, \bxtest) -
     \bk_{\bZ\bxtest}^\top \bK_{\bZ\bZ}^{-1} \left( \bK_{\bZ\bZ} - \bS \right) \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bxtest}
   \label{eqn:approx_pred_covar}
 \end{align}
@@ -68,7 +68,7 @@ Under the whitened coordinate system, the predictive mean and variance of \cref{
 \begin{align}
   \ameantest{\bxtest} &= \bk_{\bZ\bxtest}^\top \bR^{-\top} \bm'
   \label{eqn:approx_pred_mean} \\
-  \acovtest{\bxtest} &= k(\bxtest, \bxtest) -
+  \avartest{\bxtest} &= k(\bxtest, \bxtest) -
     \bk_{\bZ\bxtest}^\top \bR^{-\top} \left( \bI - \bS' \right) \bR^{-1} \bk_{\bZ\bxtest}
   \label{eqn:approx_pred_covar}
 \end{align}
