@@ -138,7 +138,7 @@ Through some numerical manipulation \citep[see][]{golub2012matrix}, one can show
   \label{eqn:cg_optimality}
 \end{align}
 %
-where $\mathcal{K}_J (\bA, \bb)$, the domain that $\bc_J$ is optimal over, is referred to as the $J^\text{th}$ \emph{Krylov subpace} of $\bA$ and $\bb$.
+where $\mathcal{K}_J (\bA, \bb)$, the domain that $\bc_J$ is optimal over, is referred to as the $J^\text{th}$ {\bf Krylov subpace} of $\bA$ and $\bb$.
 %
 \begin{equation}
   \mathcal{K}_J (\bA, \bb) = \left\{ \bb, \:\: \bA \bb, \:\: \bA^2 \bb, \:\: \ldots, \:\: \bA^{J-1} \bb \right\}.
@@ -148,9 +148,9 @@ where $\mathcal{K}_J (\bA, \bb)$, the domain that $\bc_J$ is optimal over, is re
 (This is why CG is referred to as a ``Krylov Subspace Method''.)
 Note the connection between \cref{eqn:krylov} and MVMs:
 the vectors spanning $\mathcal{K}_J (\bA, \bb)$ can be formed by applying an MVM to the previous vector: $\bA^J \bb = \bA \left( \bA^{J-1} \bb \right)$.
-The CG search directions $\bd_1, \ldots, \bd_J$ lie in the Krylov subspace, and the matrix-vector multiplication $\bA \bd_{J-1}$ in \cref{alg:cg} produces the next subspace $\mathcal{K}_{J+1} (\bA, \bb)$.
+The CG search directions $\bd_1, \ldots, \bd_J$ lie in the Krylov subspace, and so the matrix-vector multiplication $\bA \bd_{J-1}$ in \cref{alg:cg} expands $\mathcal{K}_{J}(\bA, \bb)$ to the next subspace $\mathcal{K}_{J+1} (\bA, \bb)$.
 
-\cref{eqn:cg_optimality,eqn:krylov} help to explain why CG rapidly converges.
+\cref{eqn:cg_optimality,eqn:krylov} explain why CG rapidly converges.
 Since the Krylov subspace contains powers of $\bA$ applied to $\bb$, we can interpret of \cref{eqn:cg_optimality} as an \emph{optimal polynomial approximation} of $\bA^{-1}$:
 %
 \begin{align*}
@@ -169,7 +169,7 @@ From this perspective, one can derive CG's famous (though loose) convergence bou
   \begin{equation*}
     \Vert \bc_J - (\bA^{-1} \bb) \Vert_\bA
     \leq
-    2 \Bigg[ \frac{ \sqrt \kappa(\bA) - 1 }{\sqrt \kappa(\bA) + 1} \Biggr]^J \Vert \bb \Vert_\bA,
+    2 \Bigg[ \frac{ \sqrt{ \kappa(\bA) } - 1 }{\sqrt{ \kappa(\bA) } + 1} \Biggr]^J \Vert \bb \Vert_\bA,
   \end{equation*}
   %
   where $\kappa(\bA) = \Vert \bA \Vert_2 / \Vert \bA^{-1} \Vert_2$ is the \emph{condition number} of $\bA$.
@@ -190,7 +190,7 @@ This can be accomplished through {\bf preconditioning}, which introduces a matri
 %
 instead of $\bA^{-1} \bb$.
 Both systems have the same solution $\bc$, but the preconditioned system's convergence depends on the conditioning of $\bP^{-1} \bA$ rather than that of $\bA$.
-The algorithm for \emph{preconditioned conjugate gradients} (PCG) is essentially the same as vanilla CG, with the additional step of applying $\bP^{-1}$ to the residuals (i.e. $\bP^{-1} \br_j$).
+The algorithm for \emph{preconditioned conjugate gradients} (PCG) is essentially the same as vanilla CG, with the additional step of applying $\bP^{-1}$ to the MVMs (i.e. $\bP^{-1} \bA \bd_{j-1}$) and residuals (i.e. $\bP^{-1} \br_j$).
 See \autoref{alg:std_pcg} for details.
 
 \input algorithms/pcg
