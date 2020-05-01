@@ -12,7 +12,7 @@ especially when predictions would be otherwise difficult to interpret
 Historically, the use of GPs has been limited to problems with small datasets, since learning and inference computations na\"ively scale cubically with the number of data points ($n$).
 Recent advances in \emph{inducing point methods} have managed to scale up GP training and computing predictive means to larger datasets \cite{snelson2006sparse,quinonero2005unifying,titsias2009variational}.
 \emph{Kernel Interpolation for Scalable Structured GPs} (KISS-GP) is one such method that scales to millions of data points \cite{wilson2015kernel,wilson2015thoughts}.
-For a test point $\bx^*$, KISS-GP expresses the predictive mean as ${\blue\ba^\top} \bw(\bx^*) $, where $\blue \ba$ is a pre-computed vector dependent only on training data, and $\bw(\bx^*)$ is a sparse interpolation vector.
+For a test point $\bxtest$, KISS-GP expresses the predictive mean as $\bw_{\bxtest}^\top {\blue \ba'}$, where $\blue \ba'$ is a pre-computed vector dependent only on training data, and $\bw_\bxtest$ is a sparse interpolation vector.
 This formulation affords the ability to compute predictive means in \emph{constant time}, independent of $n$.
 
 \begin{figure}[t!]
@@ -34,8 +34,8 @@ Matching the reduced complexity of predictive mean inference without sacrificing
 
 \begin{table*}[t!]
   \caption{
-    Asymptotic complexities of predictive (co)variances ($n$ training points, $m$ inducing points, $k$ Lanczos/CG iterations)
-    and sampling from the predictive distribution ($s$ samples, $t$ test points).
+    Asymptotic complexities of predictive (co)variances ($N$ training points, $M$ inducing points, $J$ Lanczos/CG iterations)
+    and sampling from the predictive distribution ($S$ samples, $T$ test points).
     \label{tab:running_times}
   }
   \vspace{0.5ex}
@@ -49,12 +49,12 @@ Matching the reduced complexity of predictive mean inference without sacrificing
 
 In this paper, we provide a solution based on the tridiagonalization algorithm of \citet{lanczos1950iteration}.
 Our method takes inspiration from KISS-GP's mean computations: we express the predictive covariance between $\bx^*_i$ and $\bx^{*}_j$ as
-$\bw(\bx^*_i)^\top \blue{C} \: \bw(\bx^{*}_j)$,
-where $\blue C$ is an $m \times m$ matrix dependent only on training data.
-However, we take advantage of the fact that $\blue C$ affords fast matrix-vector multiplications (MVMs) and avoid explicitly computing the matrix.
-Using the Lanczos algorithm, we can efficiently decompose $\blue C$ as two rank-$k$ matrices $\blue C\!\approx\! \blue{R^T R^\prime}$ in \emph{nearly linear time}.
-After this one-time upfront computation, and due to the special structure of $\blue {R,R^\prime}$, all variances can be computed in \emph{constant time} -- $\bigo{k}$ -- per (co)variance entry.
-We extend this method to sample from the predictive distribution at $t$ points in $\bigo{t + m}$ time -- independent of training dataset size.
+$\bw_{\bxtest_i}^\top \blue{\bC} \: \bw_{\bxtest_j}$,
+where $\blue C$ is an $M \times M$ matrix dependent only on training data.
+However, we take advantage of the fact that $\blue \bC$ affords fast matrix-vector multiplications (MVMs) and avoid explicitly computing the matrix.
+Using the Lanczos algorithm, we can efficiently decompose $\blue \bC$ as two rank-$J$ matrices $\blue \bC \approx \blue{\bR \bR^{\top \prime}}$ in \emph{nearly linear time}.
+After this one-time upfront computation, and due to the special structure of $\blue {\bR,\bR^\prime}$, all variances can be computed in \emph{constant time} -- $\bigo{J}$ -- per (co)variance entry.
+We extend this method to sample from the predictive distribution at $T$ points in $\bigo{T + M}$ time -- independent of training dataset size.
 
 We refer to this method as LanczOs Variance Estimates, or LOVE{} for short.\footnote{
   LOVE{} is implemented in the GPyTorch library.
