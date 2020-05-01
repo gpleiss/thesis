@@ -44,14 +44,16 @@ $\trainK^{-1}\by$ can be computed using \emph{conjugate gradients} (CG) \cite{cu
 and the other two quantities can be computed using the Lanczos tridiagonalization algorithm \cite{ubaru2017fast,dong2017scalable}.
 These MVM-based methods are asymptotically faster and more space efficient than Cholesky based methods \cite{wilson2015kernel,dong2017scalable}.
 Additionally, these methods are able to exploit algebraic structure in the data for further efficiencies \cite{cunningham2008fast,saatcci2012scalable,wilson2015kernel}.
-However, these methods also have disadvantages.
-The quantities are computed via several independent calls to the CG and stochastic Lanczos quadrature subroutines, which are inherently sequential and therefore do not fully utilize parallel hardware.
-Additionally, the Lanczos tridiagonalization algorithm requires $\bigo{NP}$ space for $P$ iterations and suffers from numerical stability issues due to loss of orthogonality \cite{golub2012matrix}.
+We aim to expand on these methods.
+In particular, our goals are to
+\begin{enumerate}
+  \item introduce a unified MVM algorithm that simultaneously computes all terms and thus improve parallelization/GPU utilization; and
+  \item avoid using Lanczos tridiagonalization for the second two terms, as it suffers from numerical instabilities \cite{golub2012matrix}.
+\end{enumerate}
 
 \subsection{Modified Batched Conjugate Gradients (mBCG)}
 \label{sec:mbcg}
 
-Our goal is to capitalize on the advantages of MVM-based methods (space-efficiency, ability to exploit structure, etc.) but with more efficiency, numerical stability, and GPU utilization.
 For this purpose, we introduce a \emph{modified Batched Conjugate Gradients Algorithm} (mBCG) algorithm.
 Standard conjugate gradients takes as input a vector $\by$ and a routine for computing a matrix vector product $\trainK\by$, and, after $J$ iterations, outputs an approximate solve $\bc_{J} \approx \trainK^{-1}\by$ (with exact equality when $J = N$).
 We modify conjugate gradients to 1. perform linear solves with multiple right hand sides simultaneously, and 2. return tridiagonal matrices corresponding to partial Lanczos tridiagonalizations of $\trainK$ with respect to each right hand side.
