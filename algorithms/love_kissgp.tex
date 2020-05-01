@@ -1,0 +1,43 @@
+\begin{algorithm2e}[t]
+  \SetAlgoLined
+  \SetKwInOut{Input}{Input}
+  \SetKwInOut{Output}{Output}
+  \newcommand\NextInput[1]{%
+    \settowidth\inputlen{\Input{}}%
+    \setlength\hangindent{1.5\inputlen}%
+    \hspace*{\inputlen}#1\\
+  }
+  \newcommand\graycomment[1]{\footnotesize\ttfamily\textcolor{gray}{#1}}
+  \SetCommentSty{graycomment}
+  \SetKwFunction{mvmkxx}{mvm\_$\trainK$}
+  \SetKwFunction{mvmkux}{mvm\_$\bK_{\bZ\bX}$}
+  \SetKwFunction{lanczos}{lanczos\textsubscript{J}}
+  \SetKwFunction{sparsemm}{sparse\_mm}
+  \SetKwFunction{choleskyfactor}{cholesky\_factor}
+  \SetKwFunction{triangularsolve}{trinagular\_solve}
+  \caption[LOVE{} + KISS-GP]{
+    LOVE{} + KISS-GP for constant-time predictive variances.
+    {\color{blue} Terms in blue} only depend on training data.
+  }
+  \label{alg:love_kissgp}
+    \Input{$\bw_{\bxtest}$, $\bw_{\bxtestprime}$ -- interpolation vectors for $\bxtest$, $\bxtestprime$}
+    \NextInput{$k(\bxtest, \bxtestprime)$ -- prior covariance between $\bxtest$, $\bxtestprime$}
+    \NextInput{$\bb = \frac{1}{M} \bW_\bX^\top {\color{blue} \bK_{\bZ\bZ} \mathbf{1}}$ -- average col. of $\bW_\bX^\top {\color{blue} \bK_{\bZ\bZ}}$}
+    \NextInput{{\color{blue} \mvmkxx{}} -- func. that performs MVMs with $\color{blue} \trainK$}
+    %\NextInput{{\color{blue} \mvmkxx{}} -- func. that performs MVMs with $\color{blue} (\bW^\top_{\bX} \bK_{\bZ\bZ} \bW_\bX + \sigma_\text{obs}^2 \bI) \approx \trainK$}
+    \NextInput{{\color{blue} \mvmkux{}} -- func. that performs MVMs with $\color{blue} \bK_{\bZ\bX}$}
+    %\NextInput{{\color{blue} \mvmkux{}} -- func. that performs MVMs with $(\color{blue} \bK_{\bZ\bZ} \bW_{\bX}) \approx \bK_{\bZ\bX}$}
+    \Output{Approximate predictive covariance $\covtest{\bxtest}{\bxtestprime}$.}
+    \BlankLine
+    \If{$\blue \bR$ has not previously been computed}{
+      $\color{blue} \bQ, \bT$ $\leftarrow$ \lanczos{ {\color{blue} \mvmkxx}, $\bb$ } \\
+      \qquad \tcp{$J$ iter. of Lanczos w/ matrix $\trainK$ and probe vec. $\bb$ }
+      $\color{blue} \bL_{\bT}$ $\leftarrow$ \choleskyfactor{ $\color{blue} \bT$ } \\
+      $\blue \bR$ $\leftarrow$ \triangularsolve{ $\color{blue} \mvmkux{ \bQ }, \bL_\bT$ }
+      \tcp*{$\bR = \bL_\bT^{-1} \bQ^\top \bW^\top_\bX \bK_{\bZ\bZ}$  }
+    }
+    \tcp{$\bR \in \reals^{J \times M}$, $J \ll M$.}
+    $\bu$ $\leftarrow$ \sparsemm{ $\blue \bR$, $\bw_\bxtest$ } \\
+    $\bu'$ $\leftarrow$ \sparsemm{ $\blue \bR$, $\bw_\bxtestprime$ } \\
+    \Return{ $k_{\bx^{*}_i, \bx^{*}_j} - \bu^T \bu'$ } \\
+\end{algorithm2e}
