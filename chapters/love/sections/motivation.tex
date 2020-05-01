@@ -1,0 +1,79 @@
+\section{Motivation}
+\label{sec:love_motivation}
+
+\cref{eqn:predictive_mean} and \cref{eqn:predictive_var} describe how to compute predictive means and (co)-variances (restated below, assuming a prior mean of $\bzero$ for brevity):
+%
+\begin{align}
+  \meantest{\bxtest}
+  &= \bk_{\bX \bxtest}^\top {\color{blue} \trainK^{-1} \by}
+  \label{eqn:predictive_mean_2}
+  \\
+  \covtest{\bxtest}{\bxtestprime}
+  &= k(\bxtest, \bxtestprime) - \bk_{\bX\bxtest}^\top {\color{blue} \trainK^{-1}} \bk_{\bX\bxtestprime}.
+  \label{eqn:predictive_covar_2}
+\end{align}
+%
+The terms in {\color{blue} blue} represent terms that only depend on the training data.
+If we are using a GP model to make a single prediction, then computing both of these terms requires a single call to conjugate gradients (${\color{blue} \trainK^{-1}} \bk^\top_{\bX\bxtest}$).
+However, if we are making predictions on thousands of test points, these repeated CG calls may become prohibitively expensive, even when using the mBCG algorithm to parallelize the solves.
+Since the expensive computations in \cref{eqn:predictive_mean_2,eqn:predictive_covar_2} primarily involve the training data terms, our goal is to \emph{pre-compute and cache} the most computationally intensive parts of these equations.
+After this pre-computation, subsequent predictions ideally should be computationally cheap---i.e. $\bigo{N}$ or less.
+
+\subsection{Computing Predictive Means}
+
+Before discussing predictive (co)-variances, which will be the primary focus of this chapter, we will first discuss a pre-computation strategy for predictive means:
+Since the ${\color{blue} \trainK^{-1} \by \triangleq \ba}$ term only depends on training data, it can be cached and re-used for all predictive means.
+Each subsequent predictive mean is simply the inner product between the $\bk_{\bX \bxtest}$ vector and the pre-computed $\color{blue} \ba$ vector, which in general takes $\bigo{N}$ time.
+
+This cost can be reduced even further for KISS-GP models, as discussed in \cref{sec:kissgp} and \citep{wilson2015thoughts}.
+Recall that KISS-GP approximates the training and test covariances as:
+%
+\begin{align*}
+  \tilde{\bk}_{\bX \bxtest_i} = \bW^\top_{\bX} \bK_{\bZ \bZ} \bw_{\bxtest_i},
+  \quad
+  \tilde{\bK}_{\bX \bX} = \bW^\top_{\bX} \bK_{\bZ \bZ} \bW_{\bX},
+\end{align*}
+%
+where $\bK_{\bZ\bZ} \in \reals^{M \times M}$ is the Toeplitz inducing kernel matrix, $\bW_\bX \in \reals{M \times N}$ is the sparse interpolation for training points $X$, and $\bw_{\bxtest} \in \reals{M}$ is the sparse interpolation for $\bxtest_i$.
+Plugging these approximations into \cref{eqn:predictive_mean_2} gives us
+\[
+  \meantest{\bxtest} = \bw_{\bxtest}^\top {\blue{\underbracket{\bK_{\bZ\bZ} \bW_{\bX}(\bW_{\bX}^{\top}\bK_{\bZ\bZ}\bW_{\bX} + \sigma_\text{obs}^{2} \bI)^{-1} \by}_{\ba'}}}.
+\]
+where again the blue terms only depend on training data.
+After pre-computing the $\ba'$ vector, all subsequent means are the inner product between $\color{blue} \ba'$ and the \emph{$\bigo{1}$ sparse} $\bw_\bxtest$ vector.
+These computations are $\bigo{1}$ because of this sparsity.
+
+\subsection{Computing (Co)-Variances without Pre-computation}
+
+The predictive (co)-variances are more challenging, as the only term in \cref{eqn:predictive_covar_2} that does not depend on test data is $\blue \trainK^{-1}$.
+A common pre-computation is to form the Cholesky factorization $\blue \bL \bL^\top = \trainK$ ($\bigo{N^3}$ time, $\bigo{N^2}$ memory).
+After factorization, all subsequent solves take $\bigo{N^2}$ time.
+However, this cubic dependence on $N$ and quadratic memory may be infeasible for $N \geq 10,\!000$.
+
+It is possible to obtain some computational savings when using inducing point methods.
+For example, if we replace $\bk_{X \! \bxtest_i}$ and $\blue \trainK$ with their corresponding KISS-GP approximations in \cref{eqn:predictive_covar_2}, then we have:
+%
+\begin{align}
+  \covtest{\bxtest}{\bxtestprime}
+  &\approx
+  k(\bxtest_i \bxtest_j) -
+  \bw_{\bxtest_i}^{\top} {\color{blue}\underbracket{{\bK_{\bZ\bZ} \bW_{\bX} \left( \bW^\top_{\bX} \bK_{\bZ\bZ} \bW_\bX + \sigma^2_\text{obs} \bI \right)^{-1} \bW^\top_{\bX} \bK_{\bZ \bZ}}}_{\blue \bC}} \bw_{\bxtest_j}.
+  \label{eqn:pred_covar_approx}
+\end{align}
+%
+$\blue \bC$, the braced portion of \eqref{eqn:pred_covar_approx}, does not depend on the test points $\bxtest_{i}$, $\bxtest_{j}$ and therefore can be pre-computed during training.
+The primary cost of this pre-computation is the $M$ solves with $\blue (\bW_\bX^\top {\bK}_{\bZ\bZ} \bW_\bX + \sigma_\text{obs}^2 \bI)$: one for each column vector in $\blue \bW^{\top}_{\bX} \bK_{\bZ\bZ}$, each of which takes $\bigo{N + M\log M}$ time with CG (see \cref{sec:kissgp} or \citet{wilson2015kernel}).
+The total time for this pre-computation is therefore $\bigo{MN + M^2 \log M}$.
+After pre-computation, \cref{eqn:pred_covar_approx} becomes
+%
+\begin{align}
+  k_{f\mid\dset}(\bxtest_i, \bxtest_j) &\approx k_{\bxtest_i \bxtest_j} - \bw_{\bxtest_i}^\top \: {\blue \bC} \: \bw_{\bxtest_j}
+    \label{eqn:pred_covar_ski_naive}
+\end{align}
+As $\bw_{\bxtest_i}$ contains only four nonzero elements, the inner product of $\bw^{*}_{i}$ with $\bC$ takes $\bigo{M}$ time.
+Thus predictive covariances with \cref{eqn:pred_covar_ski_naive} are $\bigo{M}$ after pre-computation.
+
+Although this technique offers computational savings over the Cholesky method, the quadratic dependence on $M$ in the pre-computation phase is a computational bottleneck.
+In contrast, all other operations with KISS-GP require at most linear storage and near-linear time.
+Indeed, one of the hallmarks of KISS-GP is the ability to use a very large number of inducing points $M = \Theta(N)$ so that kernel computations are nearly exact.
+

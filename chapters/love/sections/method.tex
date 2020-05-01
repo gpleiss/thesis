@@ -1,79 +1,8 @@
-%!TEX root=../main.tex
-\section{Lanczos Variance Estimates (\href{https://www.youtube.com/watch?v=t5ze_e4R9QY}{LOVE{}})}
-\label{sec:method}
+\section{LanczOs Variance Estimates (LOVE)}
+\label{sec:love_method}
 
-In this section we introduce LOVE{}, an approach to efficiently approximate the predictive covariance
-\begin{align*}
-  k_{f\mid\dset}(\bxtest_i, \bxtest_j) = k_{\bxtest_i \bxtest_j} - \bk_{\bX \! \bxtest_i}^\top (K_{\bX\!\bX} + \sigma^2 \bI)^{-1} \bk_{\bX \! \bxtest_j},
-\end{align*}
-where $\bX^{*} = [ \bxtest_1, \ldots \bxtest_t ]$ denotes a set of $t$ test points, and $\bX = [\bx^{(1)}, \ldots \bx^{(N)}]$ a set of $n$ training points.
-%
-Solving $(K_{\bX \bX} + \sigma^2 \bI)^{-1}$ na\"ively takes $\bigo{n^3}$ time, but is typically performed as a one-type pre-computation during training since $K_{\bX \bX}$ does not depend on the test data.
-At test time, all covariance calculations will then cost $\bigo{n^2}$.
-In what follows, we build a significantly faster method for (co-)variance computations, mirroring this \emph{pre-compute phase} and \emph{test phase} structure.
+\input algorithms/love
 
-\subsection{A first $\bigo{m^2}$ approach with KISS-GP}
-It is possible to obtain some computational savings when using inducing point methods.
-For example, we can replace $\bk_{X \! \bxtest_i}$ and $K_{X \! X}$ with their corresponding KISS-GP approximations,
-$\tilde{\bk}_{X \! \bxtest_i}$ and $\tilde{K}_{X \! X}$, which we restate here:
-%
-%
-\begin{align*}
-  \tilde{\bk}_{\bX \bxtest_i} = W^\top_{\bX} \bK_{U \! U} \bw_{\bxtest_i},
-  \: \: \: & \: \: \:
-  \tilde{K}_{\bX \bX} = W^\top_{\bX} \bK_{U \! U} W_{\bX}.
-\end{align*}
-$W_\bX$ is the sparse interpolation matrix for training points $X$.
-$\bw_{\bxtest_i}$ and $\bw_{\bxtest_j}$ are the sparse interpolations for $\bxtest_i$ and $\bxtest_j$ respectively.
-Substituting these into \eqref{eq:pred_covar} results in the following approximation to the predictive covariance:
-%
-\begin{align}
-  k_{\!f\mid\dset}(\bxtest_i, \bxtest_j) &\approx k_{\bxtest_i \! \bxtest_j} - \tilde{\bk}_{\bX \! \bxtest_i}^\top (\tilde{K}_{\bX\!\bX} + \sigma^2 \bI)^{-1} \tilde{\bk}_{\bX \! \bxtest_j}.
-    \label{eq:pred_covar_approx}
-\end{align}
-%
-By fully expanding the second term in \eqref{eq:pred_covar_approx}, we obtain
-%
-\begin{equation}
-  \bw_{\bxtest_i}^{\top} {\color{blue}\underbrace{{\bK_{U \! U} W_{\bX} (\tilde{K}_{\bX\!\bX} + \sigma^2 \bI)^{-1} W^\top_{\bX} \bK_{U \! U}}}_{\blue C}} \bw_{\bxtest_j}
-  \label{eq:pred_covar_ski_cache}
-\end{equation}
-%
-
-
-\paragraph{Precomputation phase.}
-$\blue C$, the braced portion of \eqref{eq:pred_covar_ski_cache}, does not depend on the test points $\bxtest_{i}$, $\bxtest_{j}$ and therefore can be pre-computed during training.
-The covariance becomes:
-%
-\begin{align}
-  k_{f\mid\dset}(\bxtest_i, \bxtest_j) &\approx k_{\bxtest_i \bxtest_j} - \bw_{\bxtest_i}^\top \: \blue C \: \bw_{\bxtest_j}
-    \label{eq:pred_covar_ski_naive}
-\end{align}
-%
-In \eqref{eq:pred_covar_ski_cache}, we see that primary cost of computing $\blue C$ is the $m$ solves with $\tilde{K}_{\bX\!\bX} + \sigma^2 \bI$: one for each column vector in $W^{\top}_{\bX} \bK_{U \! U}$.
-Since $\tilde \bK_{\bX\!\bX}$ is a KISS-GP approximation, each solve is $\bigo{n + m\log m}$ time with CG \cite{wilson2015kernel}.
-The total time for $m$ solves is $\bigo{mn + m^2 \log m}$.
-%Computing the right hand sides takes $\bigo{nm}$ time total because $W^{\top}_{\bX}$ is an $n \times m$ matrix with four non-zero elements per row.
-
-\paragraph{Test phase.}
-%In the \emph{test phase} we can compute individual predictive variances in $\bigo{m}$ time.
-As $\bw^{*}_{i}$ contains only four nonzero elements,
-the inner product of $\bw^{*}_{i}$ with a vector takes $\bigo{1}$ time,
-and the multiplication $\bw^{*\top}_{i}\blue C$ requires $\bigo{m}$ time during testing.
-
-\paragraph{Limitations.}
-Although this technique offers computational savings over non-inducing point methods, the quadratic dependence on $m$ in the pre-computation phase is a computational bottleneck.
-In contrast, all other operations with KISS-GP require at most linear storage and near-linear time.
-Indeed, one of the hallmarks of KISS-GP is the ability to use a very large number of inducing points $m = \Theta(n)$ so that kernel computations are nearly exact.
-Therefore, in practice a quadratic dependence on $m$ is infeasible and so no terms are pre-computed.\footnote{
-  \citet{wilson2015thoughts} (Section 5.1.2) describe an alternative procedure that approximates $\blue C$ as a diagonal matrix
-  for fast variances, but typically incurs much greater (e.g., more than 20\%) error, which is dominated by the number of terms in
-  a stochastic expansion, compared to the number of inducing points.}
-Variances are instead computed using \eqref{eq:pred_covar_approx}, computing each term in the equation from scratch.
-Using CG, this has a cost of $\bigo{k n + k m \log m}$ for \emph{each} (co-)variance computation, where $k$ is the number of CG iterations.
-This dependence on $n$ and $m$ may be cumbersome when performing many variance computations.
-
-\subsection{Fast predictive (co-)variances with LOVE{}}
 We propose to overcome these limitations through an altered pre-computation step.
 In particular, we approximate $\blue C$ in \eqref{eq:pred_covar_ski_naive} as a low rank matrix.
 Letting $\blue R$ and $\blue{R'}$ be $k \times m$ matrices such that $\blue R^\top \blue{R'} \approx \blue C$, we rewrite \eqref{eq:pred_covar_ski_naive} as:
@@ -122,6 +51,11 @@ Therefore, during test time all predictive variances can be computed in $\bigo{k
 As stated in \autoref{subsec:lanczos}, $k$ depends on the conditioning of the matrix and not its size \cite{golub2012matrix}.
 $k\leq100$ is sufficient for most matrices in practice \cite{golub2012matrix}, and therefore $k$ can be considered to be constant.
 Running times are summarized in \autoref{tab:running_times}.
+
+
+
+
+\section{LOVE with KISS-GP}
 
 \subsection{Predictive distribution sampling with LOVE{}}
 \label{sec:sampling_method}
@@ -183,13 +117,12 @@ If we take the Cholesky decomposition of $T'_k = \!L L^\top$ (a $\bigo{k}$ opera
 \end{align}
 %
 Setting $\blue{ S= Q'_k L_{T_k} }$, we see that $k_{f \mid \dset} (\bX^*, \bX^*) = (W_X^\top \blue S)(W_X^\top \blue S)^{\top}$.
-$\blue S \! \in \! \reals^{m \times k}$ can be precomputed and cached since it does not depend on test data.
+$\blue S \! \in \! \reals^{m \times k}$ can be pre-computed and cached since it does not depend on test data.
 In total, this pre-computation takes $\bigo{k m \log m + m k^2}$ time in addition to what is required for fast variances.
 To sample from the predictive distribution, we need to evaluate \eqref{eq:sample}, which involves multiplying $W^\top_{X^*} S \mathbf{v}$.
 Multiplying $\mathbf{v}$ by $S$ requires $\bigo{mk}$ time, and finally multiplying by $W^{\top}_{X^{*}}$ takes $\bigo{tk}$ time.
 Therefore, drawing $s$ samples (corresponding to $s$ different values of $\mathbf{v}$) takes $\bigo{sk(t + m)}$ time total during the testing phase (see \autoref{tab:running_times}) -- a \emph{linear} dependence on $t$.
 
-\input algorithms/love
 
 \subsection{Extension to additive kernel compositions}
 LOVE{} is applicable even when the KISS-GP approximation is used with an additive composition of kernels,
