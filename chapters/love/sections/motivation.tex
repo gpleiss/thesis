@@ -20,6 +20,7 @@ Since the expensive computations in \cref{eqn:predictive_mean_2,eqn:predictive_c
 After this pre-computation, subsequent predictions ideally should be computationally cheap---i.e. $\bigo{N}$ or less.
 
 \subsection{Computing Predictive Means}
+\label{sec:motivation_means}
 
 Before discussing predictive (co)-variances, which will be the primary focus of this chapter, we will first discuss a pre-computation strategy for predictive means:
 Since the ${\color{blue} \trainK^{-1} \by \triangleq \ba}$ term only depends on training data, it can be cached and re-used for all predictive means.

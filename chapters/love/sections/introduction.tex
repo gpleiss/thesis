@@ -1,40 +1,37 @@
 %!TEX root=../main.tex
 \section{Introduction}
-Gaussian processes (GPs) are fully probabilistic models which can naturally estimate predictive uncertainty through posterior variances.
-These uncertainties play a pivotal role in many application domains.
-For example, uncertainty information is crucial when incorrect predictions could have catastrophic consequences, such as in medicine \cite{schulam2017if} or large-scale robotics \cite{deisenroth2015gaussian};
-Bayesian optimization approaches typically incorporate model uncertainty when choosing actions \cite{snoek2012practical,deisenroth2011pilco,wang2017max};
-and reliable uncertainty estimates are arguably useful for establishing trust in predictive models,
-especially when predictions would be otherwise difficult to interpret
-\cite{doshi2017roadmap,zhou2017effects}.
+Applying a Gaussian process model to previously unseen test data returns a \emph{predictive distribution} rather than a single point prediction.
+This predictive distribution, which is formed in a non-parametric fashion, has several advantages.
+In particular, the uncertainties expressed by the predictive distribution naturally vary with the size of the training dataset.
+Consequentially, Gaussian process predictions are well-calibrated---even for data points that lie far away from previously-seen training data \cite{rasmussen2001occam,wilson2014thesis}.
+This property is crucial for applications where incorrect predictions could have catastrophic consequences, such as in medicine \cite{schulam2017if} or large-scale robotics \cite{deisenroth2015gaussian}.
 
-\emph{Although predictive uncertainties are a primary advantage of GP models, they have recently become their computational bottleneck.}
-Historically, the use of GPs has been limited to problems with small datasets, since learning and inference computations na\"ively scale cubically with the number of data points ($n$).
-Recent advances in \emph{inducing point methods} have managed to scale up GP training and computing predictive means to larger datasets \cite{snelson2006sparse,quinonero2005unifying,titsias2009variational}.
-\emph{Kernel Interpolation for Scalable Structured GPs} (KISS-GP) is one such method that scales to millions of data points \cite{wilson2015kernel,wilson2015thoughts}.
-For a test point $\bxtest$, KISS-GP expresses the predictive mean as $\bw_{\bxtest}^\top {\blue \ba'}$, where $\blue \ba'$ is a pre-computed vector dependent only on training data, and $\bw_\bxtest$ is a sparse interpolation vector.
-This formulation affords the ability to compute predictive means in \emph{constant time}, independent of $n$.
+This non-parametric formulation unfortunately comes with a computational downside.
+Computing predictions with a GP requires performing linear solves with the $N \times N$ training covariance matrix (see \cref{eqn:predictive_mean,eqn:predictive_var}).
+BBMM and recent advances in \emph{inducing point methods} can be used to reduce some of these computational requirements.
+For a test point $\bxtest$, the predictive mean is expressed as $\bk_{\bX\bxtest}^\top {\blue \ba}$, where $\blue \ba = \trainK^{-1} \by$ is a pre-computed solve dependent only on training data.
+After computing $\ba$ in $\bigo{N^2}$ time using conjugate gradients, subsequent predictive means only require a $\bigo{N}$ inner product.
+This computation can be reduced to $\bigo{1}$ when used in conjunction with Kernel Interpolation for Scalable Structured GP models (KISS-GP, see \cref{sec:kissgp}).
+We will briefly discuss predictive mean computations in \cref{sec:motivation_means}.
 
-However, these computational savings do not extend naturally to predictive uncertainties.
-With KISS-GP, computing the predictive covariance between two points requires $\bigo{n + m \log m}$ computations, where $m$ is the number of inducing points.
-While this asymptotic complexity is lower than standard GP inference and alternative scalable approaches, it becomes prohibitive when $n$ is large, or when making many repeated computations.
-Additionally, drawing samples from the predictive distributions -- a necessary operation in many applications -- is similarly expensive.
+However, these computational savings do not naturally extend to predictive uncertainties.
+Computing the predictive variance $\vartest{\bxtest}$ requires computing $\trainK^{-1} \bk_{\bX\bxtest}$ (see \cref{eqn:predictive_var}), which depends on the test point $\bxtest$ and therefore cannot be computed upfront.
+Consequentially the most expensive computations of \cref{eqn:predictive_var} cannot be easily pre-computed and cached.
+Additionally, drawing samples from the predictive distributions---a necessary operation in many applications---is similarly expensive.
 Existing fast approximations for these operations \cite{papandreou2011efficient,wilson2015thoughts,wang2017max} typically incur a significant amount of error.
 Matching the reduced complexity of predictive mean inference without sacrificing accuracy has remained an open problem.
+The majority of this chapter is therefore dedicated to reducing the computational requirements of predictive variances and sampling.
 
-In this chapter, we provide a solution based on the tridiagonalization algorithm of \citet{lanczos1950iteration}.
-Our method takes inspiration from KISS-GP's mean computations: we express the predictive covariance between $\bx^*_i$ and $\bx^{*}_j$ as
-$\bw_{\bxtest_i}^\top \blue{\bC} \: \bw_{\bxtest_j}$,
-where $\blue C$ is an $M \times M$ matrix dependent only on training data.
-However, we take advantage of the fact that $\blue \bC$ affords fast matrix-vector multiplications (MVMs) and avoid explicitly computing the matrix.
-Using the Lanczos algorithm, we can efficiently decompose $\blue \bC$ as two rank-$J$ matrices $\blue \bC \approx \blue{\bR \bR^{\top \prime}}$ in \emph{nearly linear time}.
-After this one-time upfront computation, and due to the special structure of $\blue {\bR,\bR^\prime}$, all variances can be computed in \emph{constant time} -- $\bigo{J}$ -- per (co)variance entry.
-We extend this method to sample from the predictive distribution at $T$ points in $\bigo{T + M}$ time -- independent of training dataset size.
+In this chapter, we provide a matrix-vector multiplication (MVM) solution based on the tridiagonalization algorithm of \citet{lanczos1950iteration}.
+Our method takes inspiration from BBMM and uses a matrix-vector multiplication (MVM) algorithm for scalability, programmability, and GPU acceleration.
+We express the predictive covariance between $\bxtest$ and $\bxtestprime$ as
+$\bk_{\bX\bxtest}^\top \blue{\bC} \: \bk_{\bX\bxtest}$,
+where $\blue \bC \approx \trainK^{-1}$ is low-rank $N \times N$ approximation.
+Using the Lanczos algorithm, we can efficiently form this low-rank decomposition using $J \ll N$ matrix-vector multiplications with $\trainK$.
+After this one-time upfront computation, all variances can be computed in \emph{linear time} -- $\bigo{JN}$ -- per (co)variance entry.
+When used in conjunction with KISS-GP, this complexity can be further reduced to \emph{constant time}, and posterior samples can be drawn in \emph{linear time}.
 
-We refer to this method as LanczOs Variance Estimates, or LOVE{} for short.\footnote{
-  LOVE{} is implemented in the GPyTorch library.
-  Examples are available at \url{http://bit.ly/gpytorch-examples}.
-}
+We refer to this method as LanczOs Variance Estimates, or LOVE{} gor short.
 LOVE{} has the lowest asymptotic complexity for computing predictive (co)variances and drawing samples with GPs.
-We empirically validate LOVE{} on seven datasets and find that it consistently provides substantial speedups over existing methods \emph{without sacrificing accuracy}.
+We empirically validate LOVE{}, used in conjunction with KISS-GP, on seven datasets and find that it consistently provides substantial speedups over existing methods \emph{without sacrificing accuracy}.
 Variances and samples are accurate to within four decimals, and can be computed \emph{up to 18,000 times faster.}
