@@ -188,9 +188,9 @@ The following chapters introduce the components of our matrix-multiplication-bas
 
   \item {\bf \cref{chapter:variational}} extends the BBMM framework to Gaussian process models with non-Gaussian likelihood functions---i.e. when GPs are used to model heavy-tailed data, arrival processes, or classification problems.
     Unlike standard regression, these models necessitate the use of approximate Bayesian inference.
-    We introduce a matrix-multiplication method based on {\bf Contour Integral Quadrature (CIQ)} which can be used to optimize a re-parameterized variational training objective.
+    We introduce a matrix-multiplication method based on {\bf Cauchy Integral Quadrature (CIQ)} which can be used to optimize a re-parameterized variational training objective.
     On several large-scale spatial datasets, CIQ enables faster optimization and higher-fidelity approximations than existing variational methods.
-    We also demonstrate that CIQ can be used to efficiently sample functions from GP models.
+    We also demonstrate that CIQ can be used to efficiently sample from GP posteriors.
 
   \item This thesis culminates with with {\bf \cref{chapter:largeexact}}, which utilizes the prior chapter's methods to scale GP regression to extremely large datasets.
     Combining BBMM and LOVE with partitioned matrix-multiplication routines, we demonstrate that Gaussian processes can be trained \emph{without approximation} on datasets with \emph{over 1 million data points}.

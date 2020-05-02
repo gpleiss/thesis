@@ -15,16 +15,6 @@ Recent advances in \emph{inducing point methods} have managed to scale up GP tra
 For a test point $\bxtest$, KISS-GP expresses the predictive mean as $\bw_{\bxtest}^\top {\blue \ba'}$, where $\blue \ba'$ is a pre-computed vector dependent only on training data, and $\bw_\bxtest$ is a sparse interpolation vector.
 This formulation affords the ability to compute predictive means in \emph{constant time}, independent of $n$.
 
-\begin{figure}[t!]
-  \centering
-  \includegraphics[width=0.8\columnwidth]{figures/airline_comparison.pdf}
-  \caption{
-    Comparison of predictive variances on airline passenger extrapolation.
-    The variances predicted with LOVE{} are accurate within $10^{-4}$, yet can be computed orders of magnitude faster.
-    \label{fig:airline_results}
-  }
-\end{figure}
-
 However, these computational savings do not extend naturally to predictive uncertainties.
 With KISS-GP, computing the predictive covariance between two points requires $\bigo{n + m \log m}$ computations, where $m$ is the number of inducing points.
 While this asymptotic complexity is lower than standard GP inference and alternative scalable approaches, it becomes prohibitive when $n$ is large, or when making many repeated computations.

@@ -56,7 +56,7 @@ Empirically find that $J\leq100$ is sufficient for most matrices for $N \leq 20,
 
 
 \begin{table*}[t!]
-  \caption[Asymptotic complexities of predictive (co)variances with LOVE verses baseline methods.]{
+  \caption[Asymptotic complexities of predictive (co)variances with LOVE verses other methods.]{
     Asymptotic complexities of predictive (co)variances ($N$ training points, $M$ inducing points, $J$ Lanczos/CG iterations).
     \label{tab:running_times}
   }
@@ -94,7 +94,7 @@ Therefore, \cref{alg:love} can be applied out-of-the-box to any specialty GP mod
 In this section, we demonstrate that LOVE is an especially compelling algorithm for the scalable KISS-GP framework.
 With a few modifications to \cref{alg:love}, KISS-GP + LOVE can achieve \emph{constant-time covariance approximations} and \emph{linear time posterior samples}.
 
-\paragraph{Constant-time co-variances with KISS-GP + LOVE.}
+\subsection{Constant-Time (Co)-Variances with KISS-GP + LOVE}
 The KISS-GP approximation $\color{blue} \bW_\bX^\top \bK_{\bZ \bZ} \bW_\bX$ allows us to make additional pre-computations to further reduce test-time complexity.
 In particular,
 %
