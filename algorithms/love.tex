@@ -14,25 +14,25 @@
   \SetKwFunction{choleskyfactor}{cholesky\_factor}
   \SetKwFunction{triangularsolve}{trinagular\_solve}
   \caption[LanczOs Variance Estimates (LOVE).]{
-    LanczOs Variance Estimates (LOVE) for Exact GPs.
+    LanczOs Variance Estimates (LOVE).
     {\color{blue} Terms in blue} only depend on training data.
   }
   \label{alg:love}
-    \Input{$\bk_{\bxtest}$, $\bk_{\bxtestprime}$ -- covariance vectors for $\bxtest$, $\bxtestprime$}
+    \Input{$\bk_{\bX\bxtest}$, $\bk_{\bX\bxtestprime}$ -- covariance vectors for $\bxtest$, $\bxtestprime$}
     \NextInput{$k(\bxtest, \bxtestprime)$ -- prior covariance between $\bxtest$, $\bxtestprime$}
     \NextInput{{\color{blue}\mvmkxx{}} -- func. that performs MVMs with $\color{blue} \trainK$}
     \NextInput{J -- number of Lanczos iterations}
     \Output{Approximate predictive covariance $\covtest{\bxtest}{\bxtestprime}$.}
     \BlankLine
     \If{$\blue \bR$ has not previously been computed}{
-      $\color{blue} \bQ, \bT$ $\leftarrow$ \lanczos{ {\color{blue} \mvmkxx}, $\bk_\bxtest$ } \\
-      \qquad \tcp{$J$ iter. of Lanczos w/ matrix $\trainK$ and probe vec. $\bk_\bxtest$ }
+      $\color{blue} \bQ, \bT$ $\leftarrow$ \lanczos{ {\color{blue} \mvmkxx}, $\bk_{\bX\bxtest}$ } \\
+      \qquad \tcp{$J$ iter. of Lanczos w/ matrix $\trainK$ and probe vec. $\bk_{\bX\bxtest}$ }
       $\color{blue} \bL_{\bT}$ $\leftarrow$ \choleskyfactor{ $\color{blue} \bT$ } \\
       $\blue \bR$ $\leftarrow$ \triangularsolve{ $\color{blue} \bQ^\top, \bL_\bT$ }
     }
     \tcp{$\bR \in \reals^{J \times N}$, $J \ll N$.}
-    $\bu$ $\gets$ ${\color{blue} \bR} \bk_\bxtest$
-    $\bu'$ $\gets$ ${\color{blue} \bR} \bk_\bxtestprime$
+    $\bu$ $\gets$ ${\color{blue} \bR} \bk_{\bX\bxtest}$
+    $\bu'$ $\gets$ ${\color{blue} \bR} \bk_{\bX\bxtestprime}$
     \\
     \Return{ $k(\bxtest, \bxtestprime) - \bu^T \bu'$ } \\
 \end{algorithm2e}

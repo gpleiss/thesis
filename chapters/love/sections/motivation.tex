@@ -51,7 +51,7 @@ After factorization, all subsequent solves take $\bigo{N^2}$ time.
 However, this cubic dependence on $N$ and quadratic memory may be infeasible for $N \geq 10,\!000$.
 
 It is possible to obtain some computational savings when using inducing point methods.
-For example, if we replace $\bk_{X \! \bxtest}$ and $\blue \trainK$ with their corresponding KISS-GP approximations in \cref{eqn:predictive_covar_2}, then we have:
+For example, if we replace $\bk_{\bX \bxtest}$ and $\blue \trainK$ with their corresponding KISS-GP approximations in \cref{eqn:predictive_covar_2}, then we have:
 %
 \begin{align}
   \covtest{\bxtest}{\bxtestprime}
