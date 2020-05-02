@@ -4,16 +4,53 @@
 
 This thesis presents a comprehensive framework for Gaussian process learning, inference, and prediction.
 The algorithms proposed in \cref{chapter:bbmm,chapter:love,chapter:variational} are based around a single central design decision: reduce all expensive matrix operations to (ideally parallelized) matrix-vector multiplications (MVMs).
-\cref{chapter:bbmm} introduces the Black-Box Matrix~\texttimes~Matrix (BBMM) framework and describes how GP training terms are computed through MVMs with a modified batched-conjugate gradients algorithm (mBCG).
+\cref{chapter:bbmm} introduces the Black-Box Matrix~\texttimes~Matrix (BBMM) framework and computes GP training terms via a modified batched-conjugate gradients algorithm (mBCG).
+To enable fast predictions with Gaussian process models, \cref{chapter:bbmm} introduces the LanczOs Variance Estimates (LOVE) algorithm which computes an amortized cache of the predictive posterior via Lanczos iterations.
+Finally, \cref{chapter:variational} uses Cauchy Integral Quadrature (CIQ) to ``whiten'' or ``unwhiten'' vectors with respect to a Gaussian covariance via a multi-shift version of the MINRES algorithm (msMINRES).
+CIQ enables MVM-based training of variational approximations to GP models and also allows for efficient posterior sampling with exact Gaussian processes.
+
+Though the MVM theme reflects only a single design decision, it simultaneously addresses several disderata that improve Gaussian process usability and practicality.
+As demonstrated in \cref{chapter:bbmm}, MVM-based methods are able to effectively utilize GPU hardware and reduce specialty implementations to $\leq 50$ lines of code.
+This makes it easier for researchers to rapidly prototype and test novel models across a wide variety of datasets.
+MVM-based methods also reduce the asymptotic complexity of GPs, which in turn allows for in more powerful predictions and inferences.
+\cref{chapter:love,chapter:variational} show that high-fidelity variational approximations and large-scale sampling lead to better predictions and black-box optimization.
+Finally, MVM-based methods expands what is considered tractable for exact GP methods.
+\cref{chapter:largeexact} scales exact GPs to datasets two orders of magnitude larger than previous efforts, which opens up new possible domains for this class of models.
+
 
 
 \section{Beyond Matrix-Vector Multiplication}
 
-% optimization
+The MVM-based framework presented in this thesis makes large-scale GP models increasingly practical.
+Standard GP models with relatively simple kernels can be an effective model class for many large datasets (as demonstrated in \cref{sec:largeexact_results}).
+However, larger datasets also open up opportunities for more powerful classes of models, which in turn leads to many exciting and challenging research problems.
+These problems go beyond the scope of what is addressed by the MVM methods in this thesis.
 
-% hierarchical models
+High dimensional data domains can often be sufficiently complex to be modelled with simple Gaussian process kernels.
+In such scenarios it is common to use highly-parametric kernels \cite{wilson2013gaussian,wilson2016stochastic},
+or to use GPs as components of larger machine learning pipelines \cite{schulam2015framework,futoma2017learning} or hierarchical models \cite{wilson2012gaussian,salimbeni2017doubly,jankowiak2020deep}.
+These models are an attractive choice for large-scale modelling: combining the expressively and capacity of techniques like deep learning with the probabilistic capabilities afforded by Gaussian processes.
+Of course, the additional complexity of these models may pose learning and inference challenges.
+Advances in large-scale optimization have mostly targeted the piece-wise linear geometry of ReLU neural networks \gp{CITE} and may need to be adapted to the geometry of Gaussian processes.
+This is especially true for GP-based models that use alternative objective functions for learning \cite{jankowiak2020parametric} \gp{MORE citations}.
 
-% parameter efficient variational models
+Moreover, hierarchical models and pipelines are more computationally intensive than simpler models.
+Deep Gaussian processes for example stack multiple GPs on top of one another, and BBMM-style methods should be adapted to handle this sequential computation.
+Such models necessitate parametric approximations, as exact inference is intractable.
+Consequentially, increasing the fidelity of these models (e.g. stacking more layers, using more inducing points) increases the number of parameters, which may become an optimization or test-time bottleneck.
+It is worth noting that these problems are not unique to large-scale Gaussian processes---they are also issues of many classes of large-scale machine learning models.
+Addressing these challenges in the context of GPs however is a relatively new area of research, as these models have only recently been considered applicable in such domains.
+
+%
+\begin{itemize}
+  \item {\bf Hierarchical modelling.}
+
+  \item
+
+  \item
+\end{itemize}
+
+
 
 \section{Beyond Gaussian Processes}
 
