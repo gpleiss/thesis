@@ -11,14 +11,6 @@ Alternatively, $\btheta$ can be inferred via eliptic slice sampling \cite{murray
 \cref{eqn:log_lik} can be also used to choose an appropriate kernel function via Bayesian model selection \cite{rasmussen2006gaussian,duvenaud2013structure}.
 Regardless of the desired mechanism---optimization, sampling, or model selection---training a Gaussian process will require repeatedly computing the GP marginal log likelihood and its derivative (i.e. $\approx50-100$ times).
 
-
-%\gp{Incorporate}
-%\paragraph{Conjugate gradients, the Lanczos tridiagonalization algorithm,}
-%and their relatives are methods from numerical linear algebra for computing linear solves and solving eigenvalue problems \emph{without explicitly computing a matrix}.
-%These techniques have been around for decades, and are covered in popular books and papers \cite{saad2003iterative,golub2012matrix,demmel1997applied,parlett1980new,lanczos1950iteration,datta2010numerical,paige1970practical}.
-%These algorithms belong to a broad class of iterative methods known as \emph{Krylov subspace methods}, which access matrices only through matrix-vector multiplies (MVMs).
-%Historically, these methods have been applied to solving large numerical linear algebra problems, particularly those involving sparse matrices that afford fast MVMs.
-
 Most GP implementations compute the marginal log likelihood and its derivative using the Cholesky factor of the training kernel matrix $\bL \bL^\top = \trainK$.
 As described in \cref{chapter:introduction} this has numerous drawbacks.
 Besides its $\bigo{N^3}$ time complexity and $\bigo{N^2}$ space requirements, the Cholesky factorization is an inherently sequential algorithm that does not effectively utilize modern hardware like GPUs.
@@ -55,7 +47,7 @@ In addition, we discuss how BBMM is incorporated into the GPyTorch software pack
 We demonstrate how BBMM enables simple implementations of exact GPs, multi-output GPs, and specialty models like the SKI and SGPR approximations.
 
 \paragraph{Related work.}
-Recently, a number of papers have proposed alternatives to Cholesky-based training, instead relying on iterative numerical algorithms to compute \cref{eqn:log_lik,eqn:log_lik_deriv} \cite{cunningham2008fast,murray2009gaussian,saatcci2012scalable,wilson2014thesis,wilson2015kernel,cutajar2016preconditioning,dong2017scalable,gardner2018product}.
+Recently, a number of researchers have proposed alternatives to Cholesky-based training, instead relying on iterative numerical algorithms to compute \cref{eqn:log_lik,eqn:log_lik_deriv} \cite{cunningham2008fast,murray2009gaussian,saatcci2012scalable,wilson2014thesis,wilson2015kernel,cutajar2016preconditioning,dong2017scalable,gardner2018product}.
 These approaches rely on the conjugate gradients and Lanczos algorithms described in \cref{sec:mvms}, both of which rely on matrix-vector multiplication (MVMs) with the training kernel matrix.
 One key advantage is that MVM approaches can exploit algebraic structure for increased computational efficiencies.
 Notably, the structured kernel interpolation (SKI) method \cite{wilson2015kernel} uses structured kernel matrices with fast MVMs to achieve a remarkable asymptotic complexity.

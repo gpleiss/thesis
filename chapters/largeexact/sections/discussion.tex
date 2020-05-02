@@ -3,17 +3,17 @@
 
 Historically, for Gaussian processes, ``a large dataset is one that contains over a few thousand data points'' \citep{hensman2013gaussian} which have traditionally necessitated scalable approximations.
 Bigger datasets have traditionally necessitated
-scalable approximations. In this paper, we have extended
+scalable approximations. In this chapter, we have extended
 the applicability of exact GPs far beyond what has been
 thought possible --- to datasets with over a million training examples through MVM-based GP inference. Our
 approach uses easily parallelizable routines that fully exploit modern parallel hardware and distributed computing. In our comparisons, we find that exact GPs are more
-widely applicable than previously thought, performing significantly 
+widely applicable than previously thought, performing significantly
 better than approximate methods on large datasets, while requiring fewer design choices.
 
 \paragraph{Is CG still exact?}
 In the GP literature, \emph{exact} GP inference typically refers to using the Cholesky decomposition with exact kernels \citep{rasmussen2006gaussian}.
 A natural question to ask is whether we can consider our approach ``exact'' in light of the fact that CG perform solves only up to a pre-specified error tolerance.
-However, unlike the approximate methods presented in this paper, the difference between a CG-based model and a theoretical model with ``perfect'' solves can be precisely controlled by this error tolerance.
+However, unlike the approximate methods presented in this chapter, the difference between a CG-based model and a theoretical model with ``perfect'' solves can be precisely controlled by this error tolerance.
 We therefore consider CG exact in a sense that is commonly used in the context of mathematical optimization --- namely that it computes solutions up to arbitrary precision.
 In fact, CG-based methods can often be more precise than Cholesky based approaches in floating-point arithmetic due to fewer round-off errors \cite{gardner2018gpytorch}.
 

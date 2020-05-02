@@ -14,7 +14,7 @@ or stochastic variational optimization \citep{hensman2013gaussian,hensman2015sca
 However, due to the historical intractability of training exact GPs on large datasets, it
 has been an open question how approximate methods compare to an exact approach when much more data is available.
 
-In this paper, we develop a methodology to scale exact GP inference well beyond what has previously been achieved:
+In this chapter, we develop a methodology to scale exact GP inference well beyond what has previously been achieved:
 we train a Gaussian process \emph{on over a million data points}, performing predictions \emph{without approximations}.
 Such a result would be intractable with standard implementations which rely on the Cholesky decomposition.
 The scalability we demonstrate is made feasible by Blackbox Matrix$\times$Matrix multiplication (BBMM) training procedure of \citet{gardner2018gpytorch}, which uses conjugate gradients and related methods to reduce GP inference to iterations of matrix multiplication.

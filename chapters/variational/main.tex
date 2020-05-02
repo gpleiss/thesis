@@ -195,22 +195,3 @@ Taking even more inspiration from Gardner et al., 2018\footnote{
 %
 This is a low-rank approximation to $\bK_{\bZ\bZ}$.
 We can then use the Woodbury matrix identity to compute $( t_q^2 \bI - \bP \bP )^{-1}$ in $\bigo{ J^3 + J M^2 }$ time.
-
-
-%Krylov subspace methods give us a mechanism to construct such an algorithm.
-%More generally, given a real symmetric matrix\footnote{
-  %While Krylov methods are applicable to complex and non-symmetric square matrices as well,
-  %in this paper we restrict ourselves to the real symmetric case for simplicity.
-%} $\bA \in \reals^{n \times n}$, a vector $\bb \in \reals^n$, and a \emph{matrix function} $\phi(\cdot)$, Krylov methods allow us to approximate $\phi(\bA) \bb$ up to arbitrary precision without ever explicitly forming the matrix $\bA$.
-%All that's required is (potentially black-box) access to to a matrix-vector multiplication routine $\bA \bb$.
-
-%The $j^\text{th}$ \emph{Krylov subspace} of matrix $\bA \in \reals^{D}$ and vector $\bb$ is defined as
-%If $\bA$ is full rank and $\bb$ is not an eigenvector of $\bA$, then the $D^\text{th}$ Krylov subspace will span $\reals^{D}$.
-
-%Krylov methods are iterative and follow this basic pattern:
-%we begin with an initial approximation $\bv_0 \approx \phi(\bA) \bb$.
-%At each iteration we obtained a refined approximation $\bv_j \approx \phi(\bA) \bb$ which is ``closer'' to the solution according to some metric.
-%Each iteration requires performing a single matrix-vector multiplication $\bA \bc$ for some vector $\bc$.
-%After $n$ iterations (where $n$ is the size of the matrix) the solution $\bv_n$ will be exact.
-%However, solutions that are within e.g. $\epsilon \leq 10^{-6}$ can often be found in $j \ll n$ iterations (e.g. as low as $j=20$ iterations).
-%The iterations tend to converge exponentially, though the exact rate of convergence depends on the conditioning of $\bA$.

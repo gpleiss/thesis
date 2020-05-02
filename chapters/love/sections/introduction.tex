@@ -22,7 +22,7 @@ Additionally, drawing samples from the predictive distributions -- a necessary o
 Existing fast approximations for these operations \cite{papandreou2011efficient,wilson2015thoughts,wang2017max} typically incur a significant amount of error.
 Matching the reduced complexity of predictive mean inference without sacrificing accuracy has remained an open problem.
 
-In this paper, we provide a solution based on the tridiagonalization algorithm of \citet{lanczos1950iteration}.
+In this chapter, we provide a solution based on the tridiagonalization algorithm of \citet{lanczos1950iteration}.
 Our method takes inspiration from KISS-GP's mean computations: we express the predictive covariance between $\bx^*_i$ and $\bx^{*}_j$ as
 $\bw_{\bxtest_i}^\top \blue{\bC} \: \bw_{\bxtest_j}$,
 where $\blue C$ is an $M \times M$ matrix dependent only on training data.
