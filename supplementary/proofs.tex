@@ -1,14 +1,14 @@
 %!TEX root=../main.tex
 \chapter{Detailed Convergence Analysis of Preconditioned mBCG}
 
-\section{Proof of Theorems in \cref{sec:piv_chol_precond}}
+\section{Proof of Theorems in Section~\ref{sec:piv_chol_precond}}
 \label{app:proofs}
 Here we include theorems and proofs about the partial pivoted Cholesky preconditioner applied to mBCG.
 All theorems are restated from \cref{sec:piv_chol_precond}.
 
 
-\subsection{Proof of \cref{thm:condition_number}.}
-\newtheorem*{thm:condition_number}{\cref{thm:condition_number} (Restated)}
+\subsection{Proof of Lemma~\ref{thm:condition_number}}
+\newtheorem*{thm:condition_number}{Lemma~\ref{thm:condition_number} (Restated)}
 \begin{thm:condition_number}
   Let $\bar\bL_{R}$ be the rank-$R$ pivoted Cholesky factor of kernel matrix $\bK_{\bX\bX} \in \reals^{N \times N}$.
   If the first $R$ eigenvalues $\lambda_1$, $\ldots$, $\lambda_R$ of $\bK_{\bX\bX}$ satisfy
@@ -105,7 +105,7 @@ All theorems are restated from \cref{sec:piv_chol_precond}.
 
 
 
-\subsection{Proof of \cref{thm:precond_mbcg_solves}}
+\subsection{Proof of Theorem~\ref{thm:precond_mbcg_solves}}
 \newtheorem*{thm:precond_mbcg_solves}{\cref{thm:precond_mbcg_solves} (Restated)}
 \begin{thm:precond_mbcg_solves}
   Let $\bK_{\bX\bX} \in \reals^{N \times N}$ be a $N \times N$ kernel that satisfies the eigenvalue condition of \cref{eqn:pcp_condition},
@@ -145,7 +145,7 @@ Since \cref{eqn:pcp_condition} holds, we can simply plug \cref{thm:condition_num
 
 
 
-\subsection{Proof of \cref{thm:precond_mbcg_logdet}}
+\subsection{Proof of Theorem~\ref{thm:precond_mbcg_logdet}}
 \newtheorem*{thm:precond_mbcg_logdet}{\cref{thm:precond_mbcg_logdet} (Restated)}
 \begin{thm:precond_mbcg_logdet}
   Assume $\bK_{\bX\bX} \in \reals^{N \times N}$ satisfies the eigenvalue condition of \cref{eqn:pcp_condition}.
@@ -172,7 +172,7 @@ Since \cref{eqn:pcp_condition} holds, we can simply plug \cref{thm:condition_num
 
 
 
-\section{Applying \cref{thm:precond_mbcg_solves,thm:precond_mbcg_logdet} to Univariate RBF Kernels}
+\section{Applying Theorems~\ref{thm:precond_mbcg_solves} and \ref{thm:precond_mbcg_logdet} to Univariate RBF Kernels}
 \label{app:univariate_rbf}
 
 Our convergence theory depends on the assumption in \cref{thm:condition_number} that the eigenvalues of $\bK_{\bX\bX}$ decay exponentially.

@@ -173,6 +173,8 @@ Based on the work of \citet{harbrecht2012low}, one can prove the following lemma
 	where $\trainP = \left( \bar\bL_R \bar\bL_R^\top + \sigma^2_\text{obs} \bI \right)$ and $\trainK = \left( \bK_{\bX\bX} + \sigma^2_\text{obs} \bI \right)$.
 \end{lemma}
 %
+\noindent
+(See \cref{app:proofs} for proofs.)
 It so happens that the exponentially-decaying eigenvalue assumption actually holds for certain classes of kernels.
 For example, the eigenvalues of univariate RBF kernels are guaranteed to decay \emph{super-exponentially} (see \cref{app:univariate_rbf}).
 In our experiments we observe significantly improved conditioning for other kernels as well (\cref{sec:bbmm_results}).
@@ -210,6 +212,8 @@ Using \cref{thm:condition_number}, we can prove the following statements about t
   \end{equation*}
 \end{theorem}
 %
+\noindent
+(See \cref{app:proofs} for proofs.)
 \cref{thm:precond_mbcg_solves} implies that the mBCG solves---used to compute both $\trainK^{-1} \by$ and $\tr{ \trainK^{-1} (\partial \trainK / \partial \btheta)}$---will converge \emph{exponentially} quicker as the rank of the pivoted Cholesky decomposition increases.
 \cref{thm:precond_mbcg_logdet} implies that the number of iterations needed to accurately estimate $\log \vert \trainP^{-1}\trainK \vert$ also decreases quickly as $R$ increases.
 Furthermore, in the limit as $R \rightarrow N$ we have that $\log \vert \trainK \vert = \log \vert \trainP \vert$.

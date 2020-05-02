@@ -2,8 +2,12 @@
 \label{chapter:discussion}
 
 
+This thesis presents a comprehensive framework for Gaussian process learning, inference, and prediction.
+The algorithms proposed in \cref{chapter:bbmm,chapter:love,chapter:variational} are based around a single central design decision: reduce all expensive matrix operations to (ideally parallelized) matrix-vector multiplications (MVMs).
+\cref{chapter:bbmm} introduces the black-box matrix$\times$matrix (BBMM) framework and describes how GP training terms are computed through MVMs with a modified batched-conjugate gradients algorithm (mBCG).
 
-\subsection{Beyond Matrix-Vector Multiplication}
+
+\section{Beyond Matrix-Vector Multiplication}
 
 % optimization
 
@@ -11,6 +15,6 @@
 
 % parameter efficient variational models
 
-\subsection{Beyond Gaussian Processes}
+\section{Beyond Gaussian Processes}
 
 % optimal transport
