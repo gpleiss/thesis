@@ -26,26 +26,11 @@ This formulation affords the ability to compute predictive means in \emph{consta
 \end{figure}
 
 However, these computational savings do not extend naturally to predictive uncertainties.
-With KISS-GP, computing the predictive covariance between two points requires $\bigo{n + m \log m}$ computations, where $m$ is the number of inducing points (see \cref{tab:running_times}).
+With KISS-GP, computing the predictive covariance between two points requires $\bigo{n + m \log m}$ computations, where $m$ is the number of inducing points.
 While this asymptotic complexity is lower than standard GP inference and alternative scalable approaches, it becomes prohibitive when $n$ is large, or when making many repeated computations.
 Additionally, drawing samples from the predictive distributions -- a necessary operation in many applications -- is similarly expensive.
 Existing fast approximations for these operations \cite{papandreou2011efficient,wilson2015thoughts,wang2017max} typically incur a significant amount of error.
 Matching the reduced complexity of predictive mean inference without sacrificing accuracy has remained an open problem.
-
-\begin{table*}[t!]
-  \caption{
-    Asymptotic complexities of predictive (co)variances ($N$ training points, $M$ inducing points, $J$ Lanczos/CG iterations)
-    and sampling from the predictive distribution ($S$ samples, $T$ test points).
-    \label{tab:running_times}
-  }
-  \vspace{0.5ex}
-  \centering
-  \resizebox{\textwidth}{!}{%
-    \input{tables/love_complexity}
-  }
-  \vspace{-2ex}
-\end{table*}
-
 
 In this paper, we provide a solution based on the tridiagonalization algorithm of \citet{lanczos1950iteration}.
 Our method takes inspiration from KISS-GP's mean computations: we express the predictive covariance between $\bx^*_i$ and $\bx^{*}_j$ as

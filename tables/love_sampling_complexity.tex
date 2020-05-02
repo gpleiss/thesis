@@ -1,0 +1,26 @@
+\begin{tabular}{ |c||c|c||c| }
+  \hline
+  \multirow{2}*{\bf Method} & \multicolumn{2}{c||}{\bf Pre-computation}  & {\bf Drawing $S$ samples} \\
+                            & \multicolumn{1}{c}{(time)} & (storage) & (time) \\
+  \hhline{|=#=|=|=|}
+  Standard GP
+  & --
+  & --
+  & $\bigo{T N^2 + T^2 (N + S) + T^3}$
+  \\
+  SGPR
+  & --
+  & --
+  & $\bigo{T M^2 + T^2 (M + S) + T^3}$
+  \\
+  KISS-GP
+  & --
+  & --
+  & $\bigo{J T (N  + M \log M) + T^2 (M + S) + T^3}$
+  \\ \hline
+  {\color{\ourmethodcolor} KISS-GP (w/ LOVE{})}
+  & {\color{\ourmethodcolor}$\bigo{J (N + M \log M)}$}
+  & {\color{\ourmethodcolor}$\bigo{JM}$}
+  & {\color{\ourmethodcolor} $\bigo{J S (T + M)}$}
+  \\ \hline
+\end{tabular}

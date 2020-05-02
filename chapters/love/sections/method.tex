@@ -55,6 +55,35 @@ Empirically find that $J\leq100$ is sufficient for most matrices for $N \leq 20,
 
 
 
+\begin{table*}[t!]
+  \caption[Asymptotic complexities of predictive (co)variances with LOVE verses baseline methods.]{
+    Asymptotic complexities of predictive (co)variances ($N$ training points, $M$ inducing points, $J$ Lanczos/CG iterations).
+    \label{tab:running_times}
+  }
+  \vspace{0.5ex}
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \input{tables/love_complexity}
+  }
+  \vspace{-2ex}
+\end{table*}
+
+\begin{table*}[t!]
+  \caption[Asymptotic complexities of posterior sampling with LOVE + KISS-GP verses other methods.]{
+    Asymptotic complexities of posterior sampling
+		($N$ training points, $M$ inducing points, $J$ Lanczos/CG iterations, $S$ samples, $T$ test points).
+    \label{tab:running_times_sampling}
+  }
+  \vspace{0.5ex}
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \input{tables/love_sampling_complexity}
+  }
+  \vspace{-2ex}
+\end{table*}
+
+
+
 \section{LOVE with KISS-GP}
 \label{sec:love_method_kissgp}
 
@@ -95,6 +124,9 @@ Therefore, the modified KISS-GP + LOVE precomputation is \emph{near-linear time}
 It is summarized in \cref{alg:love_kissgp} and \cref{tab:running_times}.
 
 In addition to these fast predictive (co)-variances, LOVE + KISS-GP offers two additional speedups that are specific to KISS-GP models.
+
+
+
 
 \subsection{Predictive Distribution Sampling with LOVE{} + KISS-GP}
 \label{sec:sampling_method}
@@ -177,7 +209,7 @@ ${\blue S} \in \reals^{M \times J}$ can be pre-computed and cached since it does
 In total, this pre-computation takes $\bigo{J M \log M + M J^2}$ time in addition to what is required for fast variances.
 To sample from the predictive distribution, we need to evaluate \cref{eqn:sample}, which involves multiplying $\bW^\top_{\bXtest} {\blue \bS} \bepsilon$.
 Multiplying $\bepsilon$ by $\bS$ requires $\bigo{MJ}$ time, and finally multiplying by $\bW^{\top}_{\bXtest}$ takes $\bigo{TJ}$ time.
-Therefore, drawing $S$ samples (corresponding to $S$ different values of $\bepsilon$) takes $\bigo{SJ(T + M)}$ time total during the testing phase (see \cref{tab:running_times})---a \emph{linear} dependence on $T$.
+Therefore, drawing $S$ samples (corresponding to $S$ different values of $\bepsilon$) takes $\bigo{SJ(T + M)}$ time total during the testing phase (see \cref{tab:running_times_sampling})---a \emph{linear} dependence on $T$.
 
 
 
