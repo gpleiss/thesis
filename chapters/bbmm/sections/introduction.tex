@@ -20,7 +20,7 @@ This entanglement of model specification and inference procedure impedes rapid p
 In this chapter, we introduce a highly efficient framework for Gaussian process training.
 Whereas previous approaches require the user to provide routines for computing the GP marginal log likelihood for a sufficiently complex model,
 our framework only requires access to a blackbox routine that performs matrix-matrix multiplications with the kernel matrix and its derivative.
-Accordingly, we refer to our method as BlackBox Matrix$\times$Matrix (BBMM) Inference.
+Accordingly, we refer to our method as Black-Box Matrix~\texttimes~Matrix (BBMM) Inference.
 
 In contrast to the Cholesky decomposition, matrix multiplication fully utilizes GPU acceleration.
 We will demonstrate that this matrix approach also significantly eases implementation for a wide class of existing GP models from the literature.

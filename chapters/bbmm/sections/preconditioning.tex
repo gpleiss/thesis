@@ -1,6 +1,6 @@
 \label{sec:preconditioning}
 
-While each iteration of mBCG performs large parallel matrix$\times$matrix operations that utilize hardware efficiently, the iterations themselves are sequential.
+While each iteration of mBCG performs large parallel matrix~\texttimes~matrix operations that utilize hardware efficiently, the iterations themselves are sequential.
 A natural goal for better utilizing hardware is to trade off fewer sequential steps for slightly more effort per step.
 We accomplish this goal using \emph{preconditioning} \citep[e.g.][]{demmel1997applied,saad2003iterative,van2003iterative,golub2012matrix}, which introduces a matrix $\bP$ to solve the related linear system
 \begin{equation}

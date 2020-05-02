@@ -17,7 +17,7 @@ has been an open question how approximate methods compare to an exact approach w
 In this chapter, we develop a methodology to scale exact GP inference well beyond what has previously been achieved:
 we train a Gaussian process \emph{on over a million data points}, performing predictions \emph{without approximations}.
 Such a result would be intractable with standard implementations which rely on the Cholesky decomposition.
-The scalability we demonstrate is made feasible by Blackbox Matrix$\times$Matrix multiplication (BBMM) training procedure of \citet{gardner2018gpytorch}, which uses conjugate gradients and related methods to reduce GP inference to iterations of matrix multiplication.
+The scalability we demonstrate is made feasible by Black-Box Matrix~\texttimes~Matrix multiplication (BBMM) training procedure of \citet{gardner2018gpytorch}, which uses conjugate gradients and related methods to reduce GP inference to iterations of matrix multiplication.
 \citet{gardner2018gpytorch} show that this procedure (1) achieves exponential convergence using a pivoted Cholesky preconditioner under certain conditions, (2) requires relatively few number of conjugate gradient steps to convergence for typical datasets, and (3) can more accurately solve linear systems than Cholesky-based approaches. Using BBMM, our approach is generally applicable without constraints to input grids or specific kernel families.
 
 By partitioning and distributing kernel matrix multiplications across GPUs, we

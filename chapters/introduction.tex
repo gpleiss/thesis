@@ -174,11 +174,6 @@ The following chapters introduce the components of our matrix-multiplication-bas
     BBMM uses a modified version of preconditioned conjugate gradients (mPCG) that reduces GP training to a series of \emph{matrix-multiplications}.
     We demonstrate that this approach effectively uses GPU acceleration and is up to $30\times$ over existing inference methods.
     Additionally, we show that implementing specialty GP models with BBMM only requires writing an efficient kernel matrix-multiplication routine.
-    %Whereas previous inference approaches require the user to provide routines for computing the full GP marginal log likelihood for a sufficiently complex model,
-    %our framework only requires access to a blackbox routine that performs matrix-matrix multiplications with the kernel matrix and its derivative.
-    %Accordingly, we refer to our method as BlackBox Matrix$\times$Matrix (BBMM) Inference.
-    %In contrast to the Cholesky decomposition, which is at the heart of many existing inference engines, matrix-matrix multiplications fully utilize GPU acceleration.
-    %We will demonstrate that this matrix-matrix approach also significantly eases implementation for a wide class of existing GP models from the literature.
 
   \item {\bf \cref{chapter:love}} extends BBMM to making predictions with Gaussian processes.
     Computing GP predictive distributions requires expensive computations involving the training covariance matrix.

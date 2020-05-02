@@ -6,7 +6,7 @@
 The goal of this chapter is to replace existing training strategies with a unified framework that utilizes modern hardware efficiently.
 We additionally desire that complex GP models can be used in a blackbox manner without additional training rules.
 To this end, our method reduces the bulk of GP inference to one of the most efficiently-parallelized computations: \emph{matrix-matrix multiplication}.
-We call our method BlackBox Matrix$\times$Matrix inference (BBMM) because it only requires a user to specify a matrix multiply routine for the kernel $\trainK ( \cdot )$ and its derivative $\frac{\partial \trainK}{\partial \btheta} ( \cdot )$.
+We call our method Black-Box Matrix~\texttimes~Matrix inference (BBMM) because it only requires a user to specify a matrix multiply routine for the kernel $\trainK ( \cdot )$ and its derivative $\frac{\partial \trainK}{\partial \btheta} ( \cdot )$.
 
 \paragraph{Required operations.}
 To train a GP we must compute the marginal log likelihood~(\cref{eqn:log_lik}) and its derivative~(\cref{eqn:log_lik_deriv}).
