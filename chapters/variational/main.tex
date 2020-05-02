@@ -67,10 +67,10 @@ Under the whitened coordinate system, the predictive mean and variance of \cref{
 %
 \begin{align}
   \ameantest{\bxtest} &= \bk_{\bZ\bxtest}^\top \bR^{-\top} \bm'
-  \label{eqn:approx_pred_mean} \\
+  \label{eqn:approx_pred_mean_white} \\
   \avartest{\bxtest} &= k(\bxtest, \bxtest) -
     \bk_{\bZ\bxtest}^\top \bR^{-\top} \left( \bI - \bS' \right) \bR^{-1} \bk_{\bZ\bxtest}
-  \label{eqn:approx_pred_covar}
+  \label{eqn:approx_pred_covar_white}
 \end{align}
 %
 In practice, it is common to set $\bR$ to the Cholesky factor of $\bK_{\bZ\bZ}$.

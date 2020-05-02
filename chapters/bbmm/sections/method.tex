@@ -2,7 +2,7 @@
 %\newpage
 \section{Gaussian Process Training Through Matrix Multiplication}
 
-\label{sec:method_bbmm}
+\label{sec:bbmm_method}
 The goal of our paper is to replace existing training strategies with a unified framework that utilizes modern hardware efficiently.
 We additionally desire that complex GP models can be used in a blackbox manner without additional training rules.
 To this end, our method reduces the bulk of GP inference to one of the most efficiently-parallelized computations: \emph{matrix-matrix multiplication}.
@@ -111,20 +111,6 @@ $\trainK^{-1} \by$, $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \btheta}
     where $\be^{(1)} = [1, 0, \:\:, \ldots, \:\: 0]$.
     (The reduction in the second line comes from the orthogonality of $\bQ^{(i)}$ and $\bz^{(i)} / \Vert \bz^{(i)} \Vert_2$ is the first column of $\bQ^{(i)}$.)
     Therefore, we can estimate the log determinant of $\trainK$ simply by computing logarithms of the tridiagonal matrices returned by mBCG in \cref{eqn:mod_cg_call}.
-    %
-    %\begin{equation}
-      %\log \vert \trainK \vert = \tr{\log \bT}  = \Ev{\bz^{(i)^\top} (\log \bT)\bz^{(i)}} \approx \sum_{i=1}^{t}\bz^{(i)^\top} \left( \log \bT \right) \bz^{(i)}\label{eqn:logdetKQ}
-    %\end{equation}
-    %where $\log \bT$ here denotes the matrix logarithm, and the approximation comes from the same stochastic trace estimation technique used for \cref{eqn:trace_deriv_estimate}.
-      %One approach to obtain a decomposition $\trainK=\bQ\bT\bQ^{\top}$ is to use the \emph{Lanczos tridiagonalization algorithm}.
-      %This algorithm takes the matrix $\trainK$ and a probe vector $\bz$ and outputs the decomposition $\bQ\bT\bQ^{\top}$ (where $\bz$ is the first column of $\bQ$).
-      %However, rather than running the full algorithm, we can instead run $p$ iterations of the algorithm $t$ times, each with a vector $\bz^{(1)},...,\bz^{(T)}$ to obtain $T$ decompositions  $\tilde{\bQ}_{1}\tilde{\bT}_{1}\tilde{\bQ}_{1}^{\top},...,\tilde{\bQ}_{t}\tilde{\bT}_{t}\tilde{\bQ}_{t}^{\top}$ with $\tilde{\bQ}_{i} \in \reals^{n \times p}$ and $\tilde{\bT}_{i} \in \reals^{p \times p}$. We can use these partial decompositions to estimate~\eqref{eqn:logdetKQ}:
-    %\begin{equation}
-      %\Ev{\bz^{(i)\top} (\log \bT)\bz^{(i)}} = \Ev{\bz^{(i)\top}  \tilde{\bQ}_{i}(\log \tilde{\bT}_{i}) \tilde{\bQ}_{i}^{\top}\bz^{(i}} \approx \frac{1}{t} \sum_{i=1}^{t} \bz^{(i)\top} \tilde{\bQ}_{i}(\log \tilde{\bT}_{i})\tilde{\bQ}_{i}^{\top}\bz_{i} = \frac{1}{t} \sum_{i=1}^{t}e_{1}^{\top}(\log \tilde{\bT}_{i})e_{1},
-      %\label{eqn:slq}
-    %\end{equation}
-    %where $e_{1}$ is the first row of the identity matrix.
-    %Running Lanczos with a starting vector $\bz_{i}$ ensures that all columns of $\tilde{\bQ}_{i}$ are orthogonal to $\bz_{i}$ except the first, so $\tilde{\bQ}_{i}\bz_{i} = e_{1}$ \cite{dong2017scalable,ubaru2017fast,golub2009matrices}.
 \end{enumerate}
 %
 We note that our derivative and log determinant estimates are also proposed by \citet{cutajar2016preconditioning} and \citet{dong2017scalable}, respectively.
@@ -212,12 +198,6 @@ In summary, mBCG is therefore able to perform all solve operations in batch, whi
 
 To compute the Lanczos tridiagonal matrices  that correspond to inputs $\bz^{(1)}, \ldots, \bz^{(T)}$, mBCG adapts a technique from \citet{saad2003iterative}.
 From \cref{obs:lanczos_cg}, the diagonal and subdiagonal entries of $\bT^{(1)}, \ldots, \bT^{(T)}$ are simple deterministic transforms of the $\balpha_j$ and $\bbeta_j$ coefficients from mBCG.
-%This approach allows us to compute a log determinant estimate identical to \eqref{eqn:slq} \emph{without running the Lanczos algorithm}.
-%In particular, we will store the $\alpha_j$ and $\beta_j$ coefficients from \cref{alg:std_pcg}.
-%\cref{obs:lanczos_cg}.
-%(See \cite{saad2003iterative}, Section 6.7.3.)
-%In other words, we can recover the Lanczos tridiagonal matrix $\tilde T$ simply by running CG.
-%Our mBCG algorithm simply exploits this fact.
 The final three lines in {\color{\colornew} \colornew} in \cref{alg:mod_pcg} use the $\balpha_j$ and $\bbeta_j$ coefficients to iteratively compute the Lanczos matrices from \cref{obs:lanczos_cg}.
 Notably, these matrices can be formed with $\bigo{T}$ extra computation, and we are able to avoid running the Lanczos algorithm.
 This is an advantage over existing MVM-based training methods, as mBCG avoids the numerical instabilities associated with Lanczos (see \cref{sec:lanczos}).
@@ -240,7 +220,7 @@ where $\mmm{\trainK}$ is the time to multiply $\trainK$ by a $N \times (T + 1)$ 
 This multiplication takes $\bigo{N^2 T}$ time with a standard matrix.
 It is worth noting that this is a lower asymptotic complexity that standard Cholesky-based training, which is $\bigo{N^3}$.
 Therefore, \emph{BBMM offers a computational speedup for exact GPs}.
-As we will show in \cref{sec:advantages}, this time complexity can be further reduced with structured data or sparse GP approximations.
+As we will show in \cref{sec:programmability}, this time complexity can be further reduced with structured data or sparse GP approximations.
 
 %We first briefly analyze the running time of mBCG (\cref{alg:mod_pcg}) itself.
 %The algorithm performs matrix multiplies with $\trainK$ once before the loop and once during every iteration of the loop.

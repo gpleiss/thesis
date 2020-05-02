@@ -191,7 +191,7 @@ This can be accomplished through {\bf preconditioning}, which introduces a matri
 instead of $\bA^{-1} \bb$.
 Both systems have the same solution $\bc$, but the preconditioned system's convergence depends on the conditioning of $\bP^{-1} \bA$ rather than that of $\bA$.
 The algorithm for \emph{preconditioned conjugate gradients} (PCG) is essentially the same as vanilla CG, with the additional step of applying $\bP^{-1}$ to the MVMs (i.e. $\bP^{-1} \bA \bd_{j-1}$) and residuals (i.e. $\bP^{-1} \br_j$).
-See \autoref{alg:std_pcg} for details.
+See \cref{alg:std_pcg} for details.
 
 \input algorithms/pcg
 
@@ -415,7 +415,7 @@ However, one advantage of Lanczos is that the $\bQ_J$ and $\bT_J$ matrices can b
 %
 \begin{equation}
   \bA^{-1} \bb' \approx \left( \bQ_J \bT_J^{-1} \bQ_J^\top \right) \bb',
-  \label{eq:lanczos_solve}
+  \label{eqn:lanczos_solve}
 \end{equation}
 %
 where $\bQ_J$ and $\bT_J$ come from a previous solve $\bA^{-1} \bb$.
@@ -424,11 +424,11 @@ We will use this fact in \cref{chapter:love}.
 \paragraph{Deriving Lanczos from CG.}
 Additionally, one can recover part of the Lanczos tridiagonalization from conjugate gradients.
 \citet{saad2003iterative} and others show that it is possible to recover the $\bT_J$ tridigonal Lanczos matrix by \emph{reusing coefficients} generated in CG iterations.
-In particular, we will store the $\alpha_j$ and $\beta_j$ coefficients from \autoref{alg:std_pcg}.
+In particular, we will store the $\alpha_j$ and $\beta_j$ coefficients from \cref{alg:std_pcg}.
 %
 \begin{observation}[Recovering Lanczos tridiagonal matrices from PCG \cite{saad2003iterative}]
   Assume we use $J$ iterations of standard preconditioned conjugate gradients to solve $\bA^{-1} \bb$ with preconditioner $\bP$.
-  Let $\alpha_1, \ldots, \alpha_p$ and $\beta_1, \ldots, \beta_p$ be the scalar coefficients from each iteration (defined in \autoref{alg:std_pcg}).
+  Let $\alpha_1, \ldots, \alpha_p$ and $\beta_1, \ldots, \beta_p$ be the scalar coefficients from each iteration (defined in \cref{alg:std_pcg}).
   The matrix
   %
   \begin{equation*}

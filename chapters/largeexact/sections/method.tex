@@ -1,6 +1,6 @@
 %!TEX root=../main.tex
 \section{Method}
-\label{sec:method}
+\label{sec:largeexact_method}
 To perform exact Gaussian process inference on large datasets, we must overcome
 the time and space requirements of solving linear systems.
 Most GP implementations use the Cholesky decomposition to
@@ -111,24 +111,21 @@ Each partitioned matrix multiplication only has
 to supply each device with a new right-hand-side vector $\bv$. Finally, if $w$ devices are used, the output from each
 device will be a vector of length $n / pw$. Thus only $\bigo{n}$ data are copied to or from the devices.
 In contrast, distributing the Cholesky decomposition across multiple devices
-would require $\bigo{n^2}$ communication \citep{gustavson2006three} \citep{nguyen2019exact}.
+would require $\bigo{n^2}$ communication \citep{nguyen2019exact}.
 
 Distributed computations have been utilized for approximate GP inference through
 mixture-of-experts GP models \citep{deisenroth2015distributed}. Concurrent with the Cholesky-based approach by \citet{nguyen2019exact},
 our method is the first to parallelize \emph{exact} Gaussian process inference through distributed computing.
 
 \paragraph{Predictions.} At inference time, we must compute the predictive mean and variance
-given in \eqref{eq:pred_mean} and \eqref{eq:pred_var}. Although the predictive mean contains a linear solve $\widehat \bK_{\bX \! \bX}^{-1}
+given in \cref{eqn:predictive_mean} and \cref{eqn:predictive_var}. Although the predictive mean contains a linear solve $\widehat \bK_{\bX \! \bX}^{-1}
 \by$, this solve depends only on the training data. The result of this solve can
 be stored in a linear vector $\mathbf{a}$ and used for subsequent
 predictions. Therefore, computing the predictive mean requires computing
 $\widehat \bK_{\bx^{*} \! \bX} \mathbf{a}$. Because this equation involves no linear solves, it can be computed efficiently on a single GPU.
 
-Similarly, a training data dependent cache can be computed for the predictive variance using the method of \citet{pleiss2018constant} with a satisfactorily tight convergence tolerance.
-On exact GPs, this approach affords $\bigo{n}$ predictive variance computations,\footnote{
-  We do not achieve constant-time predictions as described in \cite{pleiss2018constant}.
-  Reducing the $\bigo{n}$ prediction time to $\bigo{1}$ requires using structure kernel interpolation \cite{wilson2015kernel} to approximate the kernel matrix.
-} removing the need to perform a linear solve at test time.
+Similarly, a training data dependent cache can be computed for the predictive variance using LOVE (\cref{chapter:love}) with a satisfactorily tight convergence tolerance.
+On exact GPs, this approach affords $\bigo{n}$ predictive variance computations, removing the need to perform a linear solve at test time.
 In practice, we observe that both the predictive mean and variance can be computed in less than a second on a single GPU, even if the full model required days to train on multiple GPUs.
 Because predictions are fast after these precomputations, we can afford to use
 more stringent criteria for CG convergence for these one-time precomputations.
@@ -148,4 +145,5 @@ case we found that preconditioners of up to size $k=100$ provide a noticeable im
 \paragraph{PCG Convergence Criteria.}
 Importantly, Conjugate gradients is \emph{not} an approximate method for performing linear solves. Rather, it is a method that consumes time to perform solves to a specified tolerance. If this tolerance is low, the solve is exact. Thus, it is analogous to using gradient descent to solve a convex optimization problem (and is in fact largely what is happening). This gives us the ability to investigate how the performance of exact GPs change with different degrees of convergence.
 
-At test time, we find that an accurate solve $\widehat \bK_{\bX \! \bX}^{-1} \by$ (with tolerance $\epsilon \leq 0.01$) is critical for good predictive performance; we therefore find that GP predictions require exact solves. For hyperparameter training, however, we find that, interestingly, less strict convergence criteria suffice, and even a looser convergence criterion of up to $\epsilon = 1$ has little impact on final model performance. Given that predictions using our approach are highly efficient (see \autoref{tab:no_ard_timings}), it may be interesting to investigate alternative approximate methods for finding good hyperparameters, and then using the techniques in this paper for exact inference and predicitons.
+At test time, we find that an accurate solve $\widehat \bK_{\bX \! \bX}^{-1} \by$ (with tolerance $\epsilon \leq 0.01$) is critical for good predictive performance; we therefore find that GP predictions require exact solves. For hyperparameter training, however, we find that, interestingly, less strict convergence criteria suffice, and even a looser convergence criterion of up to $\epsilon = 1$ has little impact on final model performance.
+Given that predictions using our approach are highly efficient (see \cref{tab:large_exact_gp_timings}), it may be interesting to investigate alternative approximate methods for finding good hyperparameters, and then using the techniques in this paper for exact inference and predicitons.

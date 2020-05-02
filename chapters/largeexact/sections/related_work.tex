@@ -2,7 +2,7 @@
 \section{Related Work}
 
 \paragraph{MVM-based GP inference.}
-Conjugate gradients and related MVM-based algorithms \cite{gibbs1997efficient,ubaru2017fast,dong2017scalable} have been used in certain settings throughout the GP literature.
+Conjugate gradients and related MVM-based algorithms \cite{ubaru2017fast,dong2017scalable} have been used in certain settings throughout the GP literature.
 However, these methods have typically been used when the kernel matrix is structured and affords fast matrix-vector multiplications.
 \citet{cunningham2008fast} note that CG reduces asymptotic complexity when the data lie on a regularly-spaced grid because the kernel matrix is structured and affords $\bigo{n \log n}$ MVMs.
 This idea was extended to multi-dimensional grids by \citet{saatcci2012scalable}.
@@ -23,5 +23,6 @@ Training and predictions with this approximation take $\bigo{n m^2}$ time and $\
 Here we highlight some notable variants of the basic approach, though it is by no means an exhaustive list -- see \cite{liu2018gaussian} for a more thorough review.
 \emph{Sparse Gaussian process regression} (SGPR) \cite{titsias2009variational} selects the inducing points $\bZ$ through a regularized objective.
 \emph{Structured kernel interpolation} (SKI) \cite{wilson2015kernel} and its variants \cite{gardner2018product} place the inducing points on a grid, in combination with sparse interpolation,
-for $\mathcal{O}(n + g(m))$ computations and memory, where $g(m) \approx m$. \emph{Stochastic variational Gaussian processes} (SVGP) \cite{hensman2013gaussian} introduce a set of
-variational parameters that can be optimized using minibatch training. Recent work has investigated how to scale up the number of inducing points using tensor decompositions \cite{evans2018scalable,izmailov2018scalable}.
+for $\mathcal{O}(n + g(m))$ computations and memory, where $g(m) \approx m$.
+\emph{Stochastic variational Gaussian processes} (SVGP) \cite{hensman2013gaussian} introduce a set of variational parameters that can be optimized using minibatch training.
+Recent work has investigated how to scale up the number of inducing points using tensor decompositions \cite{evans2018scalable,izmailov2018scalable}.

@@ -61,7 +61,7 @@ For example, if we replace $\bk_{\bX \bxtest}$ and $\blue \trainK$ with their co
   \label{eqn:pred_covar_approx}
 \end{align}
 %
-$\blue \bC$, the braced portion of \eqref{eqn:pred_covar_approx}, does not depend on the test points $\bxtest_{i}$, $\bxtest_{j}$ and therefore can be pre-computed during training.
+$\blue \bC$, the braced portion of \cref{eqn:pred_covar_approx}, does not depend on the test points $\bxtest_{i}$, $\bxtest_{j}$ and therefore can be pre-computed during training.
 The primary cost of this pre-computation is the $M$ solves with $\blue (\bW_\bX^\top {\bK}_{\bZ\bZ} \bW_\bX + \sigma_\text{obs}^2 \bI)$: one for each column vector in $\blue \bW^{\top}_{\bX} \bK_{\bZ\bZ}$, each of which takes $\bigo{N + M\log M}$ time with CG (see \cref{sec:kissgp} or \citet{wilson2015kernel}).
 The total time for this pre-computation is therefore $\bigo{MN + M^2 \log M}$.
 After pre-computation, \cref{eqn:pred_covar_approx} becomes

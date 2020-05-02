@@ -77,6 +77,13 @@
 	year={2016}
 }
 
+@article{doshi2017roadmap,
+  title={Towards a rigorous science of interpretable machine learning.},
+  author={Doshi-Velez, Finale and Kim, Been},
+  journal={arXiv preprint arXiv:1702.08608},
+  year={2017}
+}
+
 @book{molnar2019interpretable,
   title={Interpretable machine learning},
   author={Molnar, Christoph},
@@ -177,6 +184,17 @@
 
 %% Deep learning: Optimization
 
+@article{liu1989lbfgs,
+  author={Liu, Dong C. and Nocedal, Jorge},
+  title={On the Limited Memory {BFGS} Method for Large Scale Optimization},
+  journal={Mathematical Programming},
+  volume = {45},
+  number={1-3},
+  year = {1989},
+  pages={503--528},
+  publisher={Springer}
+} 
+
 @article{hochreiter1997flat,
   title={Flat minima},
   author={Hochreiter, Sepp and Schmidhuber, J{\"u}rgen},
@@ -185,6 +203,13 @@
   number={1},
   pages={1--42},
   year={1997}
+}
+
+@inproceedings{kingma2014adam,
+  title={Adam: A method for stochastic optimization},
+  author={Kingma, Diederik P and Ba, Jimmy},
+  booktitle={ICLR},
+  year={2015}
 }
 
 @inproceedings{ioffe2015batch,
@@ -511,7 +536,7 @@
 %% GPs: Applications
 
 @article{vasudevan2009gaussian,
-  title={Gaussian process modeling of large-scale terrain},
+  title={{G}aussian process modeling of large-scale terrain},
   author={Vasudevan, Shrihari and Ramos, Fabio and Nettleton, Eric and Durrant-Whyte, Hugh},
   journal={Journal of Field Robotics},
   volume={26},
@@ -521,20 +546,32 @@
   publisher={Wiley Online Library}
 }
 
-@inproceedings{snoek2012practical,
-  title={Practical {B}ayesian optimization of machine learning algorithms},
-  author={Snoek, Jasper and Larochelle, Hugo and Adams, Ryan P},
-  booktitle={NeurIPS},
-  pages={2951--2959},
-  year={2012}
-}
-
 @inproceedings{deisenroth2011pilco,
   title={{PILCO}: A model-based and data-efficient approach to policy search},
   author={Deisenroth, Marc and Rasmussen, Carl E},
   booktitle={ICML},
   pages={465--472},
   year={2011}
+}
+
+@article{roberts2013gaussian,
+  title={{G}aussian processes for time-series modelling},
+  author={Roberts, Stephen and Osborne, Michael and Ebden, Mark and Reece, Steven and Gibson, Neale and Aigrain, Suzanne},
+  journal={Philosophical Transactions. Series A: Mathematical, Physical and Engineering Sciences},
+  volume={371},
+  number={1984},
+  year={2013}
+}
+
+@article{deisenroth2015gaussian,
+  title={{G}aussian processes for data-efficient learning in robotics and control},
+  author={Deisenroth, Marc Peter and Fox, Dieter and Rasmussen, Carl Edward},
+  journal={Pattern Analysis and Machine Intelligence},
+  volume={37},
+  number={2},
+  pages={408--423},
+  year={2015},
+  publisher={IEEE}
 }
 
 @inproceedings{schulam2015framework,
@@ -546,11 +583,18 @@
 }
 
 @inproceedings{gardner2015psychophysical,
-  title={Psychophysical Detection Testing with Bayesian Active Learning.},
+  title={Psychophysical Detection Testing with {B}ayesian Active Learning.},
   author={Gardner, Jacob R and Song, Xinyu and Weinberger, Kilian Q and Barbour, Dennis L and Cunningham, John P},
   booktitle={UAI},
   pages={286--295},
   year={2015}
+}
+
+@inproceedings{schulam2017if,
+  title={What-If Reasoning with Counterfactual {G}aussian Processes},
+  author={Schulam, Peter and Saria, Suchi},
+  booktitle={NeurIPS},
+  year={2017}
 }
 
 @inproceedings{john2018large,
@@ -559,6 +603,66 @@
   booktitle={ICML},
   pages={2362--2370},
   year={2018}
+}
+
+
+%% GPs: BayesOpt
+
+@article{frazier2009knowledge,
+  title={The knowledge-gradient policy for correlated normal beliefs},
+  author={Frazier, Peter and Powell, Warren and Dayanik, Savas},
+  journal={Journal on Computing},
+  volume={21},
+  number={4},
+  pages={599--613},
+  year={2009}
+	publisher={INFORMS}
+}
+
+@inproceedings{snoek2012practical,
+  title={Practical {B}ayesian optimization of machine learning algorithms},
+  author={Snoek, Jasper and Larochelle, Hugo and Adams, Ryan P},
+  booktitle={NeurIPS},
+  pages={2951--2959},
+  year={2012}
+}
+
+@inproceedings{hernandez2014predictive,
+  title={Predictive entropy search for efficient global optimization of black-box functions},
+  author={Hern{\'a}ndez-Lobato, Jos{\'e} Miguel and Hoffman, Matthew W and Ghahramani, Zoubin},
+  booktitle={NeurIPS},
+  pages={918--926},
+  year={2014}
+}
+
+@inproceedings{kandasamy2015high,
+  title={High dimensional {B}ayesian optimisation and bandits via additive models},
+  author={Kandasamy, Kirthevasan and Schneider, Jeff and P{\'o}czos, Barnab{\'a}s},
+  booktitle={ICML},
+  pages={295--304},
+  year={2015}
+}
+
+@inproceedings{gardner2017discovering,
+  title={Discovering and exploiting additive structure for {B}ayesian optimization},
+  author={Gardner, Jacob R and Guo, Chuan and Weinberger, Kilian Q and Garnett, Roman and Grosse, Roger},
+  booktitle={AISTATS},
+  pages={1311--1319},
+  year={2017}
+}
+
+@inproceedings{wang2017batched,
+  title={Batched high-dimensional bayesian optimization via structural kernel learning},
+  author={Wang, Zi and Li, Chengtao and Jegelka, Stefanie and Kohli, Pushmeet},
+  booktitle={ICML},
+  year={2017}
+}
+
+@inproceedings{wang2017max,
+  title={Max-value entropy search for efficient {B}ayesian optimization},
+  author={Wang, Zi and Jegelka, Stefanie},
+  booktitle={ICML},
+  year={2017}
 }
 
 @inproceedings{eriksson2019scalable,
@@ -571,6 +675,13 @@
 
 
 %% GPs: Deep
+
+@inproceedings{wilson2012gaussian,
+  title={{G}aussian process regression networks},
+  author={Wilson, Andrew Gordon and Knowles, David A and Ghahramani, Zoubin},
+  booktitle={ICML},
+  year={2012}
+}
 
 @inproceedings{damianou2013deep,
   title={Deep gaussian processes},
@@ -620,6 +731,14 @@
 
 %% GPs: General
 
+@inproceedings{rasmussen2001occam,
+  title={Occam's razor},
+  author={Rasmussen, Carl Edward and Ghahramani, Zoubin},
+  booktitle={NeurIPS},
+  pages={294--300},
+  year={2001}
+}
+
 @book{rasmussen2006gaussian,
   title={{G}aussian processes for machine learning},
   author={Rasmussen, Carl Edward and Williams, Christopher KI},
@@ -652,7 +771,7 @@
 }
 
 @phdthesis{gardner2018discovering,
-  title={Discovering and Exploiting Structure for Gaussian Processes},
+  title={Discovering and Exploiting Structure for {G}aussian Processes},
   author={Gardner, Jacob R},
   year={2018},
   school={Cornell University}
@@ -728,15 +847,21 @@
 }
 
 @InCollection{turner2011two,
-  author = 	 {R. E. Turner and M. Sahani},
-  title = 	 {Two problems with variational expectation
-                  maximisation for time-series models},
-  booktitle = 	 {Bayesian Time series models},
-  pages = 	 {109--130},
-  publisher = {Cambridge University Press},
-  year = 	 2011,
-  editor = 	 {D. Barber and T. Cemgil and S. Chiappa},
-  chapter = 	 5
+  author={R. E. Turner and M. Sahani},
+  title={Two problems with variational expectation maximisation for time-series models},
+  booktitle={{B}ayesian Time series models},
+  pages={109--130},
+  publisher={Cambridge University Press},
+  year=2011,
+  editor={D. Barber and T. Cemgil and S. Chiappa},
+  chapter=5
+}
+
+@inproceedings{papandreou2011efficient,
+  title={Efficient variational inference in large-scale {B}ayesian compressed sensing},
+  author={Papandreou, George and Yuille, Alan L},
+  booktitle={ICCV Workshops},
+  year={2011}
 }
 
 @phdthesis{saatcci2012scalable,
@@ -746,11 +871,34 @@
   school={University of Cambridge}
 }
 
+@inproceedings{le2013fastfood,
+  title={Fastfood: approximating kernel expansions in loglinear time},
+  author={Le, Quoc and Sarl{\'o}s, Tam{\'a}s and Smola, Alex},
+  booktitle={ICML},
+  year={2013}
+}
+
 @phdthesis{wilson2014thesis,
   title={Covariance kernels for fast automatic pattern discovery and extrapolation with {G}aussian processes},
   author={Andrew Gordon Wilson},
   school={University of Cambridge},
   year={2014}
+}
+
+@inproceedings{deisenroth2015distributed,
+  title={Distributed {G}aussian Processes},
+  author={Deisenroth, Marc Peter and Ng, Jun Wei},
+  booktitle={ICML},
+  pages={1481-1490},
+  year={2015},
+}
+
+@inproceedings{yang2015carte,
+  title={A la carte--learning fast kernels},
+  author={Yang, Zichao and Wilson, Andrew and Smola, Alex and Song, Le},
+  booktitle={AISTATS},
+  pages={1098--1106},
+  year={2015}
 }
 
 @inproceedings{wilson2015kernel,
@@ -781,11 +929,27 @@
   year={2018}
 }
 
+@inproceedings{izmailov2018scalable,
+  title={Scalable {G}aussian Processes with Billions of Inducing Inputs via Tensor Train Decomposition},
+  author={Izmailov, Pavel and Novikov, Alexander and Kropotov, Dmitry},
+  booktitle={AISTATS},
+  pages={726--735},
+  year={2018}
+}
+
 @inproceedings{evans2018scalable,
   title={Scalable gaussian processes with grid-structured eigenfunctions ({GP-GRIEF})},
   author={Evans, Trefor W and Nair, Prasanth B},
   booktitle={ICML},
   year={2018}
+}
+
+@article{liu2018gaussian,
+  title={When {G}aussian process meets big data: A review of scalable {GP}s},
+  author={Liu, Haitao and Ong, Yew-Soon and Shen, Xiaobo and Cai, Jianfei},
+  journal={Neural Networks and Learning Systems},
+  year={2020},
+	publisher={IEEE},
 }
 
 @inproceedings{nguyen2019exact,
@@ -795,14 +959,6 @@
   pages={1286--1295},
   year={2019},
   organization={ACM}
-}
-
-@article{liu2020gaussian,
-  title={When Gaussian process meets big data: A review of scalable GPs},
-  author={Liu, Haitao and Ong, Yew-Soon and Shen, Xiaobo and Cai, Jianfei},
-  journal={IEEE Transactions on Neural Networks and Learning Systems},
-  year={2020},
-  publisher={IEEE}
 }
 
 
@@ -838,14 +994,6 @@
   author={Duvenaud, David and Lloyd, James Robert and Grosse, Roger and Tenenbaum, Joshua B and Ghahramani, Zoubin},
   booktitle={ICML},
   year={2013}
-}
-
-@inproceedings{gardner2017discovering,
-  title={Discovering and exploiting additive structure for {B}ayesian optimization},
-  author={Gardner, Jacob R and Guo, Chuan and Weinberger, Kilian Q and Garnett, Roman and Grosse, Roger},
-  booktitle={AISTATS},
-  pages={1311--1319},
-  year={2017}
 }
 
 @inproceedings{benton2019function,
@@ -928,7 +1076,7 @@
 }
 
 @inproceedings{wilson2020efficiently,
-	title={Sparse Orthogonal Variational Inference for Gaussian Processes},
+	title={Sparse Orthogonal Variational Inference for {G}aussian Processes},
 	author={Shi, Jiaxin and Titsias, Michalis K. and Mnih, Andriy},
   booktitle	={AISTATS},
 	year={2020},

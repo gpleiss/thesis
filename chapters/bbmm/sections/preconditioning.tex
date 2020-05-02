@@ -26,7 +26,7 @@ In particular, we will perform the solves
 
 The only difference between \cref{eqn:mod_cg_call_precond} and the original set of solves in \cref{eqn:mod_cg_call}
 is that the $\bz^{(i)}$ probe vectors have covariance $\Ev{ \bz^{(i)} \bz^{(i)^\top} } = \trainP$ (rather than unit covariance).
-To understand why this is the case, recall from \cref{sec:method_bbmm} that our log determinant estimate is given by:
+To understand why this is the case, recall from \cref{sec:bbmm_method} that our log determinant estimate is given by:
 %
 \begin{align*}
 	\log \left\vert \trainK \right\vert

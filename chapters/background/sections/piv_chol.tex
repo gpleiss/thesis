@@ -13,7 +13,7 @@ Additionally, we introduce a pivoted version of the Cholesky factorization, whic
 The Cholesky decomposition is defined by a recursive algorithm:
 %
 \begin{equation}
- \label{eq:cholesky_full}
+ \label{eqn:cholesky_full}
  \begin{bmatrix} \bA^{(11)} & \bA^{(12)} \\ \bA^{(12)^\top} & \bA^{(22)}\end{bmatrix}
  =
  \begin{bmatrix} \bL^{(11)} & \bzero \\ \bL^{(11)^{-1}} \bA^{(12)} & \bL^{(22)}\end{bmatrix}
@@ -37,7 +37,7 @@ Therefore:
     \begin{bmatrix} 0 & 0 \\ 0 & \bS_2 \end{bmatrix}
   \nonumber \\
   &= \bl_{1}\bl_{1}^{\top} + \begin{bmatrix} 0 & 0 \\ 0 & \bS_2 \end{bmatrix}
-  \label{eq:chol_incomplete}.
+  \label{eqn:chol_incomplete}.
 \end{align}
 %
 Because the Schur complement is positive definite, we can continue by recursing on the $(N-1) \times (N - 1)$ Schur complement $\bS_2$ to get another vector.

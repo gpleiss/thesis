@@ -97,12 +97,13 @@ Before addressing these issues, it is worth discussing why Gaussian processes ar
     The prediction's confidence interval is small when $\bx$ is close to training dataset points, and large when $\bx$ is too far from points for accurate interpolation.
 \end{enumerate}
 
-These benefits are obviously applicable to the ``small data'' regime, where priors and marginalization are critical for meaningful predictive performance.
-However, it is worth noting that these properties also apply to large datasets.
+\noindent
+These benefits are obviously applicable to the ``small data'' regime, where priors and marginalization are critical for meaningful predictive performance \cite{rasmussen2001occam}.
+However, these properties also are beneficial for large datasets.
 Good uncertainty estimates and interpretable predictions are increasingly desirable for large-scale machine learning models.
 %GPs (with certain kernel functions) are universal approximators \cite{micchelli2006universal}, and their modelling capacity increases with the amount of available training data.
-In addition, large datasets make it possible to use powerful families of covariance functions \citep{wilson2013gaussian,wilson2016deep,benton2019function} or hierarchical (``deep'') GP models \cite{wilson2016deep,salimbeni2017doubly,jankowiak2020deep}, which increase the predictive power of GPs.
-This makes GPs especially desirable on big-data tasks like large-scale extrapolation \citep[e.g.][]{jankowiak2020parametric} and high-dimensional optimization \citep[e.g.][]{eriksson2019scalable}.
+In addition, large datasets make it possible to use powerful families of covariance functions \citep{wilson2013gaussian,wilson2016deep,benton2019function} or hierarchical (``deep'') GP models \cite{wilson2016deep,salimbeni2017doubly,jankowiak2020deep}.
+This makes GPs especially powerful on big-data tasks like large-scale extrapolation \citep[e.g.][]{jankowiak2020parametric} and high-dimensional optimization \citep[e.g.][]{eriksson2019scalable}.
 
 
 \section{Practical Concerns with Gaussian Processes Models}

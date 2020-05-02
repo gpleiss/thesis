@@ -362,8 +362,10 @@ It is well suited to high-dimensional datasets or datasets with complex features
 \label{sec:approx_gps}
 
 As we will discuss in detail in the next chapters, computing the marginal log likelihood (\cref{eqn:log_lik}) and the predictive distribution (\cref{eqn:predictive_mean,eqn:predictive_var}) has historically been computationally prohibitive for large datasets.
-This has motivated the development of several approximate Gaussian process regression methods \citep[e.g.][]{quinonero2005unifying,snelson2006sparse,rahimi2008random,titsias2009variational,hensman2013gaussian,wilson2015kernel,gardner2018product,evans2018scalable} that trade off exactness for computational scalability.
+This has motivated the development of several approximate Gaussian process regression methods \citep[e.g.][]{quinonero2005unifying,snelson2006sparse,rahimi2008random,titsias2009variational,hensman2013gaussian,wilson2015kernel,izmailov2018scalable,gardner2018product,evans2018scalable} that trade off exactness for computational scalability.
 Many of these methods approximate the training kernel matrix $\bK_{\bX\bX}$ with a structured or low-rank matrix $\approxK$ that affords faster matrix operations and requires less storage.
+Here we highlight some notable variants of the basic approach, though it is by no means an exhaustive list---see \cite{liu2018gaussian} for a more thorough review.
+
 
 \paragraph{Inducing Points.}
 A common mechanism for scalable methods is to introduce a set of pseudo-inputs, or {\bf inducing points}, which function as a sufficient statistic for the predictive distribution.
@@ -415,6 +417,11 @@ In the next section we will discuss a fourth variant---Kernel Interpolation for 
 %
 We will discuss how to exploit this low-rank kernel matrix structure for faster inference in the next chapter.
 
+
+\subsection{Variational Approximations to Sparse Gaussian Processes}
+\gp{TODO}
+
+
 \subsection{Kernel Interpolation for Scalable Structured Gaussian Processes (KISS-GP)}
 \label{sec:kissgp}
 
@@ -459,14 +466,14 @@ Substituting the KISS-GP approximate kernel into \cref{eqn:predictive_mean} and 
   \label{eqn:pred_mean_ski}
 \end{equation}
 (Here {\color{blue} blue} highlights computations that don't depend on test data.)
-Because $\bw_{\bx^{*}}$ is the only term in \eqref{eqn:pred_mean_ski} that depends on $\bx^{*}$, the remainder of the equation (denoted as $\blue \ba'$) can be pre-computed: $\meantest{\bxtest} = \bw_{\bxtest}^\top \blue \ba'$.
+Because $\bw_{\bx^{*}}$ is the only term in \cref{eqn:pred_mean_ski} that depends on $\bx^{*}$, the remainder of the equation (denoted as $\blue \ba'$) can be pre-computed: $\meantest{\bxtest} = \bw_{\bxtest}^\top \blue \ba'$.
 After pre-computing $\blue \ba'$, the multiplication $\bw_{\bxtest}^\top \blue \ba'$ requires $\bigo{1}$ time, as $\bw_{\bxtest}$ is sparse and has only four nonzero elements.
 
 \subsection{Summary of Notation}
 All the notation of this section is summarized in \cref{tab:gp_notation}.
 It will be used throughout the remaining chapters.
 
-\begin{table}[b!]
+\begin{table}[p!]
   \centerfloat
   \caption{Summary of Gaussian process notation.}
   \label{tab:gp_notation}
@@ -513,4 +520,5 @@ It will be used throughout the remaining chapters.
 		\end{tabular}
 	}
 \end{table}
+
 \newpage

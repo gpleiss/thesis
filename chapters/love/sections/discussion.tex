@@ -13,7 +13,7 @@ We note that, since these inducing point methods make a rank $m$ approximation t
 
 \paragraph{Ensuring Lanczos solves are accurate.}
 Given a matrix $\widehat K_{XX}$, the Lanczos decomposition $Q_k T_k Q_k^\top$ is designed to approximate the solve $\widehat K_{XX}^{-1} \bb$, where $\bb$ is the first column of $Q_k$.
-As argued in \autoref{subsec:lanczos}, the $Q_k$ and $T_k$ can usually be re-used to approximate the solves $\widehat K_{XX}^{-1} (W_X^\top K_{UU}) \approx Q_k T_k^{-1} Q_k^\top (W_X^\top K_{UU})$.
+As argued in \cref{sec:lanczos}, the $\bQ$ and $\bT$ can usually be re-used to approximate the solves $\widehat K_{XX}^{-1} (W_X^\top K_{UU}) \approx Q_k T_k^{-1} Q_k^\top (W_X^\top K_{UU})$.
 This property of the Lanczos decomposition is why LOVE{} can compute fast predictive variances.
 While this method usually produces accurate solves, the solves will not be accurate if some columns of $(W^\top_X K_{UU})$ are (nearly) orthogonal to the columns of $Q_k$.
 In this scenario, \citet{saad1987lanczos} suggests that the additional Lanczos iterations with a new probe vector will correct these errors.
