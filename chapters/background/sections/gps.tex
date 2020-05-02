@@ -394,7 +394,7 @@ However, under these interpretations it is less straightforward to derive connec
 \paragraph{Variants.}
 The basic formula of \cref{eqn:inducing_interpolation} can be extended to create a variety of approximate Gaussian process regression methods.
 We briefly present three common variants here---all of which use $M \ll N$ inducing points and learn their locations through gradient descent of \cref{eqn:log_lik}.
-In the next section we will discuss a fourth variant---Kernel Interpolation for Scalable Structured GPs (KISS-GP) \cite{wilson2015kernel}---which utilizes inducing points in a unique way.
+In the next section we will discuss Kernel Interpolation for Scalable Structured GPs (KISS-GP) \cite{wilson2015kernel}---a variant which utilizes inducing points in a unique way.
 
 \begin{itemize}
 	\item {\bf Subset of Regressors (SoR)} \cite{silverman1985some,smola2001sparse} is arguably the most standard variant.
@@ -416,10 +416,6 @@ In the next section we will discuss a fourth variant---Kernel Interpolation for 
 \end{itemize}
 %
 We will discuss how to exploit this low-rank kernel matrix structure for faster inference in the next chapter.
-
-
-\subsection{Variational Approximations to Sparse Gaussian Processes}
-\gp{TODO}
 
 
 \subsection{Kernel Interpolation for Scalable Structured Gaussian Processes (KISS-GP)}
@@ -473,7 +469,7 @@ After pre-computing $\blue \ba'$, the multiplication $\bw_{\bxtest}^\top \blue \
 All the notation of this section is summarized in \cref{tab:gp_notation}.
 It will be used throughout the remaining chapters.
 
-\begin{table}[!tb]
+\begin{table}[!b]
   \centerfloat
   \caption{Summary of Gaussian process notation.}
   \label{tab:gp_notation}
