@@ -16,19 +16,19 @@ Letting $\blue \bR$ be a $J \times N$ matrices such that $\blue \bR^\top \blue{\
 Variance computations with \cref{eqn:predictive_covar_2_fast} take $\bigo{JN}$ time.
 
 \paragraph{An MVM-based low-rank approximation with Lanczos.}
-There are many possible ways to form a low-rank approximation of $\trainK^{-1}$.
+There are many possible ways to form a low-rank approximation of $\blue \trainK^{-1}$.
 Our proposed method will make use of the Lanczos algorithm from \cref{sec:lanczos}, which will generate the low-rank approximation through matrix-vector multiplication (MVMs).
 This makes it possible to easily transfer this approximation to specialty GP models (e.g. scalable models, multitask models, etc.) and the computation will effectively utilize GPU acceleration.
 Moreover, as we will demonstrate in \cref{sec:love_results}, the Lanczos low-rank approximation rapidly converges to the true inverse.
 
 Recall from \cref{sec:lanczos} that $J$ iterations of Lanczos tridiagonalization approximates matrix solves:
 \[
-  \trainK^{-1} \bb \approx \bQ \bT^{-1} \bQ^{\top} \bb,
+  {\color{blue} \trainK^{-1}} \bb \approx {\color{blue} \bQ \bT^{-1} \bQ^{\top}} \bb,
 \]
-where the orthonormal matrix $\bQ \in \reals^{N \times J}$ and tridiagonal matrix $\bT \in \reals^{J \times J}$ are computed with respect to probe vector $\bb$.
-As argued by \citet{parlett1980new}, \citet{saad1987lanczos}, and \citet{schneider2001krylov}, the $\bQ$ and $\bT$ matrices can be used to approximate subsequent solves
-$\trainK^{-1} \bb' \approx \bQ \bT^{-1} \bQ^\top \bb'$.
-We exploit this fact and use $\bQ \bT^{-1} \bQ^\top$ to be a general-purpose approximation to $\trainK^{-1}$.
+where the orthonormal matrix ${\color{blue} \bQ} \in \reals^{N \times J}$ and tridiagonal matrix ${\color{blue} \bT} \in \reals^{J \times J}$ are computed with respect to probe vector $\bb$.
+As argued by \citet{parlett1980new}, \citet{saad1987lanczos}, and \citet{schneider2001krylov}, the $\blue \bQ$ and $\blue \bT$ matrices can be used to approximate subsequent solves
+${\color{blue} \trainK^{-1}} \bb' \approx {\color{blue} \bQ \bT^{-1}} \bQ^\top \bb'$.
+We exploit this fact and use $\blue \bQ \bT^{-1} \bQ^\top$ to be a general-purpose approximation to $\blue \trainK^{-1}$.
 When $J \ll N$ (e.g. $J \approx 100$), then this will be a low-rank approximation.
 
 To compute the $\bR$ matrix in \cref{eqn:predictive_covar_2_fast}, we simply run $J$ iterations of Lanczos:
@@ -40,9 +40,9 @@ To compute the $\bR$ matrix in \cref{eqn:predictive_covar_2_fast}, we simply run
   \underbracket{ \left( {\color{blue} \bL_\bT^{-1} \bQ^\top} \right)}_{\color{blue} \bR}
 \end{align*}
 %
-where $\bL_\bT$ is the Cholesky factor of $\bT$.
-Applying Lanczos to $\trainK$ requires $J$ MVMs for a total of $\bigo{J \mvm(\trainK)}$ time ($\mvm(\trainK)$ is the complexity of one MVM with $\trainK$, which is nominally $\bigo{N^2}$).
-Computing and applying the Cholesky factor $\bL_\bT$ is $\bigo{J}$ time due to the tridiagonal structure of $\bT$.
+where $\blue \bL_\bT$ is the Cholesky factor of $\blue \bT$.
+Applying Lanczos to $\blue \trainK$ requires $J$ MVMs for a total of $\bigo{J \mvm(\trainK)}$ time ($\mvm(\trainK)$ is the complexity of one MVM with $\blue \trainK$, which is nominally $\bigo{N^2}$).
+Computing and applying the Cholesky factor $\blue \bL_\bT$ is $\bigo{J}$ time due to the tridiagonal structure of $\blue \bT$.
 
 In total, the entire pre-computation phase takes $\bigo{J N^2}$ time for standard GPs.
 This is the same amount of time of a single marginal likelihood computation using BBMM.
@@ -50,7 +50,7 @@ After pre-computation, each covariance takes $\bigo{JN}$ time.
 We refer to this fast covariance approximation algorithm as {\bf LanczOs Variance Estimates}, or {\bf LOVE} for short.
 It is summarized in \cref{alg:love} and \cref{tab:running_times}.
 
-$J$, the size of the low-rank approximation, depends on the conditioning of $\trainK$ and not its size.
+$J$, the size of the low-rank approximation, depends on the conditioning of $\blue \trainK$ and not its size.
 Empirically find that $J\leq100$ is sufficient for most matrices for $N \leq 20,\!000$, and therefore $J$ can be considered to be constant.
 
 
@@ -89,7 +89,7 @@ Empirically find that $J\leq100$ is sufficient for most matrices for $N \leq 20,
 
 \input algorithms/love_kissgp
 
-As with BBMM, LOVE solely relies on matrix-vector multiplication and makes no assumption about the structure of $\trainK$.
+As with BBMM, LOVE solely relies on matrix-vector multiplication and makes no assumption about the structure of $\blue \trainK$.
 Therefore, \cref{alg:love} can be applied out-of-the-box to any specialty GP model including scalable approximations.
 In this section, we demonstrate that LOVE is an especially compelling algorithm for the scalable KISS-GP framework.
 With a few modifications to \cref{alg:love}, KISS-GP + LOVE can achieve \emph{constant-time covariance approximations} and \emph{linear time posterior samples}.
@@ -218,7 +218,7 @@ LOVE{} is applicable even when the KISS-GP approximation is used with an additiv
 %
 \begin{equation}
   \widetilde{k}(\bx, \bx') =
-  \bw^{(1)\top}_{\bx} \bK^{(1)}_{\bZ \bZ} \bw^{(1)}_{\bx'} + \ldots + \bw^{(D)\top}_{\bx} \bK^{(D)}_{\bZ \bZ} \bw^{(D)}_{\bx'}.
+  \bw^{(1)\top}_{\bx} {\color{blue} \bK^{(1)}_{\bZ \bZ}} \bw^{(1)}_{\bx'} + \ldots + \bw^{(D)\top}_{\bx} {\color{blue} \bK^{(D)}_{\bZ \bZ}} \bw^{(D)}_{\bx'}.
   \notag
 \end{equation}
 Additive structure has recently been a focus in several Bayesian optimization settings, since the cumulative regret of additive models depends linearly on the number of dimensions
@@ -234,11 +234,13 @@ To apply LOVE{}, we note that additive composition can be re-written as
     \bw^{(D)}_{\bx}
   \end{bmatrix}^\top
   \!
+  {\color{blue}
   \begin{bmatrix}
     \bK^{(1)}_{\bZ \bZ} & \!\! \ldots \!\! & 0 \\
     \vdots & \!\! \ddots \!\! & \vdots \\
     0 & \!\! \ldots \!\! & \bK^{(D)}_{\bZ \bZ}
   \end{bmatrix}
+  }
   \!
   \begin{bmatrix}
     \bw^{(1)}_{\bx} \\
@@ -249,7 +251,7 @@ To apply LOVE{}, we note that additive composition can be re-written as
 \end{equation}
 %
 The block matrices in \cref{eqn:multi_dimensional_kernel_block} are analogs of their 1-dimensional counterparts in \cref{eqn:ski}.
-Therefore, we can directly apply \cref{alg:love_kissgp}, replacing $\bW_\bX$, $\bw_\bxtest$, $\bw_\bxtestprime$, and $\bK_{\bZ\bZ}$ with their block forms.
+Therefore, we can directly apply \cref{alg:love_kissgp}, replacing $\blue \bW_\bX$, $\bw_\bxtest$, $\bw_\bxtestprime$, and $\blue \bK_{\bZ\bZ}$ with their block forms.
 The block $\bw_\bxtest$, $\bw_\bxtestprime$ vectors are $\bigo{D}$-sparse, and therefore interpolation takes $\bigo{D}$ time.
-MVMs with the block $\bK_{\bZ\bZ}$ matrix take $\bigo{DM\log M}$ time by exploiting the block-diagonal structure.
+MVMs with the block $\blue \bK_{\bZ\bZ}$ matrix take $\bigo{DM\log M}$ time by exploiting the block-diagonal structure.
 With $D$ additive components, predictive variance computations cost only a factor $\bigo{D}$ more than their 1-dimensional counterparts.

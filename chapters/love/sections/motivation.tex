@@ -29,9 +29,9 @@ This cost can be reduced even further for KISS-GP models, as discussed in \cref{
 Recall that KISS-GP approximates the training and test covariances as:
 %
 \begin{align*}
-  \tilde{\bk}_{\bX \bxtest} = \bW^\top_{\bX} \bK_{\bZ \bZ} \bw_{\bxtest},
+  \tilde{\bk}_{\bX \bxtest} = {\color{blue} \bW^\top_{\bX} \bK_{\bZ \bZ}} \bw_{\bxtest},
   \quad
-  \tilde{\bK}_{\bX \bX} = \bW^\top_{\bX} \bK_{\bZ \bZ} \bW_{\bX},
+  {\color{blue} \tilde{\bK}_{\bX \bX}} = {\color{blue} \bW^\top_{\bX} \bK_{\bZ \bZ} \bW_{\bX}},
 \end{align*}
 %
 where $\bK_{\bZ\bZ} \in \reals^{M \times M}$ is the Toeplitz inducing kernel matrix, $\bW_\bX \in \reals{M \times N}$ is the sparse interpolation for training points $X$, and $\bw_{\bxtest} \in \reals{M}$ is the sparse interpolation for $\bxtest$.
@@ -70,7 +70,7 @@ After pre-computation, \cref{eqn:pred_covar_approx} becomes
   \covtest{\bxtest}{\bxtestprime} &\approx k_{\bxtest \bxtestprime} - \bw_{\bxtest}^\top \: {\blue \bC} \: \bw_{\bxtestprime}
     \label{eqn:pred_covar_ski_naive}
 \end{align}
-As $\bw_{\bxtest}$ contains only four nonzero elements, the inner product of $\bw^{*}_{i}$ with $\bC$ takes $\bigo{M}$ time.
+As $\bw_{\bxtest}$ contains only four nonzero elements, the inner product of $\bw^{*}_{i}$ with $\blue \bC$ takes $\bigo{M}$ time.
 Thus predictive covariances with \cref{eqn:pred_covar_ski_naive} are $\bigo{M}$ after pre-computation.
 
 Although this technique offers computational savings over the Cholesky method, the quadratic dependence on $M$ in the pre-computation phase is a computational bottleneck.
