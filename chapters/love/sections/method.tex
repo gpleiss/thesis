@@ -137,7 +137,7 @@ This is a vary common operation: in Bayesian optimization, several popular acqui
 Let $\bXtest = [ \bxtest_1, \ldots, \bxtest_T ]$ be a test set of $T$ points.
 To draw samples from $p( \bfn(\bxtest_1), \ldots, \bfn(\bxtest_T) \! \mid \! \dset)$---the predictive function evaluated on $\bxtest_1, \ldots, \bxtest_t$,
 the cross-covariance terms (i.e. $\covtest{\bxtest_i}{\bxtest_j}$) are necessary in addition to the variance terms ($\vartest{\bxtest_i}$).
-We sample $p( \bfn(\bxtest_1), \ldots, \bfn(\bxtest_T) \! \mid \! \dset)$ through the reparameterization trick \cite{kingma2014adam}:
+We sample $p( \bfn(\bxtest_1), \ldots, \bfn(\bxtest_T) \! \mid \! \dset)$ through the reparameterization trick \cite{kingma2014auto,rezende2014stochastic}:
 %
 \[
   \bmeantest = \begin{bmatrix} \meantest{\bxtest_1} \\ \vdots \\ \meantest{\bxtest_1} \end{bmatrix},

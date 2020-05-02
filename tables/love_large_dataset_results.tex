@@ -1,27 +1,19 @@
 %!TEX root=../main.tex
-\begin{tabular}{ |ccc||c|c||c|c||c|c|c|c|| }
+\begin{tabular}{ |ccc||c|c||c|c| }
   \hline
-  \multicolumn{3}{|c||}{\bf Dataset}
-  & \multicolumn{2}{c||}{\thead{\bf Variance SMAE}}
-  & \multicolumn{2}{c||}{\thead{\bf Speedup over KISS-GP (w/o LOVE{})}}
-  & \multicolumn{4}{c||}{\thead{\bf Speedup over SGPR}}
+  \multicolumn{3}{|c|}{\bf Dataset}
+  & \multicolumn{4}{c|}{\thead{\bf Speedup over SGPR}}
   \\
-  \cline{1-11}
-  \multirow{2}{*}{Name}
-  & \multirow{2}{*}{$n$}
-  & \multirow{2}{*}{$d$}
-  & \multirow{2}{*}{\thead{(vs KISS-GP w/o LOVE)}}
-  & \multirow{2}{*}{\thead{(vs Exact GP)}}
-  & \multirow{2}{*}{\thead{(from scratch)}}
-  & \multirow{2}{*}{\thead{(after pre-comp.)}}
-  & \thead{(from scratch)}
-  & \thead{(after pre-comp.)}
-  & \thead{(from scratch)}
-  & \thead{(after pre-comp.)}
+  \cline{1-7}
+  Name
+  & {$N$}
+  & {$D$}
+  & {\thead{(vs KISS-GP w/o LOVE)}}
+  & {\thead{(vs Exact GP)}}
+  & {\thead{(from scratch)}}
+  & {\thead{(after pre-comp.)}}
   \\
-   &  &  &  &  &  &  & m=100 & m=100 & m=1000 & m=1000
-  \\
-  \hhline{|===#=|=#=|=#=|=|=|=#}
+  \hhline{|===#=|=#=|=|}
   \thead{\bf Airfoil}
   & $1,\!503$
   & $6$
@@ -29,10 +21,10 @@
   & $7.01 \times 10^{-5}$
   & $4 \times$
   & $84 \times$
-  & $3 \times$
-  & $49 \times$
-  & $9 \times$
-  & $183 \times$
+  %& $3 \times$
+  %& $49 \times$
+  %& $9 \times$
+  %& $183 \times$
   \\
 
   \thead{\bf Skillcraft}
@@ -42,10 +34,10 @@
   & $2.86 \times 10^{-4}$
   & $25 \times$
   & $167 \times$
-  & $4 \times$
-  & $70 \times$
-  & $17 \times$
-  & $110 \times$
+  %& $4 \times$
+  %& $70 \times$
+  %& $17 \times$
+  %& $110 \times$
   \\
 
   \thead{\bf Parkinsons}
@@ -55,10 +47,10 @@
   & $5.18 \times 10^{-3}$
   & $46 \times$
   & $443 \times$
-  & $3 \times$
-  & $33 \times$
-  & $16 \times$
-  & $152 \times$
+  %& $3 \times$
+  %& $33 \times$
+  %& $16 \times$
+  %& $152 \times$
   \\
 
   \thead{\bf PoleTele}
@@ -68,10 +60,10 @@
   & $1.08 \times 10^{-3}$
   & $78 \times$
   & $1178 \times$
-  & $1.5 \times$
-  & $40 \times$
-  & $21 \times$
-  & $343 \times$
+  %& $1.5 \times$
+  %& $40 \times$
+  %& $21 \times$
+  %& $343 \times$
   \\
 
   \thead{\bf Elevators}
@@ -81,10 +73,10 @@
   & --
   & $64 \times$
   & $1017 \times$
-  & $2 \times$
-  & $31 \times$
-  & $20 \times$
-  & $316 \times$
+  %& $2 \times$
+  %& $31 \times$
+  %& $20 \times$
+  %& $316 \times$
   \\
 
   \thead{\bf Kin40k}
@@ -94,10 +86,10 @@
   & --
   & $31 \times$
   & $2065 \times$
-  & $8 \times$
-  & $81 \times$
-  & $12 \times$
-  & $798 \times$
+  %& $8 \times$
+  %& $81 \times$
+  %& $12 \times$
+  %& $798 \times$
   \\
 
   \thead{\bf Protein}
@@ -107,10 +99,10 @@
   & --
   & $44 \times$
   & $1151 \times$
-  & $10 \times$
-  & $109 \times$
-  & $20 \times$
-  & $520 \times$
+  %& $10 \times$
+  %& $109 \times$
+  %& $20 \times$
+  %& $520 \times$
   \\
   \hline
 \end{tabular}

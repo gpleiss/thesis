@@ -1,0 +1,78 @@
+%!TEX root=../main.tex
+\begin{tabular}{ |c||c|c|c|c|c| }
+  \hline
+  \multirow{4}{*}{\thead{\bf Dataset} }
+  & \multicolumn{5}{c|}{\thead{\bf Speedup over Exact GP w/ Cholesky} }
+
+  \\
+  \cline{2-6}
+
+
+  %& \thead{\bf Exact GP \\ \bf w/ Cholesky}
+  %& \thead{\bf Fourier \\ \bf Features}
+  %& \thead{\bf SGPR (m=100)}
+  %& \thead{\bf SGPR (m=1000)}
+  %& \thead{\bf KISS-GP \\ \bf w/ LOVE}
+  & \thead{\bf Fourier \\ \bf Features}
+  & \thead{\bf SGPR \\ ($M=100$)}
+  & \thead{\bf SGPR \\ ($M=1000$)}
+  & \thead{\bf LOVE \\ \bf + KISS-GP{} \\ (from scratch)}
+  & \thead{\bf LOVE \\ \bf + KISS-GP{} \\ (after pre-comp.)}
+  \\
+  \hhline{|=#=|=|=|=|=|}
+
+  \thead{\bf PolTele}
+  %& $\mathbf{8.8 \times 10^{-4}}$
+  %& $1.8 \times 10^{-3}$
+  %& $4.9 \times 10^{-3}$
+  %& $2.7 \times 10^{-3}$
+  %& $\mathbf{7.5 \times 10^{-4}}$
+  & $22 \times$
+  & $24 \times$
+  & $3 \times$
+  & $21 \times$
+  & $\mathbf{881 \times}$
+  \\
+
+  \thead{\bf Elevators}
+  %& $\mathbf{2.6 \times 10^{-7}}$
+  %& $3.1 \times 10^{-4}$
+  %& $8.7 \times 10^{-6}$
+  %& $3.6 \times 10^{-6}$
+  %& $\mathbf{5.5 \times 10^{-7}}$
+  & $31 \times$
+  & $33 \times$
+  & $4 \times$
+  & $25 \times$
+  & $\mathbf{1062 \times}$
+  \\
+  \hline
+
+  \thead{\bf BayesOpt (Eggholder)}
+  %& $\mathbf{7.7 \times 10^{-4}}$
+  %& $1.5 \times 10^{-3}$
+  %& $\mathbf{8.1 \times 10^{-4}}$
+  %& --
+  %& $\mathbf{8.0 \times 10^{-5}}$
+  & $16 \times$
+  & $8 \times$
+  & --
+  & $19 \times$
+  & $\mathbf{775 \times}$
+  \\
+
+  \thead{\bf BayesOpt (Styblinski-Tang)}
+  %& $\mathbf{5.4 \times 10^{-4}}$
+  %& $7.3 \times 10^{-3}$
+  %& $\mathbf{5.2 \times 10^{-4}}$
+  %& --
+  %& $\mathbf{5.2 \times 10^{-4}}$
+  & $11 \times$
+  & $8 \times$
+  & --
+  & $42 \times$
+  & $\mathbf{18,\!100 \times}$
+  \\
+  \hline
+
+\end{tabular}
