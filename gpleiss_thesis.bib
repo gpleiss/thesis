@@ -365,6 +365,12 @@
   year={2019}
 }
 
+@article{charlier2020kernel,
+  title={Kernel Operations on the {GPU}, with Autodiff, without Memory Overflows},
+  author={Charlier, Benjamin and Feydy, Jean and Glaun{\`e}s, Joan and Collin, Fran{\c{c}}ois-David and Durif, Ghislain},
+  year={2020}
+}
+
 
 %% General references
 
@@ -625,6 +631,16 @@
 
 
 %% GPs: BayesOpt
+
+@article{thompson1933likelihood,
+  title={On the likelihood that one unknown probability exceeds another in view of the evidence of two samples},
+  author={Thompson, William R},
+  journal={Biometrika},
+  volume={25},
+  number={3/4},
+  pages={285--294},
+  year={1933}
+}
 
 @article{frazier2009knowledge,
   title={The knowledge-gradient policy for correlated normal beliefs},
@@ -1312,6 +1328,17 @@
   publisher={Springer}
 }
 
+@article{paige1975solution,
+  title={Solution of sparse indefinite systems of linear equations},
+  author={Paige, Christopher C and Saunders, Michael A},
+  journal={Journal on Numerical Analysis},
+  volume={12},
+  number={4},
+  pages={617--629},
+  year={1975},
+	publisher={SIAM}
+}
+
 @article{o1980block,
   title={The block conjugate gradient algorithm and related methods},
   author={O'Leary, Dianne P},
@@ -1352,6 +1379,29 @@
   year={1987}
 }
 
+@article{jegerlehner1996krylov,
+  title={Krylov space solvers for shifted linear systems},
+  author={Jegerlehner, Beat},
+  journal={arXiv preprint hep-lat/9612014},
+  year={1996}
+}
+
+@phdthesis{choi2006iterative,
+  title={Iterative methods for singular linear equations and least-squares problems},
+  author={Choi, Sou-Cheng},
+  year={2006}
+}
+
+@article{fong2012cg,
+  title={CG versus MINRES: An empirical comparison},
+  author={Fong, David Chin-Lung and Saunders, Michael},
+  journal={Sultan Qaboos University Journal for Science},
+  volume={17},
+  number={1},
+  pages={44--62},
+  year={2012}
+}
+
 @article{ubaru2017fast,
   title={Fast estimation of $\tr{f(\bA)}$ via stochastic {L}anczos quadrature},
   author={Ubaru, Shashanka and Chen, Jie and Saad, Yousef},
@@ -1367,6 +1417,63 @@
   author={Dong, Kun and Eriksson, David and Nickisch, Hannes and Bindel, David and Wilson, Andrew Gordon},
   booktitle={NeurIPS},
   year={2017},
+}
+
+
+%% Numerical linalg: CIQ
+
+@article{aune2013iterative,
+  title={Iterative numerical methods for sampling from high dimensional Gaussian distributions},
+  author={Aune, Erlend and Eidsvik, Jo and Pokern, Yvo},
+  journal={Statistics and Computing},
+  volume={23},
+  number={4},
+  pages={501--521},
+  year={2013},
+  publisher={Springer}
+}
+
+@article{saibaba2013flexible,
+  title={A flexible Krylov solver for shifted systems with application to oscillatory hydraulic tomography},
+  author={Saibaba, Arvind K and Bakhos, Tania and Kitanidis, Peter K},
+  journal={Journal on Scientific Computing},
+  volume={35},
+  number={6},
+  pages={A3001--A3023},
+  year={2013},
+  publisher={SIAM}
+}
+
+@article{aune2014parameter,
+  title={Parameter estimation in high dimensional Gaussian distributions},
+  author={Aune, Erlend and Simpson, Daniel P and Eidsvik, Jo},
+  journal={Statistics and Computing},
+  volume={24},
+  number={2},
+  pages={247--263},
+  year={2014}
+}
+
+@article{chow2014preconditioned,
+  title={Preconditioned Krylov subspace methods for sampling multivariate Gaussian distributions},
+  author={Chow, Edmond and Saad, Yousef},
+  journal={Journal on Scientific Computing},
+  volume={36},
+  number={2},
+  pages={A588--A608},
+  year={2014},
+  publisher={SIAM}
+}
+
+@article{bakhos2017multipreconditioned,
+  title={Multipreconditioned GMRES for shifted systems},
+  author={Bakhos, Tania and Kitanidis, Peter K and Ladenheim, Scott and Saibaba, Arvind K and Szyld, Daniel B},
+  journal={Journal on Scientific Computing},
+  volume={39},
+  number={5},
+  pages={S222--S247},
+  year={2017},
+  publisher={SIAM}
 }
 
 
@@ -1445,6 +1552,71 @@
   author={Fitzsimons, Jack K and Osborne, Michael A and Roberts, Stephen J and Fitzsimons, Joseph F},
   booktitle={UAI},
   year={2018}
+}
+
+
+%% SuperRes
+
+@article{besag1991bayesian,
+  title={Bayesian image restoration, with two applications in spatial statistics},
+  author={Besag, Julian and York, Jeremy and Molli{\'e}, Annie},
+  journal={Annals of the Institute of Statistical Mathematics},
+  volume={43},
+  number={1},
+  pages={1--20},
+  year={1991},
+  publisher={Springer}
+}
+
+@article{chipman1996bayesian,
+  title={Bayesian variable selection with related predictors},
+  author={Chipman, Hugh},
+  journal={Canadian Journal of Statistics},
+  volume={24},
+  number={1},
+  pages={17--36},
+  year={1996}
+}
+
+@article{waller1997hierarchical,
+  title={Hierarchical spatio-temporal mapping of disease rates},
+  author={Waller, Lance A and Carlin, Bradley P and Xia, Hong and Gelfand, Alan E},
+  journal={Journal of the American Statistical Association},
+  volume={92},
+  number={438},
+  pages={607--617},
+  year={1997},
+}
+
+@article{knorr2002block,
+  title={On block updating in Markov random field models for disease mapping},
+  author={Knorr-Held, Leonhard and Rue, H{\aa}vard},
+  journal={Scandinavian Journal of Statistics},
+  volume={29},
+  number={4},
+  pages={597--614},
+  year={2002}
+}
+
+@article{bardsley2012mcmc,
+  title={MCMC-based image reconstruction with uncertainty quantification},
+  author={Bardsley, Johnathan M},
+  journal={Journal on Scientific Computing},
+  volume={34},
+  number={3},
+  pages={A1316--A1332},
+  year={2012},
+  publisher={SIAM}
+}
+
+@article{griffin2017hierarchical,
+  title={Hierarchical shrinkage priors for regression models},
+  author={Griffin, Jim and Brown, Phil and others},
+  journal={Bayesian Analysis},
+  volume={12},
+  number={1},
+  pages={135--159},
+  year={2017}
 }
 
 

@@ -203,7 +203,7 @@ Notably, these matrices can be formed with $\bigo{T}$ extra computation, and we 
 This is an advantage over existing MVM-based training methods, as mBCG avoids the numerical instabilities associated with Lanczos (see \cref{sec:lanczos}).
 
 
-\subsection{Runtime and space.}
+\subsection{Runtime and Space}
 As shown above, we are able to approximate all inference terms from \emph{a single call to mBCG}.
 These approximations improve with the number of mBCG iterations.
 Each iteration requires one matrix-matrix multiply with $\trainK$ and element-wise operations on $N \times T$ matrices.
