@@ -229,7 +229,7 @@
 }
 
 @article{goyal2017accurate,
-  title={Accurate, large minibatch sgd: Training {I}magenet in 1 hour},
+  title={Accurate, large minibatch {SGD}: Training {I}magenet in 1 hour},
   author={Goyal, Priya and Doll{\'a}r, Piotr and Girshick, Ross and Noordhuis, Pieter and Wesolowski, Lukasz and Kyrola, Aapo and Tulloch, Andrew and Jia, Yangqing and He, Kaiming},
   journal={arXiv preprint arXiv:1706.02677},
   year={2017}
@@ -864,24 +864,6 @@
   year={2009}
 }
 
-@InCollection{turner2011two,
-  author={R. E. Turner and M. Sahani},
-  title={Two problems with variational expectation maximisation for time-series models},
-  booktitle={{B}ayesian Time series models},
-  pages={109--130},
-  publisher={Cambridge University Press},
-  year=2011,
-  editor={D. Barber and T. Cemgil and S. Chiappa},
-  chapter=5
-}
-
-@inproceedings{papandreou2011efficient,
-  title={Efficient variational inference in large-scale {B}ayesian compressed sensing},
-  author={Papandreou, George and Yuille, Alan L},
-  booktitle={ICCV Workshops},
-  year={2011}
-}
-
 @phdthesis{saatcci2012scalable,
   title={Scalable inference for structured {G}aussian process models},
   author={Saat{\c{c}}i, Yunus},
@@ -979,6 +961,13 @@
   organization={ACM}
 }
 
+@article{wilson2020efficiently,
+	title={Efficiently sampling functions from {G}aussian process posteriors},
+	author={Wilson, James T. and Borovitskiy, Viacheslav and Terenin, Alexander and Mostowsky, Peter and Deisenroth, Marc Peter},
+  journal={arXiv preprint arXiv:2002.09309},
+	year={2020},
+}
+
 
 %% GPs: Kernels
 
@@ -1033,6 +1022,24 @@
   year={2009}
 }
 
+@InCollection{turner2011two,
+  author={R. E. Turner and M. Sahani},
+  title={Two problems with variational expectation maximisation for time-series models},
+  booktitle={{B}ayesian Time series models},
+  pages={109--130},
+  publisher={Cambridge University Press},
+  year=2011,
+  editor={D. Barber and T. Cemgil and S. Chiappa},
+  chapter=5
+}
+
+@inproceedings{papandreou2011efficient,
+  title={Efficient variational inference in large-scale {B}ayesian compressed sensing},
+  author={Papandreou, George and Yuille, Alan L},
+  booktitle={ICCV Workshops},
+  year={2011}
+}
+
 @inproceedings{hensman2013gaussian,
   title={{G}aussian processes for big data},
   author={Hensman, James and Fusi, Nicolo and Lawrence, Neil D},
@@ -1070,6 +1077,14 @@
   school={University of Cambridge}
 }
 
+@inproceedings{sheth2017excess,
+  title={Excess risk bounds for the Bayes risk using variational inference in latent Gaussian models},
+  author={Sheth, Rishit and Khardon, Roni},
+  booktitle={NeurIPS},
+  pages={5151--5161},
+  year={2017}
+}
+
 @inproceedings{salimbeni2018orthogonally,
   title={Orthogonally decoupled variational {G}aussian processes},
   author={Salimbeni, Hugh and Cheng, Ching-An and Boots, Byron and Deisenroth, Marc},
@@ -1083,6 +1098,20 @@
   author={Burt, David R and Rasmussen, Carl E and Van Der Wilk, Mark},
   booktitle={ICML},
   year={2019}
+}
+
+@article{knoblauch2019generalized,
+  title={Generalized Variational Inference},
+  author={Knoblauch, Jeremias and Jewson, Jack and Damoulas, Theodoros},
+  journal={arXiv preprint arXiv:1904.02063},
+  year={2019}
+}
+
+@inproceedings{shi2019sparse,
+  title={Sparse Orthogonal Variational Inference for {G}aussian Processes},
+  author={Shi, Jiaxin and Titsias, Michalis K and Mnih, Andriy},
+  booktitle={AISTATS},
+  year={2020}
 }
 
 @inproceedings{wilk2020variational,
@@ -1105,13 +1134,6 @@
   author={Jankowiak, Martin and Pleiss, Geoff and Gardner, Jacob R},
   journal={arXiv preprint arXiv:1910.07123},
   year={2020}
-}
-
-@article{wilson2020efficiently,
-	title={Efficiently sampling functions from {G}aussian process posteriors},
-	author={Wilson, James T. and Borovitskiy, Viacheslav and Terenin, Alexander and Mostowsky, Peter and Deisenroth, Marc Peter},
-  journal={arXiv preprint arXiv:2002.09309},
-	year={2020},
 }
 
 
@@ -1436,4 +1458,28 @@
   number={6},
   pages={1153--1160},
   year={1981}
+}
+
+@inproceedings{cuturi2013sinkhorn,
+  title={Sinkhorn distances: Lightspeed computation of optimal transport},
+  author={Cuturi, Marco},
+  booktitle={NeurIPS},
+  pages={2292--2300},
+  year={2013}
+}
+
+@inproceedings{altschuler2019massively,
+  title={Massively scalable {S}inkhorn distances via the {N}ystr{\"o}m method},
+  author={Altschuler, Jason and Bach, Francis and Rudi, Alessandro and Niles-Weed, Jonathan},
+  booktitle={NeurIPS},
+  pages={4429--4439},
+  year={2019}
+}
+
+@inproceedings{koh2017understanding,
+  title={Understanding black-box predictions via influence functions},
+  author={Koh, Pang Wei and Liang, Percy},
+  booktitle={ICML},
+  pages={1885--1894},
+  year={2017}
 }
