@@ -19,14 +19,14 @@ Besides the storage cost associated with {\tt mvm\_$\trainK$}, each iteration of
 (See \cref{alg:mod_pcg}.)
 Storing these vectors requires exactly $4N$ space.
 In addtion, the mBCG algorithm stores the tridiagonal matrices for stochastic Lanczos quadrature, which requires $\bigo{J}$ memory for $J$ iterations of mBCG.
-The quadratic space cost associated with MVM-based GP inference comes from storing the matrix $\trainK$.
+The quadratic space cost associated with MVM-based exact GPs comes from storing the matrix $\trainK$.
 
 Typically, {\tt mvm\_$\trainK$} is implemented by first computing the full $N \times N$ kernel matrix $\trainK$, then computing the matrix-vector product with the full matrix.
-Although forming $\trainK$ requires $\bigo{N^2}$ memory, the result of the MVM $\trainK^{-1} \bb$ requires only $\bigo{N}$ memory.
-By using a \emph{map-reduce style algorithm} to compute $\trainK^{-1} \bb$, we can reduce the memory requirement of {\tt mvm\_$\trainK$} to \emph{linear in $N$}.
+Although forming $\trainK$ requires $\bigo{N^2}$ memory, the \emph{output} of the MVM $\trainK \bb$ requires only $\bigo{N}$ memory.
+By using a \emph{map-reduce style algorithm} to compute $\trainK \bb$, we can reduce the memory requirement of {\tt mvm\_$\trainK$} to \emph{linear in $N$}.
 
 \paragraph{Partitioned kernel MVMs.}
-To compute $\trainK^{-1} \bb$ in a map-reduce fashion, we partition the kernel matrix $\trainK$ such that \textit{we only store a constant number of rows at any given time}.
+To compute $\trainK \bb$ in a map-reduce fashion, we partition the kernel matrix $\trainK$ such that \textit{we only store a constant number of rows at any given time}.
 We first partition the data matrix $\bX \in \reals^{N \times D}$ into $P$ partitions, each of which contains roughly $N/P$ data points:
 %
 \[
@@ -39,7 +39,7 @@ We first partition the data matrix $\bX \in \reals^{N \times D}$ into $P$ partit
 %
 where we use ``$;$'' to denote row-wise concatenation.
 For each $\bX^{(\ell)}$, we can compute $\widehat \bK_{\bX^{(\ell)}\!\bX}$, which is a roughly $(N / P) \times N$ kernel matrix.
-By partitioning the kernel matrix this way, we rewrite it as a concatenation of the $P$ partitions:
+We can now rewrite the training kernel matrix as a concatenation of the $P$ partitions:
 %
 \[
   \widehat \bK_{\bX\!\bX} = \begin{bmatrix}
@@ -51,7 +51,7 @@ By partitioning the kernel matrix this way, we rewrite it as a concatenation of 
 %
 Computing each partition requires access to the full training set $\bX$, which we assume fits in memory.
 However, each partition $\widehat \bK_{\bX^{(\ell)}\!\bX}$ contains only $1/P$ of the entries of the full kernel matrix.
-Rewriting the matrix-vector product $\trainK \bb$ in terms of these partitions,
+Rewriting the matrix-vector product $\trainK \bb$ in terms of these partitions:
 %
 \[
   \widehat \bK_{\bX\!\bX} \bb = \begin{bmatrix}
@@ -68,7 +68,6 @@ The other memory requirements (i.e. storing $\bX$ and $\bb$) are linear in $N$.
 
 This algorithm allows us to reduce memory usage in exchange for sequential but easily parallelizable computations.
 If $P=1$ then we have the na\"ive $\bigo{N^2}$ memory MVM procedure. As $P \to N$, PCG will only require $\bigo{N}$ memory.
-In practice, we set a constant number of rows per partition according to the amount of memory available rather than number of partitions $P$.
 By keeping a partition in memory only until its component of the MVM has been computed, we can train GPs with an $\bigo{N}$ memory requirement.
 
 After developing our own custom partitioned-MVM approach, we were made aware of the KeOps software package \cite{charlier2020kernel} which computes map-reduced kernel-vector products.
@@ -83,7 +82,7 @@ Thus we can compute partitioned MVMs in parallel to attain wall-clock speedups p
 Additionally, we note that distributed parallel MVMs require only $O(N)$ communication.
 Each partitioned matrix multiplication only has to supply each device with a new right-hand-side vector $\bb$.
 Finally, if $W$ devices are used, the output from each device will be a vector of length $N / PW$.
-Thus only $\bigo{N}$ data are copied to or from the devices.
+Thus only $\bigo{N}$ memory is copied to or from the devices.
 In contrast, distributing the Cholesky decomposition requires $\bigo{N^2}$ communication \citep{nguyen2019exact}.
 
 
@@ -93,7 +92,7 @@ In contrast, distributing the Cholesky decomposition requires $\bigo{N^2}$ commu
 \subsection{Practical Considerations}
 
 \paragraph{Predictions with large-scale GPs.}
-At inference time, we must compute the predictive mean and variance given in \cref{eqn:predictive_mean} and \cref{eqn:predictive_var}.
+At test time, we must compute the predictive mean and variance given in \cref{eqn:predictive_mean} and \cref{eqn:predictive_var}.
 As described in \cref{sec:motivation_means}, predictive means require the inner product between $\bk_{\bX \bxtest}$ and the cached vector $\blue \ba = \trainK^{-1} \by$.
 Similarly, the LOVE method of \cref{chapter:love} generates a cachable low-rank approximation ${\color{blue} \bR^\top \bR} \approx {\color{blue} \trainK^{-1}}$ for predictive variances.
 After these caches have been computed, predictive distributions can be computed through $\bigo{N}$ vector inner products---an especially fast operation on GPUs.

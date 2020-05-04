@@ -14,19 +14,17 @@ On the other hand, BBMM and LOVE
 \end{enumerate*}
 
 While the past chapters address the computational efficiency of GP training and inference, we must still address the memory bottleneck.
-Exact GPs, unlike their scalable counterparts, make use of a dense $N \times N$ training kernel matrix which naively requires quadratic memory.
+Exact GPs, unlike their scalable counterparts, make use of dense $N \times N$ training kernel matrices which naively require quadratic memory.
 To overcome this limitation, we partition and distribute kernel matrix-vector multiplications (MVMs) across GPUs in a Map-Reduce style fashion.
-This reduces the memory requirement for GP training to $\mathcal{O}(N)$ \emph{on an individual GPU}, permitting scaling beyond $n\approx 10^4$ samples.
+This reduces the memory requirement for GP training to $\mathcal{O}(N)$ \emph{on an individual GPU}, permitting scaling beyond $N\approx 10^4$.
 Our implementation uses the KeOps library \cite{charlier2020kernel} and a custom multi-GPU wrapper to implement these memory-efficient MVMs.
 
 In addition, we introduce a number of practical heuristics to accelerate training and maximally utilize parallelization.
-With $8$ GPUs, GPs can be trained in seconds for $N \approx 10^4$, hours for $N \approx 10^5$, and less than one day for $N \approx 10^6$.
-This training time can be further reduced by using better hyperparameter initializations.
-After training, all models can \emph{make exact GP predictions in less than 1 second on 1 GPU} using the LOVE method presented in \cref{chapter:love}.
+With a single GPU, exact GPs can be trained in seconds for $N \approx 10^4$, hours for $N \approx 10^5$, and less than one day for $N \approx 10^6$.
+After training, exact GP models can \emph{make predictions in milliseconds} on large datasets using the LOVE method presented in \cref{chapter:love}.
 
 
 
-The past three chapters have introduced black-box methods for GP learning, training, and inference based on matrix-vector multiplication (MVM).
 
 \paragraph{Exact GPs vs Scalable Approximations.}
 A natural question is whether or not exact Gaussian processes are desirable for such large datasets.
@@ -35,20 +33,19 @@ Many approximate methods have been introduced to reduce this asymptotic complexi
 random feature expansions \cite{rahimi2008random,le2013fastfood,yang2015carte},
 tensor decompositions \cite{izmailov2018scalable,evans2018scalable},
 or stochastic variational optimization \citep{hensman2013gaussian,hensman2015scalable,wilson2016stochastic,cheng2017variational,salimbeni2018orthogonally,shi2019sparse}.
-Recent analysis has demonstrated strong convergence rates for variational Gaussian process approximations under certain conditions \cite{burt2019rates}.
-
+Recent analysis demonstrates good convergence rates for variational GP approximations under certain conditions \cite{burt2019rates}.
 Moreover, the framework developed in the previous chapters makes it simple to implement and experiment with various approximate methods.
-As discussed in \cref{sec:programmability}, a primary advantage of the MVM framework is its black-box nature.
-The BBMM, LOVE, and CIQ algorithms can be used with a wide variety of scalable GP approximations with almost no additional implementation: all that's needed is an efficient {\tt \_matmul} function.
+As discussed in \cref{sec:programmability}, the BBMM, LOVE, and CIQ algorithms can be used with a wide variety of scalable GP approximations with almost no additional implementation
+(all that's needed is an efficient {\tt \_matmul} function).
 
-At the same time, there is reason to believe that exact methods are perferable over scalable approximate methods if they are computationally feasible.
-Due to the historical intractability of training exact GPs on large datasets, it has been an open question how approximate methods compare to an exact approach when much more data is available.
-Moreover, every approximate method inherently makes biases and tradeoffs \cite{turner2011two,bauer2016understanding} that may not be applicable to every dataset.
+At the same time, there is reason to believe that exact methods are preferable over scalable GP approximations if they are computationally feasible.
+Every approximate method inherently makes biases and tradeoffs \cite{turner2011two,bauer2016understanding} that may not be applicable to every dataset.
 Choosing the appropriate approximation is akin to a large hyperparameter search and may require expert knowledge.
 Exact GPs offer a simplicity that is more generally applicable and---as we will demonstrate---more computationally powerful.
+%Due to the historical intractability of training exact GPs on large datasets, it has been an open question how approximate methods compare to an exact approach when much more data is available.
 
 We benchmark on regression datasets from the UCI repository \citep{asuncion2007uci}.
 We find exact GPs offer notably better performance than scalable approximations, often exceeding a two-fold reduction in root-mean-squared error.
-The results show that GPs continue to significantly benefit from the addition of new training points, a valuable conceptual finding in favor of non-parametric approaches.
-Moreover, these results clarifies the relative performance of popular GP approximations against exact GPs in an unexplored data size regime, enabling future comparisons against other GP approximations.
+Exact GPs continue to benefit from the addition of new training points, a valuable conceptual finding in favor of non-parametric approaches.
+Moreover, our results clarify the relative performance of popular GP approximations against exact GPs in the $N\geq100,\!000$ regime---a comparison which has previously been considered intractable.
 
