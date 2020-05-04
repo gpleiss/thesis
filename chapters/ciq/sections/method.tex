@@ -1,7 +1,7 @@
 \section{Cauchy Integral Quadrature (CIQ) via Matrix-Vector Multiplication}
 \label{sec:ciq_method}
 
-In this section we will develop an MVM method to compute $\bK^{-1/2} \bb$ and $\bK^{1/2} \bb$ for sampling and whitening.
+In this section we develop an MVM method to compute $\bK^{-1/2} \bb$ and $\bK^{1/2} \bb$ for sampling and whitening.
 Our approach uses to a \emph{rational approximation} of $\bK^{-1/2}$ in conjunction with \emph{matrix-vector multiplication}-based solvers.
 This scales better than existing methods (e.g. Cholesky) by
 \begin{enumerate*}
@@ -10,9 +10,8 @@ This scales better than existing methods (e.g. Cholesky) by
   \item more effectively using GPU acceleration.
 \end{enumerate*}
 
-\paragraph{Cauchy Integral Quadrature (CIQ)}
-To compute $\bK^{-\frac 1 2}$, we re-cast the matrix square root through a rational approximation.
-A well-established result from complex analysis is that the inverse square root can be expressed through Cauchy's integral formula \citep{davies2005computing,higham2008functions,hale2008computing,golub2012matrix}:
+\paragraph{Cauchy Integral Quadrature (CIQ).}
+A well-established result from complex analysis is that $\bK^{-1/2}$ can be expressed through Cauchy's integral formula \citep{davies2005computing,hale2008computing,golub2012matrix}:
 %
 \begin{equation}
 	\bK^{-\frac 1 2} = \frac{1}{2 \pi i} \int_\Gamma t^{-\frac 1 2} \left( t \bI - \bK \right)^{-1} \intd t,
@@ -20,7 +19,7 @@ A well-established result from complex analysis is that the inverse square root 
 \end{equation}
 %
 where $\Gamma$ is a contour in the complex plane that surround the spectrum of $\bK^{-\frac 1 2}$.
-Since there is no analytic form for this integral, we instead rely on a quadrature approximation:
+Since there is no analytic form for this integral, we instead rely on a quadrature-based rational approximation:
 %
 \begin{equation}
 	\bK^{-\frac 1 2} \approx \sum_{q=1}^Q w_q \left( t_q \bI - \bK \right)^{-1},
@@ -57,12 +56,11 @@ Beyond this small eigendecomposition, the Lanczos eigenvalue estimates only requ
 
 \subsection{An Efficient Matrix-Vector Multiplication Approach to CIQ with msMINRES.}
 %
-Using \cref{eqn:contour_integral_quad} for whitening and sampling requires performing solves with multiple shifted matrices.
-Drawing a sample from $\normaldist{0}{\bK}$ using \cref{eqn:contour_integral_quad} requires computing
+Using the quadrature method of \citet{hale2008computing} for whitening and sampling requires performing solves with multiple shifted matrices.
+For example, drawing a sample from $\normaldist{0}{\bK}$ using \cref{eqn:contour_integral_quad} requires computing
 $\bK \left( \sum_{q=1}^Q w_q (t_q \bI - \bK )^{-1} \bb \right),$
 where $\bb \sim \normaldist{\bzero}{\bI}$.
-Importantly, most applications of sampling and whitening (e.g. Bayesian optimization, variational GPs)
-require repeated computation of the matrix square root.
+Importantly, most applications of sampling and whitening (e.g. Bayesian optimization, variational GPs) require repeated computations of matrix square roots.
 Therefore these $Q$ solves must be efficient to compute.
 
 \gp{Stopped here.}
