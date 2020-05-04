@@ -1,41 +1,28 @@
 %!TEX root=../main.tex
 \section{Discussion}
 
-Historically, for Gaussian processes, ``a large dataset is one that contains over a few thousand data points'' \citep{hensman2013gaussian} which have traditionally necessitated scalable approximations.
-Bigger datasets have traditionally necessitated
-scalable approximations. In this chapter, we have extended
-the applicability of exact GPs far beyond what has been
-thought possible --- to datasets with over a million training examples through MVM-based GP inference. Our
-approach uses easily parallelizable routines that fully exploit modern parallel hardware and distributed computing. In our comparisons, we find that exact GPs are more
-widely applicable than previously thought, performing significantly
-better than approximate methods on large datasets, while requiring fewer design choices.
+Historically for Gaussian processes, ``a large dataset is one that contains over a few thousand data points'' \citep{hensman2013gaussian}.
+%Bigger datasets have traditionally necessitated scalable approximations.
+In this chapter, we have extended the applicability of exact GPs far beyond what has previously been thought possible---applying GPs to datasets with over a million training examples.
+In our comparisons, we find that exact GPs perform significantly better than approximate methods on large datasets, while requiring fewer design choices.
 
 \paragraph{Is CG still exact?}
-In the GP literature, \emph{exact} GP inference typically refers to using the Cholesky decomposition with exact kernels \citep{rasmussen2006gaussian}.
+In the GP literature, \emph{exact} GP training and inference typically refers to using the Cholesky decomposition with exact kernels \citep{rasmussen2006gaussian}.
 A natural question to ask is whether we can consider our approach ``exact'' in light of the fact that CG perform solves only up to a pre-specified error tolerance.
 However, unlike the approximate methods presented in this chapter, the difference between a CG-based model and a theoretical model with ``perfect'' solves can be precisely controlled by this error tolerance.
-We therefore consider CG exact in a sense that is commonly used in the context of mathematical optimization --- namely that it computes solutions up to arbitrary precision.
-In fact, CG-based methods can often be more precise than Cholesky based approaches in floating-point arithmetic due to fewer round-off errors \cite{gardner2018gpytorch}.
+We therefore consider CG exact in a sense that is commonly used in the context of mathematical optimization---namely that it computes solutions up to arbitrary numerical precision.
+In fact, CG-based methods can often be more precise than Cholesky based approaches in floating-point arithmetic due to fewer round-off errors, as demonstrated in \cref{chapter:bbmm} (\cref{fig:cg_error}).
 
 \paragraph{When to approximate?}
-There are many approximate methods for scalable Gaussian
-processes, with varying statistical properties, advantages, and application regimes.
-We chose to compare exact GPs to approximation methods SVGP and SGPR for their
-popularity and available GPU implementations. There may be some regimes where other
-approximate methods or combinations of methods outperform these two approximations.
-Our objective is not to perform an exhaustive study of approximate methods and
-their relative strengths but to highlight that such comparisons are now possible with modern hardware.
+There are many approximate methods for scalable Gaussian processes, with varying statistical properties, advantages, and application regimes.
+We compare against the SVGP and SGPR methods due to their popularity and general applicability.
+There may be some regimes where other approximate methods outperform these two approaches.
+Our objective is not to perform an exhaustive study of approximate methods and their relative strengths but to highlight that such comparisons are now possible.
 
-Indeed, there are cases where an approximate GP method might still be preferable.
-Examples may include training on large datasets with limited computational resources.
-In certain regimes, such as low dimensional spaces, there are
-approximations that are designed to achieve high degrees of accuracy in less time than exact GPs.
-Additionally, GP inference with non-Gaussian likelihoods (such as for classification)
-requires an approximate inference strategy.
-Some approximate inference methods, such as Laplace and MCMC \citep{rasmussen2006gaussian, murray2010elliptical},
-may be amenable to the parallelisation approaches discussed here for approximate inference with exact kernels.
+Indeed, there are cases where approximate GP methods might still be preferable, especially when computational resources are limited.
+In certain regimes, such as low dimensional spaces, approximate methods like KISS-GP can achieve high degrees of accuracy in less time than exact GPs \cite{wilson2015kernel}.
+Additionally, GP inference with non-conjugate likelihoods (such as for classification) necessitates approximate training/inference (see \cref{chapter:variational}).
 
-Nonetheless, with efficient utilization of modern hardware, exact Gaussian processes are now an
-appealing option on substantially larger datasets than previously thought possible.
-Exact GPs are powerful yet simple -- achieving remarkable accuracy without requiring much expert intervention.
-We expect exact GPs to become ever more scalable and accessible with continued advances in hardware design.
+Nonetheless, with efficient utilization of modern hardware through MVM methods, exact Gaussian processes are now an appealing option on substantially larger datasets than previously thought possible.
+Exact GPs are powerful yet simple---achieving remarkable accuracy without requiring much expert design knowledge.
+We expect exact GPs to become even more scalable and accessible with continued advances in hardware design.
