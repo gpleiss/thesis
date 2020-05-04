@@ -1,0 +1,26 @@
+\begin{tabular}{ cccccccc }
+  \toprule
+  &&& \multicolumn{1}{r}{\small\bf Precomputation} &&
+  \multicolumn{3}{c}{{\bf Prediction}} \\
+  \cline{4-4} \cline{6-8}
+  \thead{\\{\bf Dataset}} & $N$ & $D$ &
+  \thead{{\bf Exact GP} \\ (BBMM)} &&
+  \thead{{\bf Exact GP} \\ (BBMM)} &
+  \thead{{\bf SGPR} \\ ($M\!=\!512$)} &
+  \thead{{\bf SVGP} \\ ($M\!=\!1,\!024$)}
+  \\
+  \midrule
+	PoleTele             & $9,\!600$          & $26$  &  $5.14$ s    && $\mathbf{6}$ \textbf{ms}    & $\mathbf{6}$ \bf ms    & $273$ ms \\
+	Elevators            & $10,\!623$         & $18$  &  $0.95$ s    && $\mathbf{7}$ \textbf{ms}    & $\mathbf{7}$ \bf ms    & $212$ ms \\
+	Bike                 & $11,\!122$         & $17$  &  $0.38$ s    && $\mathbf{7}$ \textbf{ms}    & ${9}$ ms               & $182$ ms \\
+	Kin40K               & $25,\!600$         & $8$   &  $12.3$ s     && $\mathbf{11}$ \textbf{ms}   & $       {12}$ ms       & $220$ ms \\
+	Protein              & $29,\!267$         & $9$   &  $7.53$ s     && $       {14}$ ms            & $\mathbf{9}$ \bf ms    & $146$ ms \\
+	KeggDirected         & $31,\!248$         & $20$  &  $8.06$ s    && $\mathbf{15}$ \textbf{ms}   & $       {16}$ ms       & $143$ ms \\
+	CTslice              & $34,\!240$         & $385$ &  $7.57$ s   && $\mathbf{22}$ \textbf{ms}   & $       {14}$ ms       & $133$ ms \\
+	KEGGU                & $40,\!708$         & $27$  &  $18.9$ s    && $\mathbf{18}$ \textbf{ms}   & $       {13}$ ms       & $211$ ms \\
+	3DRoad               & $278,\!319$        & $3$   &  $118$ m*     && ${119}$ ms                  & $\mathbf{68}$ \bf ms   & $130$ ms \\
+	Song                 & $329,\!820$        & $90$  &  $22.2$ m*   && ${123}$ ms                  & $\mathbf{99}$ \bf ms   & $134$ ms \\
+	Buzz                 & $373,\!280$        & $77$  &  $42.6$ m*   && ${131}$ ms                  & $\mathbf{114}$ \bf ms  & $142$ ms \\
+	HouseElectric        & $1,\!311,\!539$    & $9$   &  $3.40$ hr*   && ${958}$ ms                  & -----                  & $\mathbf{166}$ \textbf{ms} \\
+  \bottomrule
+\end{tabular}
