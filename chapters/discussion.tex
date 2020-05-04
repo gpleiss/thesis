@@ -3,17 +3,17 @@
 
 
 This thesis presents a comprehensive framework for Gaussian process learning, inference, and prediction.
-The algorithms proposed in \cref{chapter:bbmm,chapter:love,chapter:variational} are based around a single central design decision: reduce all expensive matrix operations to (ideally parallelized) matrix-vector multiplications (MVMs).
+The algorithms proposed in \cref{chapter:bbmm,chapter:love,chapter:ciq} are based around a single central design decision: reduce all expensive matrix operations to (ideally parallelized) matrix-vector multiplications (MVMs).
 \cref{chapter:bbmm} introduces the Black-Box Matrix~\texttimes~Matrix (BBMM) framework and computes GP training terms via a modified batched-conjugate gradients algorithm (mBCG).
 To enable fast predictions with Gaussian process models, \cref{chapter:love} introduces the LanczOs Variance Estimates (LOVE) algorithm which computes an amortized cache of the predictive posterior via Lanczos iterations.
-Finally, \cref{chapter:variational} uses Cauchy Integral Quadrature (CIQ) to ``whiten'' and ``unwhiten'' vectors with respect to a Gaussian covariance via a multi-shift version of the MINRES algorithm (msMINRES)---enabling
+Finally, \cref{chapter:ciq} uses Cauchy Integral Quadrature (CIQ) to ``whiten'' and ``unwhiten'' vectors with respect to a Gaussian covariance via a multi-shift version of the MINRES algorithm (msMINRES)---enabling
 the MVM-based training of variational approximations to GP models and also allows for efficient posterior sampling with exact Gaussian processes.
 
 Though the MVM theme reflects only a single design decision, it simultaneously addresses several disderata that improve Gaussian process usability and practicality.
 As demonstrated in \cref{chapter:bbmm}, MVM-based methods are able to effectively utilize GPU hardware and reduce specialty implementations to $\leq 50$ lines of code.
 This makes it easier for researchers to rapidly prototype and test novel models across a wide variety of datasets.
 MVM-based methods also reduce the asymptotic complexity of GPs, which in turn allows for in more powerful predictions and inferences.
-\cref{chapter:love,chapter:variational} show that high-fidelity variational approximations and large-scale sampling lead to better predictions and black-box optimization.
+\cref{chapter:love,chapter:ciq} show that high-fidelity variational approximations and large-scale sampling lead to better predictions and black-box optimization.
 Finally, MVM-based methods expands what is considered tractable for exact GP methods.
 \cref{chapter:largeexact} scales exact GPs to datasets two orders of magnitude larger than previous efforts, which opens up new possible domains for this class of models.
 

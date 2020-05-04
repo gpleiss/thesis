@@ -181,7 +181,7 @@ The following chapters introduce the components of our matrix-multiplication-bas
     As with BBMM training, LOVE relies entirely on \emph{matrix-multiplication}, which is especially beneficial for models with fast kernel routines.
     After the LOVE precomputation, computing a GP prediction is \emph{linear} in the amount of training data, or $\bigo{1}$ time if used in conjunction with structured kernel interpolation \cite{wilson2015kernel}.
 
-  \item {\bf \cref{chapter:variational}} extends the BBMM framework to Gaussian process models with non-Gaussian likelihood functions---i.e. when GPs are used to model heavy-tailed data, arrival processes, or classification problems.
+  \item {\bf \cref{chapter:ciq}} extends the BBMM framework to Gaussian process models with non-Gaussian likelihood functions---i.e. when GPs are used to model heavy-tailed data, arrival processes, or classification problems.
     Unlike standard regression, these models necessitate the use of approximate Bayesian inference.
     We introduce a matrix-multiplication method based on {\bf Cauchy Integral Quadrature (CIQ)} which can be used to optimize a re-parameterized variational training objective.
     On several large-scale spatial datasets, CIQ enables faster optimization and higher-fidelity approximations than existing variational methods.

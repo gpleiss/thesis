@@ -20,7 +20,7 @@ By terminating the algorithm very early, we avoid the computational bottleneck a
 When GP models are used with non-conjugate likelihoods (e.g. classification GPs or regression GPs with heavier-tailed noise models), we cannot compute the GP's marginal log likelihood (i.e. \cref{eqn:log_lik,eqn:log_lik_deriv} do not apply).
 We must instead use variational approximations of the marginal log likelihood, which requires a different set of training and inference equations.
 Importantly, it also requires computing the inverse square root of the kernel matrix times a vector ($\trainK^{- \frac 1 2} \bb$), which is not an output of the mBCG algorithm.
-We will discuss how matrix-multiplication techniques can be applied to this problem in \cref{chapter:variational}.
+We will discuss how matrix-multiplication techniques can be applied to this problem in \cref{chapter:ciq}.
 
 \paragraph{Computing predictive distributions.}
 The focus of this chapter has been training GP regression models by optimizing the marginal log likelihood of \cref{eqn:log_lik,eqn:log_lik_deriv}.
