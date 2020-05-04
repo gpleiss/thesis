@@ -36,7 +36,6 @@
 %%%%%%%%%%%%%% Formatting
 \bibliographystyle{plainnat}
 \renewcommand{\cite}[1]{\citep{#1}}
-%\renewcommand{\caption}[1]{\singlespacing\hangcaption{#1}\normalspacing}
 \renewcommand{\topfraction}{0.85}
 \renewcommand{\textfraction}{0.1}
 \renewcommand{\floatpagefraction}{0.75}
@@ -48,6 +47,11 @@
 
 %%%%%%%%%%%%% Special characters
 \DeclareUnicodeCharacter{00D7}{\texttimes}
+
+
+%%%%%%%%%%%%% Enumeration style
+\setlist[enumerate]{font={\bfseries}}% global settings, for all lists
+\setlist[enumerate,1]{label={(\arabic*)}}
 
 
 %%%%%%%%%%%%% Code examples
