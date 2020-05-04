@@ -147,7 +147,7 @@ This is a vary common operation: in Bayesian optimization, several popular acqui
 Let $\bXtest = [ \bxtest_1, \ldots, \bxtest_T ]$ be a test set of $T$ points.
 To draw samples from $p( \ytest_1, \ldots, \ytest_T  \! \mid \! \dset)$---the predictive function evaluated on $\bxtest_1, \ldots, \bxtest_t$,
 the cross-covariance terms (i.e. $\covtest{\bxtest_i}{\bxtest_j}$) are necessary in addition to the variance terms ($\vartest{\bxtest_i}$).
-We sample $p( \bfn(\bxtest_1), \ldots, \bfn(\bxtest_T) \! \mid \! \dset)$ through the reparameterization trick \cite{kingma2014auto,rezende2014stochastic}:
+We sample $\bepsilon \sim p( \bfn(\bxtest_1), \ldots, \bfn(\bxtest_T) \! \mid \! \dset)$ through the reparameterization trick \cite{kingma2014auto,rezende2014stochastic}:
 %
 \[
   \bmeantest = \begin{bmatrix} \meantest{\bxtest_1} \\ \vdots \\ \meantest{\bxtest_1} \end{bmatrix},
@@ -159,11 +159,11 @@ We sample $p( \bfn(\bxtest_1), \ldots, \bfn(\bxtest_T) \! \mid \! \dset)$ throug
   \end{bmatrix} - \sigma^2 \bI,
 \]
 \begin{equation}
-  \bmeantest + \bS \bepsilon \sim p( \bfn(\bxtest_1), \ldots, \bfn(\bxtest_T) \! \mid \! \dset)
+  \bepsilon = \bmeantest + \bS \bepsilon' \sim p( \bfn(\bxtest_1), \ldots, \bfn(\bxtest_T) \! \mid \! \dset)
   \label{eqn:sample}
 \end{equation}
 %
-where $\bepsilon \sim \normaldist{\bzero}{\bI}$ and $\bS \in \reals^{T \times T}$ is some matrix such that $\bS \bS^\top = \Covtest$.
+where $\bepsilon' \sim \normaldist{\bzero}{\bI}$ and $\bS \in \reals^{T \times T}$ is some matrix such that $\bS \bS^\top = \Covtest$.
 Typically $\bS \bS^\top$ is taken to be the Cholesky decomposition of the predictive covariance matrix.
 Computing this decomposition incurs a $\bigo{T^3}$ cost on top of the $\bigo{T^2}$ covariance evaluations.
 This may be costly, even with constant-time covariance computations.
@@ -217,9 +217,9 @@ where ${\color{blue} \bL_{\bT'} }$ is the Cholesky factor of $\blue \bT'$ (a $\b
 Setting $\blue{ \bS = \bQ' \bL_{\bT} }$, we see that $\Covtest = (\bW_{\bXtest}^\top {\blue \bS}) (\bW_{\bXtest}^\top {\blue \bS})^{\top}$.
 ${\blue S} \in \reals^{M \times J}$ can be pre-computed and cached since it does not depend on test data.
 In total, this pre-computation takes $\bigo{J M \log M + M J^2}$ time in addition to what is required for fast variances.
-To sample from the predictive distribution, we need to evaluate \cref{eqn:sample}, which involves multiplying $\bW^\top_{\bXtest} {\blue \bS} \bepsilon$.
-Multiplying $\bepsilon$ by $\bS$ requires $\bigo{MJ}$ time, and finally multiplying by $\bW^{\top}_{\bXtest}$ takes $\bigo{TJ}$ time.
-Therefore, drawing $S$ samples (corresponding to $S$ different values of $\bepsilon$) takes $\bigo{SJ(T + M)}$ time total during the testing phase (see \cref{tab:running_times_sampling})---a \emph{linear} dependence on $T$.
+To sample from the predictive distribution, we need to evaluate \cref{eqn:sample}, which involves multiplying $\bW^\top_{\bXtest} {\blue \bS} \bepsilon'$.
+Multiplying $\bepsilon'$ by $\bS$ requires $\bigo{MJ}$ time, and finally multiplying by $\bW^{\top}_{\bXtest}$ takes $\bigo{TJ}$ time.
+Therefore, drawing $S$ samples (corresponding to $S$ different values of $\bepsilon'$) takes $\bigo{SJ(T + M)}$ time total during the testing phase (see \cref{tab:running_times_sampling})---a \emph{linear} dependence on $T$.
 
 
 

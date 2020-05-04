@@ -1,33 +1,61 @@
 \section{Introduction}
 
-High dimensional multivariate Gaussian distributions arise frequently in machine learning, especially in the context of Bayesian non-parametric models.
-For example, Gaussian process regression assume that the entries in a dataset $(\bx^{(1)}, y^{(1)})$, $\ldots$, $(\bx^{(N)}, y^{(N)})$ are jointly Gaussian a priori and a posteriori.
-Inferences require operations on the prior distribution $p([y^{(1)}, \ldots, y^{(N)}]) = \normaldist{\bzero}{\bK \in \reals^{N \times N}}$,
-which typically results in expensive non-linear manipulations with the $N \times N$ covariance matrix $\bK$.
+BBMM and LOVE are black-box algorithms for
+%
+\begin{enumerate*}
+  \item computing linear solves and log determinants with massive parallelism; and
+  \item generating a low-rank cache for repeated kernel solves.
+\end{enumerate*}
+%
+This set of operations suffices for many predictive tasks with Gaussian process regression models.
+However, other Gaussian process tasks---such as optimization and non-conjugate (e.g. classification) problems---require two additional kernel matrix operations:
+\begin{itemize}
+  \item {\bf Sampling} from GP posteriors---as described in \cref{sec:sampling_method}---is a common inference operation especially in the context of Bayesian optimization \cite{thompson1933likelihood,frazier2009knowledge,wang2017max}.
+  Since we cannot directly sample a function $f(\cdot) \sim p(f(\cdot) \mid \dset)$, it is more common to sample $f(\cdot)$ evaluated on a finite test set $\bXtest = [\bxtest_1, \ldots, \bxtest_T]$
+  If $\normaldist{\bmeantest}{\Covtest}$ is the GP posterior evaluated on $\bXtest$, then we can draw samples $\bepsilon'$ via the reparameterization trick \cite{kingma2014auto,rezende2014stochastic}:
+  %
+  \begin{equation}
+    \bepsilon = \bmeantest + \left( {\Covtest}^{\frac 1 2} \right) \bepsilon'.
+    \label{eqn:sampling}
+  \end{equation}
+  %
+  where $\bepsilon' \sim \normaldist{\bzero}{\bI}$ is a standard normal vector.
 
-\paragraph{Existing Methods for Sampling and Whitening}
-typically rely on the Cholesky factorization: $\bK = \bL \bL^\top$, where $\bL$ is lower triangular.
-Though $\bL$ is not a square root of $\bK$, $\bL\bb$ is equivalent to $\bK^{1/2} \bb$ up to an orthonormal rotation.
-Therefore, $\bL\bb$, $\bb \sim \normaldist{\bzero}{\bI}$ can be used to draw samples from from $\normaldist{\bzero}{\bK}$ and $\bL^{-1} \bb$, $\bb \sim \normaldist{\bzero}{\bK}$ can be used to ``whiten'' the vector $\bb$.
+  \item {\bf ``Whitening''} is essentially the inverse of the sampling operation---and it is often necessary for non-conjugate GP approximations.
+  If $\bb$ is a random variable with mean $\bmu$ and covariance $\bK$ (e.g. a sample from a GP prior), then the whitening operation gives us a coordinate transformation
+  %
+  \begin{equation}
+    \bb' = \bK^{- \frac 1 2} \left( \bb - \bu \right)
+    \label{eqn:whitening}
+  \end{equation}
+  %
+  so that the resultant vector $\bb'$ has zero mean and unit covariance.
+  As we will discuss in \cref{sec:variational_results}, the whitening operation can significantly accelerate the convergence of variational Gaussian process inference \cite{kuss2005assessing,hensman2013gaussian,matthews2017scalable}
+\end{itemize}
+%
+Note that \cref{eqn:sampling,eqn:whitening} both require applying the matrix square root (or its inverse) to a vector: $\bK^{1/2} \bb$.
+In practice, $\bK^{1/2}$ can be replaced with any matrix $\bR$ such that $\bR \bR^\top = \bK$.
+All such $\bR$ matrices are equivalent to $\bK^{1/2}$ up to an orthonormal rotation \cite{golub2012matrix}.
+
+Existing methods for sampling and whitening typically rely on the Cholesky factorization: $\bK = \bL \bL^\top$, where $\bL$ is lower triangular.\footnote{
+  As stated above, $\bL$ is equivalent to $\bK^{1/2}$ up to an orthonormal rotation.
+}
+$\bL\bb$, $\bb \sim \normaldist{\bzero}{\bI}$ can be used to draw samples from from $\normaldist{\bzero}{\bK}$ and $\bL^{-1} \bb$, $\bb \sim \normaldist{\bzero}{\bK}$ can be used to ``whiten'' the vector $\bb$.
 However, the Cholesky factor requires $\bigo{N^3}$ computation and $\bigo{N^2}$ memory for an $N \times N$ covariance matrix $\bK$.
-Consequentially, sampling and whitening are typically accomplished with randomized algorithms \gp{CITE}, low-rank/sparse approximations \gp{CITE}, or alternative distributions \gp{CITE}.
+Consequentially, sampling and whitening are typically accomplished with randomized algorithms \citep[e.g.][]{rahimi2008random}, low-rank/sparse approximations \citep[e.g.][]{wilson2020efficiently}, or alternative distributions \citep[e.g.][]{wang2017max}.
+While the previous chapter offers an efficient sampling method for KISS-GP models; this method is not generally applicable to other classes of GP models (see \cref{sec:sampling_method}).
 
-In this paper, we use MVM methods to address a common computational bottleneck for high-dimensional Gaussian distributions: computing the products $\bK^{\frac 1 2} \bb$ and $\bK^{-\frac 1 2} \bb$ with covariance matrix $\bK$.
-This operation occurs frequently in Gaussian process methods and inverse problems \gp{CITE}.
-For example, if $\bb$ is a standard Normal vector, then $\bK^{\frac 1 2} \bb$ is a method of generating samples from $\normaldist{\bzero}{\bK}$ via the reparameterization trick \cite{kingma2013auto}.
-This operations appears frequently in Bayesian optimization \gp{CITE} and Gibbs sampling \gp{CITE}.
-$\bK^{-\frac 1 2} \bb$ can also used to project data and parameters into a ``whitened'' coordinate space \gp{CITE}---an transformation that accelerates the convergence of variational Gaussian process approximations \cite{hensman2013gaussian,matthews2017scalable}.
-Despite its ubiquity and usefulness, the matrix square root is typically avoided for matrices larger than $N=5,\!000$, and (potentially loose) approximations are typically used instead.
-Typically, the Cholesky factorization is used to compute $\bK^{-1/2} \bb$ up to an orthonormal rotation, yet this operation scales cubically with $N$ and requires quadratic memory.
-To address these limitations, we make the following contributions:
+To address these shortcomings, we develop a matrix-vector multiplication (MVM) method for both sampling and whitening operations.
+Our method, {\bf Cauchy Integral Quadrature (CIQ)}, can efficiently computes $\bK^{1/2} \bb$ and $\bK^{-1/2} \bb$, where $\bK$ is a Gaussian process covariance matrix.
+This chapter makes the following contributions:
 %
 \begin{itemize}
-  \item We introduce a matrix-vector multiplication approach to $\bK^{-\frac 1 2} \bb$ that is accurate to several decimal points with \emph{quadratic} computational requirements.
-    Our approach uses an insight from \citet{hale2008computing} that expresses the matrix square root as a \emph{sum of shifted matrix inverses}.
+  \item We develop a MVM approach to $\bK^{-\frac 1 2} \bb$ that is accurate to several decimal points with \emph{quadratic} computational requirements.
+    Our approach, CIQ, uses an insight from \citet{hale2008computing} that expresses the matrix square root as a \emph{sum of shifted matrix inverses}.
 
   \item To efficiently compute these shifted inverses, we introduce a modified version of the minimum residual algorithm (MINRES) \cite{paige1975solution} which performs \emph{multiple shifted solves} through a single iteration of MVMs.
-    This {\bf multi-shift MINRES (msMINRES)} can be preconditioned for fast convergence, and only requires $\bigo{N}$ storage when used in conjunction with partitioned MVMs \cite{wang2019exact,charlier2020kernel}.
-    Achieving 4 or 5 decimal places of accuracy typically requires \emph{fewer than 100 matrix-vector multiplications}, which can be highly accelerated through GPUs.
+    This {\bf multi-shift MINRES (msMINRES)} can be preconditioned for fast convergence, and only requires $\bigo{N}$ storage when used in conjunction with partitioned MVMs (see \cref{chapter:largeexact} or \cite{charlier2020kernel}).
+    Achieving 4 or 5 decimal places of accuracy typically requires \emph{fewer than 100 matrix-vector multiplications}, which can be accelerated through GPUs.
 
   \item We derive a scalable backward pass for $\bK^{-1/2} \bb$ that enables our approach to be used as part of learning and optimization.
 

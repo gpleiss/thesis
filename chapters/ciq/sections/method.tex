@@ -239,8 +239,8 @@ The only requirements we have for $\bP$ are that
 One possible preconditioner is the partial pivoted Cholesky preconditioner proposed by \citet{gardner2018gpytorch} (see \cref{app:preconditioner}).
 The form of $\bP$ is $\bR \bR^\top + \sigma^2 \bI$, where $\bR$ is a low-rank factor and $\sigma^2 \bI$ is a small diagonal component.
 This preconditioner affords $\approx \bigo{N}$ solves using the matrix inversion lemma and $\bigo{N}$ samples using the reparameterization trick \cite{kingma2013auto,rezende2014stochastic}.\footnote{
-	Let $\bepsilon_1$ and $\bepsilon_2$ be standard Normal random variables.
-	Then $\bR \bepsilon_1 + \sigma \bepsilon_2$ is a sample from $\normaldist{\bzero}{\bP}$.
+	Let $\bepsilon_1'$ and $\bepsilon_2'$ be standard Normal random variables.
+	Then $\bR \bepsilon_1' + \sigma \bepsilon_2'$ is a sample from $\normaldist{\bzero}{\bP}$.
 }
 Moreover, this preconditioner is highly effective on many Gaussian covariance matrices \cite{gardner2018gpytorch,wang2019exact}.
 
