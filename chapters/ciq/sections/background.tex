@@ -1,0 +1,29 @@
+\section{Background}
+
+
+\paragraph{Existing Methods for Sampling and Whitening}
+typically rely on the Cholesky factorization: $\bK = \bL \bL^\top$, where $\bL$ is lower triangular.
+Though $\bL$ is not a square root of $\bK$, $\bL\bb$ is equivalent to $\bK^{1/2} \bb$ up to an orthonormal rotation.
+Therefore, $\bL\bb$, $\bb \sim \normaldist{\bzero}{\bI}$ can be used to draw samples from from $\normaldist{\bzero}{\bK}$ and $\bL^{-1} \bb$, $\bb \sim \normaldist{\bzero}{\bK}$ can be used to ``whiten'' the vector $\bb$.
+However, the Cholesky factor requires $\bigo{N^3}$ computation and $\bigo{N^2}$ memory for an $N \times N$ covariance matrix $\bK$.
+Consequentially, sampling and whitening are typically accomplished with randomized algorithms \gp{CITE}, low-rank/sparse approximations \gp{CITE}, or alternative distributions \gp{CITE}.
+
+\paragraph{Krylov Subspace Methods}
+are a family of iterative algorithms for computing functions of matrices applied to vectors $f(\bK) \bb$ \citep[e.g.][]{schneider2001krylov,saad2003iterative,van2003iterative}.
+Crucially, $\bK$ is only accessed through \emph{matrix-vector multiplication} (MVMs), which is beneficial for extremely large matrices that cannot be explicitly computed in memory.
+All Krylov algorithms share the same basic formula: each iteration $j$ produces an estimate $\bc_j \approx f(\bK) \bb$ which falls within the $j^\text{th}$ \emph{Krylov subspace} of $\bK$ and $\bb$:
+\[
+  \bc_j \in \mathcal{K}_j (\bK, \bb) = \text{span} \left\{ \bb, \:\: \bK \bb, \:\: \bK^2 \bb, \:\: \ldots, \:\: \bK^{j-1} \bb \right\}.
+\]
+Each iteration expands the Krylov subspace by one vector, requiring a single matrix-vector multiplication with $\bK$.
+Many Krylov methods, such as linear conjugate gradients, can be reduced to simple vector recurrences which are extremely computationally efficient.
+Krylov methods are exact after $N$ iterations, though most methods offer extremely accurate solutions in $J \ll N$ iterations.
+
+There has been growing interest in applying Krylov methods to Gaussian process training and inference \gp{CITE}, especially due to its memory efficiency and ability to utilize GPU acceleration \cite{gardner2018gpytorch,wang2019exact}.
+Some Krylov methods for $\bK^{-1/2} \bb$ have been proposed by the scientific computing community \cite{aune2013iterative,aune2014parameter,chow2014preconditioned,saibaba2013flexible}.
+Unlike many existing methods, our proposed Krylov approach uses a preconditioned vector-recurrence which is extremely efficient and can handle several MVMs in parallel.
+In addition, our method affords an efficient backward pass for use with learning algorithms.
+
+
+
+

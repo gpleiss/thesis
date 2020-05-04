@@ -49,6 +49,10 @@
 \DeclareUnicodeCharacter{00D7}{\texttimes}
 
 
+%%%%%%%%%%%%% Algorithms
+\newlength\inputlen
+
+
 %%%%%%%%%%%%% Enumeration style
 \setlist[enumerate]{font={\bfseries}}% global settings, for all lists
 \setlist[enumerate,1]{label={(\arabic*)}}
@@ -84,6 +88,7 @@
 
 %%%%%%%%%%%%%% Theorems, observations, etc.
 \newtheorem{observation}{Observation}[chapter]
+\newtheorem{property}{Property}[chapter]
 \newtheorem{theorem}{Theorem}[chapter]
 \newtheorem{lemma}{Lemma}[chapter]
 
@@ -94,9 +99,10 @@
 \renewcommand{\subsectionautorefname}{Section}
 \renewcommand{\algorithmautorefname}{Algorithm}
 \newcommand{\definitionautorefname}{Definition}
+\newcommand{\observationautorefname}{Observation}
+\newcommand{\propertyautorefname}{Property}
 \newcommand{\thmautorefname}{Theorem}
 \newcommand{\lemmaautorefname}{Lemma}
-\newcommand{\observationautorefname}{Observation}
 \newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
 
 
@@ -149,7 +155,7 @@
 \input{chapters/background/main}
 \input{chapters/bbmm/main}
 \input{chapters/love/main}
-\input{chapters/variational/main}
+\input{chapters/ciq/main}
 \input{chapters/largeexact/main}
 \input{chapters/discussion}
 

@@ -1,0 +1,287 @@
+\section{Cauchy Integral Quadrature (CIQ) via Matrix-Vector Multiplication}
+\label{sec:ciq_method}
+
+The goal of this paper is to develop a method to compute $\bK^{-1/2} \bb$ and $\bK^{1/2} \bb$ for large $N \times N$ covariance matrices.
+While the Cholesky decomposition can compute these products up to an orthogonal transformation, this approach becomes infeasible as $N$ becomes larger than $\approx 4,\!000$.
+Instead, we turn to a \emph{rational approximation} of $\bK^{-1/2}$ in conjunction with \emph{matrix-vector multiplication}-based solvers.
+Our proposed method scales beyond Cholesky by
+\begin{enumerate*}
+  \item reducing computation from $\bigo{N^3}$ to $\bigo{N^2}$;
+  \item reducing memory from $\bigo{N^2}$ to $\bigo{N}$; and
+  \item more effectively using GPU acceleration.
+\end{enumerate*}
+
+\paragraph{Cauchy Integral Quadrature (CIQ)}
+To compute $\bK^{-\frac 1 2}$, we re-cast the matrix square root through a rational approximation.
+A well-established result from complex analysis is that the inverse square root can be expressed through Cauchy's integral formula \citep{davies2005computing,higham2008functions,hale2008computing,golub2012matrix}:
+%
+\begin{equation}
+	\bK^{-\frac 1 2} = \frac{1}{2 \pi i} \int_\Gamma t^{-\frac 1 2} \left( t \bI - \bK \right)^{-1} \intd t.
+	\label{eqn:contour_integral}
+\end{equation}
+%
+where $\Gamma$ is a contour in the complex plane that surround the spectrum of $\bK^{-\frac 1 2}$.
+Since there is no analytic form for integral, we will rely on a quadrature approximation.
+%
+\begin{equation}
+	\bK^{-\frac 1 2} \approx \sum_{q=1}^Q w_q \left( t_q \bI - \bK \right)^{-1}.
+	\label{eqn:contour_integral_quad}
+\end{equation}
+%
+where the weights $w_q$ encapsulate the normalizing constant and the $t^{-\frac 1 2}$ term of \cref{eqn:contour_integral}.
+\citet{hale2008computing} introduce a real-valued quadrature strategy based on Jacobi elliptic functions (described in \cref{app:quadrature}) which enables \cref{eqn:contour_integral_quad} to converge extremely rapidly.
+%
+\begin{lemma}[\citet{hale2008computing}, Thm. 4.1]
+  Let $t_1$, $\ldots$, $t_Q$ and $w_1$, $\ldots$, $w_Q$ be the shifts and weights of \citet{hale2008computing}'s quadrature procedure (see \cref{app:quadrature}).
+  Then the error of \cref{eqn:contour_integral_quad} is bounded as:
+  \[
+    \left\Vert \bK \sum_{q=1}^Q w_q \left( t_q \bI - \bK \right)^{-1} - \bK^{\frac 1 2} \right\Vert_2
+    \leq \bigo{\exp\left( \frac {\log \kappa(\bK) + 3} {2 Q \pi^2} \right)},
+  \]
+  where $\kappa(\bK)$ is the condition number of $\bK$.
+\label{lemma:hale}
+\end{lemma}
+%
+Remarkably, the error of \cref{eqn:contour_integral_quad} is \emph{logarithmically} dependent on the conditioning of $\bK$.
+\citeauthor{hale2008computing} demonstrate that, even for matrices with $\kappa(\bK) \approx 10^4$, choosing $Q = 20$ is sufficient to obtain accuracy up to \emph{full machine precision}.
+For the remainder of this paper, this method for estimating \cref{eqn:contour_integral} will be referred to as {\bf Cauchy Integral Quadrature (CIQ)}.
+
+It is worth noting that this procedure requires estimates of $\bK$'s extreme eigenvalues $\lambda_\text{min}$ and $\lambda_\text{max}$.
+A simple way to obtain these estimates is running $\approx 10$ iterations of the Lanczos algorithm \cite{lanczos1950iteration,saad2003iterative,golub2012matrix}, which requires performing $\approx 10$ matrix-vector multiplications with $\bK$ (see \cref{app:quadrature}).
+
+
+
+
+\subsection{An Efficient Matrix-Vector Multiplication Approach to CIQ with msMINRES.}
+%
+To use \cref{eqn:contour_integral_quad} for Gaussian process inference and sampling algorithms, we must perform solves with multiple shifted matrices.
+Drawing a sample from $\normaldist{0}{\bK}$ using \cref{eqn:contour_integral_quad} requires computing
+$\bK \left( \sum_{q=1}^Q w_q (t_q \bI - \bK )^{-1} \bb \right),$
+where $\bb \sim \normaldist{\bzero}{\bI}$.
+Importantly, sampling and other applications of \cref{eqn:contour_integral_quad} (e.g. variational GP approximations)
+require repeated computation of the matrix square root and possibly its derivative.
+Therefore these $Q$ solves must be efficient to compute.
+
+\paragraph{MVM approaches to matrix solves.}
+We take inspiration from the matrix-vector multiplication (MVM) inference of \citet{gardner2018gpytorch}, who use the conjugate gradients method with large-scale kernel matrices.
+\citeauthor{gardner2018gpytorch}'s CG approach effectively utilizes GPU acceleration and reduces memory requirements when computing solves and log determinants.
+In the same vein, we introduce a variant of \citet{paige1975solution}'s minimum residuals algorithm (MINRES) to compute the shifted solves for \cref{eqn:contour_integral_quad}.
+Similarly to conjugate gradients, MINRES is a Krylov subspace method that iteratively computes $\bK^{-1} \bb$ through a 4-vector recurrence involving matrix-vector multiplications with $\bK$.
+While it find the exact solution in $N$ iterations, $J \ll N$ iterations often suffices for high accuracy (e.g. up to 6 decimal places).
+MINRES has the same computational efficiency as CG, and has been shown to converge as fast if not faster \cite{fong2012cg}.
+Importantly, the convergence properties are especially desirable for Gaussian sampling applications as we will demonstrate in \cref{sec:convergence}.
+
+\paragraph{msMINRES for multiple shifted solves.}
+Our variant of MINRES---multi-shift MINRES or {\bf msMINRES}---simultaneously computes all shifted solves.
+By exploiting the geometry of Krylov subspaces (see \cref{app:minres}), we can compute all shifted solves using the same set of MVMs \cite{jegerlehner1996krylov,aune2013iterative}.
+In other words, we get $(t_q \bI - \bK)^{-1} \bb$ \emph{essentially for free} simply by computing $\bK^{-1} \bb$.
+\cref{app:minres} describes the msMINRES algorithm in detail; below we highlight its computational properties.
+
+\begin{property}[Computation/Memory of msMINRES]
+  $J$ iterations of msMINRES requires exactly $J$ matrix-vector multiplications (MVMs) with the input matrix $\bK$,
+  regardless of the number of shifts $Q$.
+  The resulting runtime of msMINRES is $\bigo{ J \mvm{\bK}}$, where $\mvm{\bK}$ is the time to perform an MVM with $\bK$.
+  The memory requirement is $\bigo{ QN }$ in addition to what's required to store $\bK$.
+\end{property}
+%
+For standard $N \! \times \! N$ kernel matrices the runtime of msMINRES will be $\bigo{J N^2}$, though all quadratic operations will greatly benefit from GPU-acceleration.
+This complexity be reduced if $\bK$ is structured, low-rank, or sparse \gp{CITE}.
+Moreover, by partitioning $\bK$ and performing MVMs in a Map-Reduce fashion \cite{wang2019exact,charlier2020kernel}, we can avoid explicitly computing $\bK$ resulting in $\bigo{QN}$ total memory.
+
+\begin{algorithm2e}[t!]
+  \SetAlgoLined
+  \SetKwInOut{Input}{Input}
+  \SetKwInOut{Output}{Output}
+  \newcommand\NextInput[1]{%
+    \settowidth\inputlen{\Input{}}%
+    \setlength\hangindent{1.5\inputlen}%
+    \hspace*{\inputlen}#1\\
+  }
+  \newcommand\graycomment[1]{\footnotesize\ttfamily\textcolor{gray}{#1}}
+  \SetCommentSty{graycomment}
+  \SetKw{Break}{break}
+  \SetKwFunction{mvmkxx}{mvm\_$\bK$}
+  \SetKwFunction{computequad}{compute\_quad}
+  \SetKwFunction{lanczos}{lanczos}
+  \SetKwFunction{minres}{msMINRES}
+  \SetKwFunction{size}{size}
+  \caption{Computing $\bK^{-\frac 1 2} \bb$ with MVM-based Cauchy Integral Quadrature}
+  \label{alg:ciq}
+    \Input{\mvmkxx{$\cdot$} -- function for matrix-vector multiplication (MVM) with matrix $\bK$}
+    \NextInput{$\bb$ -- right hand side}
+    \NextInput{$J$ -- number of \minres iterations}
+    \NextInput{$Q$ -- number of quadrature points}
+    \Output{$\bd \approx \bK^{- \frac 1 2} \bb$}
+    \BlankLine
+    $\lambda_\text{min}$, $\lambda_\text{max}$ $\gets$ \lanczos{ \mvmkxx{$\cdot$}, $\bb$ }
+    \tcp{Get e-val estimates of $\bK$ by running $\approx 10$ iterations of Lanczos tridiagonalization.}
+    $[w_1, \ldots, w_Q]$, $[t_1, \ldots, t_Q]$ $\gets$ \computequad{ $\lambda_\text{min}$, $\lambda_\text{max}$, $Q$}
+    \tcp{Weights ($w_i$) and shifts ($t_i$) for quadrature -- details in \cref{app:quadrature}.}
+    $(t_1 \bI - \bK)^{-1}$, $\ldots$ $(t_Q \bI - \bK)^{-1}$ $\gets$ \minres{ \mvmkxx{$\cdot$}, $\bb$, $J$, $t_1$, $\ldots$, $t_Q$}
+    \tcp{Shifted MINRES computes all solves simultaneously -- details in \cref{app:minres}.}
+    \BlankLine
+    \Return{$\sum_{q=1}^Q w_q \left( t_q \bI - \bK \right)^{-1} $}
+    \tcp{CIQ estimate of $\int (\bK - t)^{-1} \intd t = \bK^{-\frac 1 2} \bb$}
+\end{algorithm2e}
+
+
+\subsection{Convergence Analysis of MVM-CIQ}
+\label{sec:convergence}
+
+Our approach to MVM-based CIQ ({\bf MVM-CIQ}) is summarized by \cref{alg:ciq}.
+Using the msMINRES algorithm, the computational requires of MVM-CIQ is basically no different than CG for computing MVM-based solves.
+When using \cref{alg:ciq} to produce Gaussian samples from the distribution $\normaldist{\bzero}{\bK}$ we can obtain a bound on the error:
+%
+\begin{theorem}
+  Let $\bK$ and $\bb$ be the inputs to \cref{alg:ciq}, producing the output $\bd_J \approx \bK^{1/2} \bb$ after $J$ iterations.
+  The difference between $\bd_J$ and $\bK^{1/2} \bb$ is bounded by:
+  %
+  \begin{equation}
+    \left\Vert \bd_J - \bK^{\frac 1 2} \bb \right\Vert_2
+    \leq
+    \overbracket{
+      \bigo{\exp\left( -\frac{2 Q \pi^2}{\log \kappa(\bK) + 3} \right)}
+    }^{\text{Quadrature error}}
+    +
+    \overbracket{
+      2 \left\vert \sum_{q=1}^Q w_q \right\vert
+      \left( \frac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^J
+      \left\Vert \bb \right\Vert_2
+    }^{\text{msMINRES error}}
+  \end{equation}
+  %
+  where $Q$ is the number of quadrature points and $\kappa(\bK)$ is the condition number of $\bK$.
+  \gp{TODO: let's get rid of the sum over $w_q$.}
+  \label{thm:convergence}
+\end{theorem}
+%
+As a simply corollary, the bias of the MVM-CIQ samples decreases exponentially with more quadrature points $Q$ and more msMINRES iterations $J$.
+Though \cref{thm:convergence} implies fast convergence, it also suggests that msMINRES will be the primary source of error as it is more dependent on the conditioning of $\bK$.
+We will discuss how to address this with preconditioning in \cref{sec:ciq_precond}.
+
+
+
+\subsection{Efficient Vector-Jacobi Products for Backpropagation}
+
+In certain applications, such as learning variational GPs, we have to compute gradients of the $\bK^{-1/2} \bb$ operation.
+The backward pass forms the vector-Jacobian product $\bv^\top ( \partial \bK^{-1/2} \bb / \partial \bK)$, where $\bv$ is the gradient from earlier steps.
+The general form of the Jacobian is the solution to a Sylvester equation, which requires expensive iterative methods or solving a $N^2 \times N^2$ Kronecker sum $(\bK^{1/2} \oplus \bK^{1/2})^{-1}$.
+Both of these options are much slower than the forward pass and are impractical for large $N$.
+
+Fortunately, the quadrature approximation use that we use in \cref{alg:ciq} affords a computationally efficient vector-Jacobian product.
+If we back-propagate directly through the quadrature in \cref{eqn:contour_integral_quad}, we have
+%
+\begin{align}
+  \bv^\top \left( \frac{ \partial \bK^{-1/2} \bb }{ \partial \bK } \right)
+   \frac{ \partial \bv^\top \bK^{-1/2} \bb }{ \partial \bK }
+  &\approx { \partial \bv^\top \left( \sum_{q=1}^{Q} w_q (t_q \bI - \bK)^{-1} \right) \bb }/{ \partial \bK }
+  \nonumber
+  \\
+  &= - \frac{1}{2} \sum_{q=1}^{Q} w_q
+  \left( t_q \bI - \bK \right)^{-1}
+  \left( \bv \bb^\top + \bb \bv^\top \right)
+  \left( t_q \bI - \bK \right)^{-1}.
+  \label{eqn:ciq_deriv}
+\end{align}
+%
+The forward pass computes the solves with $\bb$.
+Therefore, the only additional work needed for the backward pass are the shifted solves $(t_q \bI - \bK)^{-1} \bv$, which can be computed with another call to the msMINRES algorithm.
+Thus the backward pass takes only $\bigo{J \mvm{\bK}}$ (e.g. $\bigo{J N^2}$) additional time.
+To the best of our knowledge, this is the first use of quadrature for matrix-root back-propagation.
+
+
+
+\subsection{Preconditioning}
+\label{sec:ciq_precond}
+
+To improve the convergence of \cref{thm:convergence}, we will introduce a preconditioner matrix $\bP$ where $\bP^{-1} \bK \approx \bI$.
+In general, it is not straightforward to apply preconditioning to \cref{alg:ciq}, as the preconditioner breaks the geometry exploited by msMINRES (see \cref{app:minres} or \cite{aune2013iterative,jegerlehner1996krylov}).
+However, when using MVM-CIQ to draw samples from $\normaldist{\bzero}{\bK}$ we can introduce a related problem that enables the use of certain preconditioners.
+Running msMINRES on the preconditioned matrix $\bP^{-1} \bK$ produces
+%
+\[
+	(\bP^{-1} \bK + t_q \bI)^{-1} (\bP^{-1} \bb)
+	=
+	\bP^{-\frac 1 2} (\bP^{-\frac 1 2} \bK \bP^{-\frac 1 2} + t_q \bI)^{-1} (\bP^{-\frac 1 2} \bb).
+\]
+%
+Plugging these shifted solves into the quadrature equation \cref{eqn:contour_integral_quad} therefore gives us
+%
+$
+	\widetilde \bd_J \approx \bP^{-\frac 1 2} (\bP^{-\frac 1 2} \bK \bP^{-\frac 1 2})^{-\frac 1 2} (\bP^{-\frac 1 2} \bb).
+$
+%
+If we choose $\bb \sim \normaldist{\bzero}{\bP}$, then
+%
+\begin{align*}
+	\Evover{\bb \sim \normaldist{\bzero}{\bP}}{\widetilde \bd_J \widetilde \bd_J}^\top
+	&=
+	\left( \bP^{-\frac 1 2} (\bP^{-\frac 1 2} \bK \bP^{-\frac 1 2})^{-\frac 1 2} \bP^{-\frac 1 2} \right)
+	\Ev{ \bb_J \bb_J^\top}
+	\left( \bP^{-\frac 1 2} (\bP^{-\frac 1 2} \bK \bP^{-\frac 1 2})^{-\frac 1 2} \bP^{-\frac 1 2} \right)
+	\\
+	&=
+	\left( \bP^{-\frac 1 2} (\bP^{-\frac 1 2} \bK \bP^{-\frac 1 2})^{-\frac 1 2} \bP^{-\frac 1 2} \right)
+	\bP
+	\left( \bP^{-\frac 1 2} (\bP^{-\frac 1 2} \bK \bP^{-\frac 1 2})^{-\frac 1 2} \bP^{-\frac 1 2} \right)
+	=
+	\bK^{-1}.
+\end{align*}
+%
+Therefore, $\bK \widetilde \bd_J$ is a valid sample from $\normaldist{\bzero}{\bK}$.
+However, the convergence of $\bd_j$ now depends on the conditioning $\kappa(\bP^{-1} \bK) \ll \kappa(\bK)$.
+The only requirements we have for $\bP$ are that
+\begin{enumerate*}
+	\item it affords efficient solves (ideally $o(n^2)$), and
+	\item it affords efficient samples $\bb \sim \normaldist{\bzero}{\bP}$ (also ideally $o(n^2)$).
+\end{enumerate*}
+
+One possible preconditioner is the partial pivoted Cholesky preconditioner proposed by \citet{gardner2018gpytorch} (see \cref{app:preconditioner}).
+The form of $\bP$ is $\bR \bR^\top + \sigma^2 \bI$, where $\bR$ is a low-rank factor and $\sigma^2 \bI$ is a small diagonal component.
+This preconditioner affords $\approx \bigo{N}$ solves using the matrix inversion lemma and $\bigo{N}$ samples using the reparameterization trick \cite{kingma2013auto,rezende2014stochastic}.\footnote{
+	Let $\bepsilon_1$ and $\bepsilon_2$ be standard Normal random variables.
+	Then $\bR \bepsilon_1 + \sigma \bepsilon_2$ is a sample from $\normaldist{\bzero}{\bP}$.
+}
+Moreover, this preconditioner is highly effective on many Gaussian covariance matrices \cite{gardner2018gpytorch,wang2019exact}.
+
+
+
+
+
+\subsection{Related Work}
+\gp{
+  TODO. Mostly \citet{hale2008computing}, \citet{chow2014preconditioned}, \citet{aune2013iterative,aune2014parameter}, and \citet{bakhos2017multipreconditioned}.
+}
+
+
+%MINRES \gp{CITE} is an iterative approach to solving $\bK^{-1} \bb$ that is similar to the method of conjugate gradients.
+%At each iteration $j$, MINRES produces the best approximate solve $\bd_j \approx \bK^{-1} \bb$ within the \emph{Krylov subspace} of $\bK$ and $\bb$:
+%%
+%\[ \bd_j = \min_{\bd \in \mathcal{K}_j (\bK, \bb)} \Vert \bK \bd - \bb \Vert_2^2, \]
+%%
+%where $\mathcal{K}_j (\bK, \bb)$ is the $j^\text{th}$ Krylov subspace of $\bK$ and $\bb$:
+%%
+%\begin{equation}
+  %\mathcal{K}_j (\bK, \bb) \triangleq
+  %\text{span} \left\{
+    %\bb, \:\: \bK \bb, \:\: \bK^2 \bb, \:\: \ldots, \:\: \bK^{j-1} \bb
+  %\right\}.
+%\end{equation}
+%%
+%(Note that each vector in the subspace can be formed simply by multiplying its preceding vector by $\bK$.)
+%From this high-level view, we can begin to see how such an iterative method could be constructed through a dynamic programming algorithm.
+%At each iteration $j+1$, we perform the matrix-vector multiplication $\bK \left( \bK^{j-1} \bb \right)$ to form the next Krylov subspace:
+%%
+%\[ \mathcal{K}_{j+1} (\bK, \bb) = \text{span} \left\{ \mathcal{K}_{j} (\bK, \bb) \:\: \cup \:\: \{ \bK \left( \bK^{j-1} \bb \right) \} \right\}.  \]
+%%
+%In practice, we can produce each $\bd_j$ through a three-vector recurrence relationship with only a single matrix-vector multiplication at each time step.
+
+%Rather than running MINRES separately for each quadrature point, it turns out we can create a modified MINRES that computes each $( t_q^2 \bI - \bK_{\bK\bK})^{-1} \bk_{\bZ \bxtest} )$ simultaneously.
+%The key insight is that the $(t_q^2 \bI - \bK_{\bK\bK})$, $\bk_{\bZ \bxtest}$ pairs each share the same Krylov subspace:
+%\[
+  %\mathcal{K}_j (\bK_{\bZ\bZ}, \bk_{\bZ\bxtest}) =
+  %\mathcal{K}_j ((t_q^2 \bI - \bK_{\bZ\bZ}), \bk_{\bZ\bxtest}) \quad \forall t_q \in \reals.
+%\]
+%From this, we can form an extremely efficient modified MINRES that solves all systems simultaneously.
+%Each iteration requires only a single matrix-vector multiplication with $\bK_{\bZ\bZ}$, and the whole algorithm only requires storing $3Q$ vectors of size $M$.
+%If we run $J$ iterations of the modified MINRES, the total computation time of $\bK_{\bZ\bZ}^{-\frac 1 2} \bk_{\bZ\bxtest}$ is $\bigo{J M^2}$.
