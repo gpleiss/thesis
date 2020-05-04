@@ -60,9 +60,10 @@ We find that exact GPs achieve lower error than approximate methods on nearly ev
 Notably, on certain datasets like 3droad, exact GPs achieve a half or even a quarter of the error of some approximate methods.
 Although \citet{nguyen2019exact} show results for exact GPs on $N \leq 120,\!000$, this is the first set of results comparing exact GPs to approximate GPs on $N\gg 10^5$.
 
-Moreover, we also see that the choice of approximate method affects performance; neither approximate method consistently outperforms the other.
-Interestingly, neither dataset size nor dimensionality seems to influence the relative performance of the approximate methods.
-For example, though Protein and Kin40K are similar in size and have almost the same dimensionality, the approximate methods perform worse on Kin40K (relative to the RMSE of exact GPs).
+Moreover, we also see that performance of the scalable GP methods is dataset dependent.
+Neither SVGP nor SGPR consistently outperforms the other.
+Interestingly, dataset size/dimensionality do not seem to influence the relative performance of approximate methods.
+For example, though Protein and Kin40K are similar in size and have similar dimensionality, the approximate methods perform worse on Kin40K (relative to the RMSE of exact GPs).
 
 \begin{table*}[t!]
   \vspace{1em}
@@ -96,10 +97,9 @@ For example, though Protein and Kin40K are similar in size and have almost the s
 \cref{tab:large_exact_gp_timings} displays the training time for exact and approximate GPs.
 Datasets with $N \leq 100,\!000$ data points, exact GPs can be trained in minutes.
 Datasets with $N \geq 100,\!000$ can be trained in hours.
-
-While approximate methods tend to be faster than exact GPs, we do note that exact GPs tend to require the same order of magnitude of training time.
-It is quite remarkable that exact GPs, which require $\bigo{N^2}$ computation with BBMM, are not much slower than approximate methods that are linear in $N$.
-We hypothesize the GPU acceleration benefits exact GPs more than approximate GPs as exact kernel matrices can afford more parallelism than approximate methods.
+While approximate GPs tend to be faster, we do note that the training time of exact GPs is within an order of magnitude of their approximate counterparts.
+It is quite remarkable that exact GPs, which require $\bigo{N^2}$ computation with BBMM, are not much slower than $\bigo{N}$ approximate methods.
+We hypothesize that exact GPs benefit more from GPU acceleration, as exact kernel matrices afford more MVM parallelism than approximate kernel matrices.
 
 \paragraph{Prediction time.}
 Although exact GPs take longer to train, we find that their speed is comparable to approximate methods at test time.
@@ -107,27 +107,53 @@ Although exact GPs take longer to train, we find that their speed is comparable 
 All predictions are made on one NVIDIA RTX 2080 Ti GPU.
 We see exact GPs take \emph{milliseconds} across all dataset sizes used.
 
-\begin{figure*}[t!]
+\begin{figure}[t!]
   \centering
-  \includegraphics[width=\linewidth]{figures/gpu_speedup.pdf}
+  \includegraphics[width=0.70\linewidth]{figures/gpu_speedup.pdf}
   \caption[Speed of BBMM training using multi-GPU computation.]{
     Speed of BBMM training using multi-GPU computation.
-    On large datasets, exact GPs with BBMM achieve a near linear speedup with more GPU resources.
+    On large datasets, exact GPs with BBMM achieve a near linear speedup with more GPUs.
+    (Speedups are measured on NVIDIA Tesla V100-SXM2-32GB-LS GPUs using models with non-ARD Mat\'ern 3/2 kernels.)
   }
   \label{fig:gpu_speedup}
-\end{figure*}
+\end{figure}
 
 \paragraph{Training acceleration with multiple GPUs.}
 As discussed in \cref{sec:largeexact_method}, the MVMs in BBMM and LOVE can be distributed across multiple devices.
 \cref{fig:gpu_speedup} plots the speedup as more GPUs are used for training on the KEGGU, 3DRoad, Song, and Buzz datasets.
+(Speedups are measured on NVIDIA Tesla V100-SXM2-32GB-LS GPUs using models with non-ARD Mat\'ern 3/2 kernels.)
 Each of these datasets achieve a nearly linear speedup when adding up to 4 GPUs.
 The speedup is more pronounced for the two large datasets (3DRoad and Song).
 
 
 \subsection{Ablation Studies}
+With BBMM and LOVE, we can better understand how exact GPs scale to datasets with $N\gg 10^4$ compared to approximate GPs.
+Here, we demonstrate how the amount of data affects exact GP performance, and how the number of inducing points affects the performance of approximate GPs.
+All experimental results in this section use GPs with non-ARD Mat\'ern 3/2 kernels.
+
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.7\linewidth]{figures/subsampling.pdf}
+  \caption{
+    Test root-mean-square error (RMSE) as a function of subsampled dataset size (lower is better).
+    Subsampled exact GPs outperform approximate GPs even with a quarter of the training set.
+    Exact GP error continues to decrease as data is added until the full dataset is used.
+  }
+  \label{fig:subsampling_results}
+\end{figure}
+
+\paragraph{Do GPs need the entire dataset?}
+As a non-parametric model, Gaussian processes naturally adapt to the amount of training data available.
+\cref{fig:subsampling_results} shows an increase in accuracy as we increase the amount of training data on the KEGGU, 3DRoad, and Song datasets.
+For each dataset, we subsample a fraction of the training data and plot the resulting test set RMSE as a function of training set size.
+As expected, the error decreases monotonically as we increase the subsample size.
+\cref{fig:subsampling_results} also shows the performance of exact GPs, SGPR, and SVGP trained on the entire dataset.
+Strikingly, in all three cases, \textit{an exact GP with less than a quarter of the training data outperforms approximate GPs trained on the entire training set}.
+Test error continues to decrease with the addition of training data.
+
 \begin{figure}[!t]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/inducing_points.pdf}
+  \includegraphics[width=0.7\linewidth]{figures/inducing_points.pdf}
   \caption{
     Error of SVGP and SGPR methods as a function of the number of inducing points
     ($m$).  Both methods scale cubically with $m$.
@@ -136,46 +162,11 @@ The speedup is more pronounced for the two large datasets (3DRoad and Song).
   }
   \label{fig:num_inducing_points}
 \end{figure}
-With our method, we can better understand how exact GPs and approximate GPs scale to datasets with $n\gg 10^4$.
-Here, we demonstrate how the amount of data affects exact GP performance, and
-how the number of inducing points affects the performance of approximate GPs.
-\begin{figure*}[t!]
-  \centering
-  \includegraphics[width=\linewidth]{figures/subsampling.pdf}
-  \caption{
-    Test root-mean-square error (RMSE) as a function of subsampled dataset size (lower is better).
-    Subsampled exact GPs outperform approximate GPs even with a quarter of the training set.
-    Exact GP error continues to decrease as data is added until the full dataset is used.
-  }
-  \label{fig:subsampling_results}
-\end{figure*}
-
-\paragraph{Do GPs need the entire dataset?}
-As a non-parametric model, Gaussian processes naturally adapt to the amount of training
-data available \citep{wilson2014thesis}. \cref{fig:subsampling_results} shows an increase in accuracy as we increase the amount
-of training data on the KEGGU, 3DRoad, and Song datasets. For each dataset, we
-subsample a fraction of the training data and plot the resulting root-mean-square
-error on the test-set as a function of subsampled training set size. We use the
-same 1/3 holdout of the full dataset to test in each case.
-As expected, the test RMSE decreases monotonically as we increase the subsample size.
-\cref{fig:subsampling_results} also shows the
-performance of exact GP, SGPR, and SVGP trained on the entire training set.
-Strikingly, in all three cases, \textit{an exact GP with less than a quarter of
-the training data outperformed approximate GPs trained on the entire
-training set}. Furthermore, test error continues to decrease with each addition of training data.
 
 \paragraph{Would more inducing points help?}
-The results in \cref{tab:large_exact_gp_results} naturally raise the question: ``can approximate models with more inducing
-points recover the performance of exact methods?''
-We plot test RMSE on two datasets, Bike and Protein, as a function of the number of inducing points in \cref{fig:num_inducing_points}.
-The test RMSE of both inducing point methods saturates on both datasets well above
-the test RMSE of an exact GP.
-Furthermore, we note that using $m$ inducing points introduces a $m \times m$
-matrix and a $\bigo{nm^2 + m^3}$ time complexity
-\cite{hensman2013gaussian,hensman2015scalable} which makes it
-difficult to train SGPR with $m \gg 1024$ inducing points on
-one GPU. It is possible to combine kernel partitioning with inducing-point methods to utilize even larger values of $m$.
-However, as \cref{fig:num_inducing_points} and \cref{tab:large_exact_gp_results} show, it may be preferable
-to use the extra computational resources to train an exact GP on more data rather than
-to train an approximate GP with more inducing points.
-%
+The results in \cref{tab:large_exact_gp_results} naturally raise the question: ``can approximate models with more inducing points recover the performance of exact methods?''
+In \cref{fig:num_inducing_points}, we plot test set RMSE on two datasets, Bike and Protein, as a function of the number of inducing points.
+The test RMSE of SGPR and SVGP saturates on both datasets well above the test RMSE of an exact GP.
+We note that using $M$ inducing points introduces a $M \times M$ matrix and a $\bigo{NM^2 + M^3}$ time complexity \cite{hensman2013gaussian,hensman2015scalable} which makes it difficult to train SGPR with $M \gg 1024$ inducing points.
+It is possible to combine partitioned kernel MVMs with inducing-point methods to utilize even larger values of $M$.
+However, as \cref{fig:num_inducing_points} and \cref{tab:large_exact_gp_results} show, it may be preferable to use the extra computational resources to train an exact GP on more data rather than to train an approximate GP with more inducing points.
