@@ -5,15 +5,12 @@ For example, Gaussian process regression assume that the entries in a dataset $(
 Inferences require operations on the prior distribution $p([y^{(1)}, \ldots, y^{(N)}]) = \normaldist{\bzero}{\bK \in \reals^{N \times N}}$,
 which typically results in expensive non-linear manipulations with the $N \times N$ covariance matrix $\bK$.
 
-Historically, $\bigo{N^3}$ operations on covariance matrices and $\bigo{N^2}$ memory requirements have limited the tractability of large-scale multivariate Gaussians.
-Gaussian process regression for example has typically been limited to a few thousand data points before approximations are necessary \cite{hensman2013gaussian}.
-A growing line of research is focused using GPU-accelerated memory-efficient covariance operations \gp{CITE} to make large-scale problems possible.
-Covariance matrix operations, such as linear solves \gp{CITE} and log determinants \gp{CITE}, can be reframed as iterative optimizations involving \emph{matrix-vector multiplication} (MVMs).
-MVM approaches has two primary advantages:
-\begin{enumerate*}
-  \item the covariance matrix does not have explicitly instantiated (only $\bigo{N}$ memory is required) \cite{wang2019exact,charlier2020kernel}, and
-  \item the MVM operations utilize GPU acceleration better direct methods like Cholesky \cite{gardner2018gpytorch}.
-\end{enumerate*}
+\paragraph{Existing Methods for Sampling and Whitening}
+typically rely on the Cholesky factorization: $\bK = \bL \bL^\top$, where $\bL$ is lower triangular.
+Though $\bL$ is not a square root of $\bK$, $\bL\bb$ is equivalent to $\bK^{1/2} \bb$ up to an orthonormal rotation.
+Therefore, $\bL\bb$, $\bb \sim \normaldist{\bzero}{\bI}$ can be used to draw samples from from $\normaldist{\bzero}{\bK}$ and $\bL^{-1} \bb$, $\bb \sim \normaldist{\bzero}{\bK}$ can be used to ``whiten'' the vector $\bb$.
+However, the Cholesky factor requires $\bigo{N^3}$ computation and $\bigo{N^2}$ memory for an $N \times N$ covariance matrix $\bK$.
+Consequentially, sampling and whitening are typically accomplished with randomized algorithms \gp{CITE}, low-rank/sparse approximations \gp{CITE}, or alternative distributions \gp{CITE}.
 
 In this paper, we use MVM methods to address a common computational bottleneck for high-dimensional Gaussian distributions: computing the products $\bK^{\frac 1 2} \bb$ and $\bK^{-\frac 1 2} \bb$ with covariance matrix $\bK$.
 This operation occurs frequently in Gaussian process methods and inverse problems \gp{CITE}.

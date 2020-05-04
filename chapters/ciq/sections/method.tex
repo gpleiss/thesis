@@ -252,36 +252,7 @@ Moreover, this preconditioner is highly effective on many Gaussian covariance ma
 \gp{
   TODO. Mostly \citet{hale2008computing}, \citet{chow2014preconditioned}, \citet{aune2013iterative,aune2014parameter}, and \citet{bakhos2017multipreconditioned}.
 }
-
-
-%MINRES \gp{CITE} is an iterative approach to solving $\bK^{-1} \bb$ that is similar to the method of conjugate gradients.
-%At each iteration $j$, MINRES produces the best approximate solve $\bd_j \approx \bK^{-1} \bb$ within the \emph{Krylov subspace} of $\bK$ and $\bb$:
-%%
-%\[ \bd_j = \min_{\bd \in \mathcal{K}_j (\bK, \bb)} \Vert \bK \bd - \bb \Vert_2^2, \]
-%%
-%where $\mathcal{K}_j (\bK, \bb)$ is the $j^\text{th}$ Krylov subspace of $\bK$ and $\bb$:
-%%
-%\begin{equation}
-  %\mathcal{K}_j (\bK, \bb) \triangleq
-  %\text{span} \left\{
-    %\bb, \:\: \bK \bb, \:\: \bK^2 \bb, \:\: \ldots, \:\: \bK^{j-1} \bb
-  %\right\}.
-%\end{equation}
-%%
-%(Note that each vector in the subspace can be formed simply by multiplying its preceding vector by $\bK$.)
-%From this high-level view, we can begin to see how such an iterative method could be constructed through a dynamic programming algorithm.
-%At each iteration $j+1$, we perform the matrix-vector multiplication $\bK \left( \bK^{j-1} \bb \right)$ to form the next Krylov subspace:
-%%
-%\[ \mathcal{K}_{j+1} (\bK, \bb) = \text{span} \left\{ \mathcal{K}_{j} (\bK, \bb) \:\: \cup \:\: \{ \bK \left( \bK^{j-1} \bb \right) \} \right\}.  \]
-%%
-%In practice, we can produce each $\bd_j$ through a three-vector recurrence relationship with only a single matrix-vector multiplication at each time step.
-
-%Rather than running MINRES separately for each quadrature point, it turns out we can create a modified MINRES that computes each $( t_q^2 \bI - \bK_{\bK\bK})^{-1} \bk_{\bZ \bxtest} )$ simultaneously.
-%The key insight is that the $(t_q^2 \bI - \bK_{\bK\bK})$, $\bk_{\bZ \bxtest}$ pairs each share the same Krylov subspace:
-%\[
-  %\mathcal{K}_j (\bK_{\bZ\bZ}, \bk_{\bZ\bxtest}) =
-  %\mathcal{K}_j ((t_q^2 \bI - \bK_{\bZ\bZ}), \bk_{\bZ\bxtest}) \quad \forall t_q \in \reals.
-%\]
-%From this, we can form an extremely efficient modified MINRES that solves all systems simultaneously.
-%Each iteration requires only a single matrix-vector multiplication with $\bK_{\bZ\bZ}$, and the whole algorithm only requires storing $3Q$ vectors of size $M$.
-%If we run $J$ iterations of the modified MINRES, the total computation time of $\bK_{\bZ\bZ}^{-\frac 1 2} \bk_{\bZ\bxtest}$ is $\bigo{J M^2}$.
+There has been growing interest in applying Krylov methods to Gaussian process training and inference \gp{CITE}, especially due to its memory efficiency and ability to utilize GPU acceleration \cite{gardner2018gpytorch,wang2019exact}.
+Some Krylov methods for $\bK^{-1/2} \bb$ have been proposed by the scientific computing community \cite{aune2013iterative,aune2014parameter,chow2014preconditioned,saibaba2013flexible}.
+Unlike many existing methods, our proposed Krylov approach uses a preconditioned vector-recurrence which is extremely efficient and can handle several MVMs in parallel.
+In addition, our method affords an efficient backward pass for use with learning algorithms.
