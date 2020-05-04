@@ -1,13 +1,12 @@
 \section{Cauchy Integral Quadrature (CIQ) via Matrix-Vector Multiplication}
 \label{sec:ciq_method}
 
-The goal of this paper is to develop a method to compute $\bK^{-1/2} \bb$ and $\bK^{1/2} \bb$ for large $N \times N$ covariance matrices.
-While the Cholesky decomposition can compute these products up to an orthogonal transformation, this approach becomes infeasible as $N$ becomes larger than $\approx 4,\!000$.
-Instead, we turn to a \emph{rational approximation} of $\bK^{-1/2}$ in conjunction with \emph{matrix-vector multiplication}-based solvers.
-Our proposed method scales beyond Cholesky by
+In this section we will develop an MVM method to compute $\bK^{-1/2} \bb$ and $\bK^{1/2} \bb$ for sampling and whitening.
+Our approach uses to a \emph{rational approximation} of $\bK^{-1/2}$ in conjunction with \emph{matrix-vector multiplication}-based solvers.
+This scales better than existing methods (e.g. Cholesky) by
 \begin{enumerate*}
-  \item reducing computation from $\bigo{N^3}$ to $\bigo{N^2}$;
-  \item reducing memory from $\bigo{N^2}$ to $\bigo{N}$; and
+  \item reducing computation from $\bigo{N^3}$ to $\bigo{N^2}$; and
+  %\item reducing memory from $\bigo{N^2}$ to $\bigo{N}$; and
   \item more effectively using GPU acceleration.
 \end{enumerate*}
 
@@ -16,15 +15,15 @@ To compute $\bK^{-\frac 1 2}$, we re-cast the matrix square root through a ratio
 A well-established result from complex analysis is that the inverse square root can be expressed through Cauchy's integral formula \citep{davies2005computing,higham2008functions,hale2008computing,golub2012matrix}:
 %
 \begin{equation}
-	\bK^{-\frac 1 2} = \frac{1}{2 \pi i} \int_\Gamma t^{-\frac 1 2} \left( t \bI - \bK \right)^{-1} \intd t.
-	\label{eqn:contour_integral}
+	\bK^{-\frac 1 2} = \frac{1}{2 \pi i} \int_\Gamma t^{-\frac 1 2} \left( t \bI - \bK \right)^{-1} \intd t,
+  \label{eqn:contour_integral}
 \end{equation}
 %
 where $\Gamma$ is a contour in the complex plane that surround the spectrum of $\bK^{-\frac 1 2}$.
-Since there is no analytic form for integral, we will rely on a quadrature approximation.
+Since there is no analytic form for this integral, we instead rely on a quadrature approximation:
 %
 \begin{equation}
-	\bK^{-\frac 1 2} \approx \sum_{q=1}^Q w_q \left( t_q \bI - \bK \right)^{-1}.
+	\bK^{-\frac 1 2} \approx \sum_{q=1}^Q w_q \left( t_q \bI - \bK \right)^{-1},
 	\label{eqn:contour_integral_quad}
 \end{equation}
 %
@@ -42,25 +41,31 @@ where the weights $w_q$ encapsulate the normalizing constant and the $t^{-\frac 
 \label{lemma:hale}
 \end{lemma}
 %
+\noindent
 Remarkably, the error of \cref{eqn:contour_integral_quad} is \emph{logarithmically} dependent on the conditioning of $\bK$.
 \citeauthor{hale2008computing} demonstrate that, even for matrices with $\kappa(\bK) \approx 10^4$, choosing $Q = 20$ is sufficient to obtain accuracy up to \emph{full machine precision}.
 For the remainder of this paper, this method for estimating \cref{eqn:contour_integral} will be referred to as {\bf Cauchy Integral Quadrature (CIQ)}.
 
-It is worth noting that this procedure requires estimates of $\bK$'s extreme eigenvalues $\lambda_\text{min}$ and $\lambda_\text{max}$.
-A simple way to obtain these estimates is running $\approx 10$ iterations of the Lanczos algorithm \cite{lanczos1950iteration,saad2003iterative,golub2012matrix}, which requires performing $\approx 10$ matrix-vector multiplications with $\bK$ (see \cref{app:quadrature}).
+It is worth noting that the quadrature procedure of  \citeauthor{hale2008computing} requires estimates of $\bK$'s extreme eigenvalues $\lambda_\text{min}$ and $\lambda_\text{max}$ (see \cref{app:quadrature}).
+An efficient estimate of these terms comes from running $\approx 10$ iterations of the Lanczos algorithm to obtain $\bT \approx \bQ^\top \bK \bQ$ (where again $\bT$ is tridiagonal and $\bQ$ has orthonormal columns---see \cref{sec:lanczos}).
+The extreme eigenvalues of $\bT$ are known to rapidly converge to the extreme eigenvalues of $\bK$ \citep[e.g.][Ch. 10]{golub2012matrix}.
+An eigendecomposition of $\bT$ is an efficient way to estimates $\lambda_\text{min}$ and $\lambda_\text{max}$ since $\bT$ is a small triagonal matrix.
+Beyond this small eigendecomposition, the Lanczos eigenvalue estimates only requires $\approx 10$ MVMs with $\bK$.
 
 
 
 
 \subsection{An Efficient Matrix-Vector Multiplication Approach to CIQ with msMINRES.}
 %
-To use \cref{eqn:contour_integral_quad} for Gaussian process inference and sampling algorithms, we must perform solves with multiple shifted matrices.
+Using \cref{eqn:contour_integral_quad} for whitening and sampling requires performing solves with multiple shifted matrices.
 Drawing a sample from $\normaldist{0}{\bK}$ using \cref{eqn:contour_integral_quad} requires computing
 $\bK \left( \sum_{q=1}^Q w_q (t_q \bI - \bK )^{-1} \bb \right),$
 where $\bb \sim \normaldist{\bzero}{\bI}$.
-Importantly, sampling and other applications of \cref{eqn:contour_integral_quad} (e.g. variational GP approximations)
-require repeated computation of the matrix square root and possibly its derivative.
+Importantly, most applications of sampling and whitening (e.g. Bayesian optimization, variational GPs)
+require repeated computation of the matrix square root.
 Therefore these $Q$ solves must be efficient to compute.
+
+\gp{Stopped here.}
 
 \paragraph{MVM approaches to matrix solves.}
 We take inspiration from the matrix-vector multiplication (MVM) inference of \citet{gardner2018gpytorch}, who use the conjugate gradients method with large-scale kernel matrices.
