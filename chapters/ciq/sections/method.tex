@@ -160,11 +160,12 @@ When using \cref{alg:ciq} to produce Gaussian samples from the distribution $\no
   \end{equation}
   %
   where $Q$ is the number of quadrature points and $\kappa(\bK)$ is the condition number of $\bK$.
-  \label{thm:convergence}
+  \label{thm:ciq_convergence}
 \end{theorem}
 %
+(see \cref{app:quadrature} for a proof.)
 As a simply corollary, the bias of the CIQ samples decreases exponentially with more quadrature points $Q$ and more msMINRES iterations $J$.
-Though \cref{thm:convergence} implies fast convergence, it also suggests that msMINRES will be the primary source of error as it is more dependent on the conditioning of $\bK$.
+Though \cref{thm:ciq_convergence} implies fast convergence, it also suggests that msMINRES will be the primary source of error as it is more dependent on the conditioning of $\bK$.
 We will discuss how to address this with preconditioning in \cref{sec:ciq_precond}.
 
 \input{algorithms/ciq}
@@ -228,7 +229,7 @@ This allows us to easily implement efficient CIQ variants for many classes of st
 \subsection{Preconditioning}
 \label{sec:ciq_precond}
 
-To improve the convergence of \cref{thm:convergence}, we will introduce a preconditioner matrix $\bP$ where $\bP^{-1} \bK \approx \bI$.
+To improve the convergence of \cref{thm:ciq_convergence}, we will introduce a preconditioner matrix $\bP$ where $\bP^{-1} \bK \approx \bI$.
 It is not immediately straightforward to apply preconditioning to \cref{alg:ciq}, as the preconditioner breaks the geometry exploited by msMINRES \cite{jegerlehner1996krylov,aune2013iterative}.
 More specifically, if we apply a preconditioner to msMINRES, the added shifts modify the preconditioned system and not the original system.
 In other words we obtain the solves
