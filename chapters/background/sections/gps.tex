@@ -468,6 +468,7 @@ After pre-computing $\blue \ba'$, the multiplication $\bw_{\bxtest}^\top \blue \
 
 
 \subsection{Variational Inference for Non-Conjugate/Large-Scale GPs.}
+\label{sec:variational}
 For most of this thesis we will focus on Gaussian process regression with a (conjugate) Gaussian observation model.
 Under this setting, exact Bayesian inference is tractable, which results in the closed-form predictive distribution given by \cref{eqn:predictive_mean,eqn:predictive_var}.
 Here we will briefly examine the case where exact inference is intractable, which occurs when
@@ -532,16 +533,21 @@ Marginalizing out $\bu$ gives us the approximate Gaussian predictive distributio
 \end{align}
 %
 where $\ameantest{\cdot}$ and $\avartest{\cdot}$ are the (approximate) predictive mean and covariance functions.
-The parameters $\bm$ and $\bS$ (as well as the inducing locations $\bZ$ and associated kernel/likelihood hyperparameters) are chosen to minimize the KL-divergence between the approximate posterior $q(\bf(\cdot), \bu)$ and the true posterior $p(\bf(\cdot), \bu \mid \bX, \by)$.
+The parameters $\bm$ and $\bS$ (as well as the inducing locations $\bZ$ and kernel/likelihood hyperparameters) are chosen to minimize the KL-divergence between the approximate posterior and the true posterior $p(f(\cdot), \bu \mid \bX, \by)$.
 This can be accomplished by optimizing the evidence-lower bound (ELBO):
 %
 \begin{align}
-	-\loglik_\text{ELBO} = -\sum_{i=1}^N \Evover{q(f(\bx^{(i)}))}{  \: \log p( y^{(i)} \mid f(\bx^{(i)}) ) \: } + \kl{ q(\bu) }{ p(\bu) },
+	-\loglik_\text{ELBO} &= -\sum_{i=1}^N \Evover{q(f(\bx^{(i)}))}{  \: \log p( y^{(i)} \mid f(\bx^{(i)}) ) \: } + \kl{ q(\bu) }{ p(\bu) },
 	\label{eqn:elbo}
 \end{align}
 %
 where $p(y^{(i)} \mid f(\bx^{(i)})$ is the (potentially) non-conjugate likelihood function.
 The expectation $\Evover{q(f(\bx^{(i)}))}{  \: \log p( y^{(i)} \mid f(\bx^{(i)}) ) \: }$ can be approximated with Monte Carlo integration \citep{wilson2016stochastic} or with Gauss-Hermite quadrature \cite{hensman2015scalable}.
+The KL divergence term is given by
+%
+\[
+	\kl{ q(\bu) }{ p(\bu) } = \frac{1}{2} \Bigl( \bm^\top \bK_{\bZ\bZ}^{-1} \bm + \tr{ \bK_{\bZ\bZ}^{-1} \bS } - \log \vert \bK_{\bZ\bZ}^{-1} \bS \vert - M \Bigr).
+\]
 
 \cref{eqn:elbo} is typically optimized using gradient descent or natural gradient descent methods \cite{hensman2012fast,salimbeni2017doubly}.
 Note that, because the ELBO factorizes as a sum over data points, we can instead approximate the sum over a minibatch of data.
@@ -552,7 +558,7 @@ The predictive distribution $q(\by \mid \bxtest) = \Evover{q(f(\bxtest))}{ p(\yt
 Closed-form predictive distributions $q(\ytest \mid \bxtest)$ exist for Gaussian and Bernoulli observation models \citep{rasmussen2006gaussian}.
 
 \subsection{Summary of Notation}
-All the notation of this section is summarized in \cref{tab:gp_notation}.
+The notation of this section is summarized in \cref{tab:gp_notation}.
 It will be used throughout the remaining chapters.
 
 \begin{table}[!b]
