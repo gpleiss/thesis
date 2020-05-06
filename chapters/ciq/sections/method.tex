@@ -260,10 +260,14 @@ Note that these requirements are met by the partial pivoted Cholesky preconditio
 
 
 \subsection{Related Work}
-\gp{
-  TODO. Mostly \citet{hale2008computing}, \citet{chow2014preconditioned}, \citet{aune2013iterative,aune2014parameter}, and \citet{bakhos2017multipreconditioned}.
-}
-There has been growing interest in applying Krylov methods to Gaussian process training and inference \gp{CITE}, especially due to its memory efficiency and ability to utilize GPU acceleration \cite{gardner2018gpytorch,wang2019exact}.
-Some Krylov methods for $\bK^{-1/2} \bb$ have been proposed by the scientific computing community \cite{aune2013iterative,aune2014parameter,chow2014preconditioned,saibaba2013flexible}.
-Unlike many existing methods, our proposed Krylov approach uses a preconditioned vector-recurrence which is extremely efficient and can handle several MVMs in parallel.
-In addition, our method affords an efficient backward pass for use with learning algorithms.
+%There has been growing interest in applying Krylov methods to Gaussian process training and inference \gp{CITE}, especially due to its memory efficiency and ability to utilize GPU acceleration \cite{gardner2018gpytorch,wang2019exact}.
+There have been some Krylov methods for $\bK^{-1/2} \bb$ have been proposed by the scientific computing community \cite{aune2013iterative,aune2014parameter,chow2014preconditioned,saibaba2013flexible}.
+\citet{aune2013iterative,aune2014parameter} draw samples using a similar quadrature formulations in conjunction with shifted conjugate gradients.
+However, their method does not allow for the use of preconditioning.
+\citet{chow2014preconditioned} draw samples using a preconditioned Lanczos algorithm.
+Their method does not rely on Cauchy's integral formula, and therefore it relies on storing the entire $\bQ_J$ and $\bT_J$ matrices.
+Our proposed Krylov approach differs from these prior works in that
+\begin{enumerate*}
+  \item it relies on vector-recurrence that can be preconditioned for fast convergence; and
+  \item it affords a simple derivative for back-propagation.
+\end{enumerate*}
