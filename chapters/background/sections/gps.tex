@@ -357,7 +357,7 @@ It is well suited to high-dimensional datasets or datasets with complex features
 
 
 
-\subsection{Approximate Gaussian Processes}
+\subsection{Scalable Gaussian Processes}
 \label{sec:approx_gps}
 
 As we will discuss in detail in the next chapters, computing the marginal log likelihood (\cref{eqn:log_lik}) and the predictive distribution (\cref{eqn:predictive_mean,eqn:predictive_var}) has historically been computationally prohibitive for large datasets.
@@ -427,6 +427,7 @@ While other methods tend to use $M \ll N$ inducing points, \citet{wilson2015kern
   \item the inducing points $\bZ = [\bz^{(1)}, \ldots, \bz^{(M)}]$ must lie on a \emph{regularly-spaced grid};
   \item the kernel function is \emph{stationary} (e.g. RBF, Mat\'ern, etc.).
 \end{enumerate}
+
 The resulting approximate kernel matrix has nice algebraic structure that can be exploited for efficient storage and fast computations.
 In particular, the approximate kernel matrix $\widetilde \bK_{\bX\bX}$ affords fast \emph{matrix-vector multiplications} (MVMs), which will translate to fast Gaussian process training and inference (using the methods described in \cref{chapter:bbmm,chapter:love}).
 
@@ -463,6 +464,92 @@ Substituting the KISS-GP approximate kernel into \cref{eqn:predictive_mean} and 
 (Here {\color{blue} blue} highlights computations that don't depend on test data.)
 Because $\bw_{\bx^{*}}$ is the only term in \cref{eqn:pred_mean_ski} that depends on $\bx^{*}$, the remainder of the equation (denoted as $\blue \ba'$) can be pre-computed: $\meantest{\bxtest} = \bw_{\bxtest}^\top \blue \ba'$.
 After pre-computing $\blue \ba'$, the multiplication $\bw_{\bxtest}^\top \blue \ba'$ requires $\bigo{1}$ time, as $\bw_{\bxtest}$ is sparse and has only four nonzero elements.
+
+
+
+\subsection{Variational Inference for Non-Conjugate/Large-Scale GPs.}
+For most of this thesis we will focus on Gaussian process regression with a (conjugate) Gaussian observation model.
+Under this setting, exact Bayesian inference is tractable, which results in the closed-form predictive distribution given by \cref{eqn:predictive_mean,eqn:predictive_var}.
+Here we will briefly examine the case where exact inference is intractable, which occurs when
+%
+\begin{enumerate}
+  \item using a non-Gaussian observation model (e.g. a Bernioulli likelihood for GP classification, a Student-T likelihood for heavy-tailed regression); or
+  \item using a dataset is too large (or cumbersome) to fit into memory.
+\end{enumerate}
+%
+These settings necessitate using \emph{approximate Bayesian inference} to estimate the predictive distribution.
+Here, we would note a subtle but important distinction between ``approximate inference'' GPs differ from the ``scalable exact GPs'' presented in \cref{sec:approx_gps}.
+Scalable GP approximations like KISS-GP perform exact GP inference but approximate operations with kernel matrices.\footnote{
+  We note that the SGPR method \cite{titsias2009variational} is in some sense a ``hybrid'' method.
+  It is motivated and derived via variational inference, and therefore could be considered an approximate inference method.
+  However, as demonstrated in \cref{sec:approx_gps}, it can also be viewed through the lens of exact GP inference with a SoR approximated kernel.
+  Since SGPR can only be applied to GP regression, in this thesis we consider it under the lens of ``scalable exact GPs.''
+  We reserve the ``approximate inference'' label for models that can handle non-conjugate observation models.
+}
+Approximate inference GPs on the other hand compute an alternative (approximate) predictive distribution, as the standard predictive distribution is not applicable.
+
+There are several approaches to approximate non-conjugate GP predictive distributions \citep{minka2001family,rasmussen2006gaussian,hensman2015mcmc,li2015stochastic}.
+Here we introduce a family of methods that rely on stochastic variational approximations.
+
+\paragraph{Stochastic variational Gaussian processes (SVGP)}
+\cite{hensman2013gaussian,hensman2015scalable,matthews2016sparse} are a popular class of models which approximate GP posteriors via variational inference.
+Similarly to SoR/FITC/SGPR, these models introduce a set of $M \ll N$ inducing points $\bZ = [\bz_1, \:\: \ldots, \:\: \bz_M]$.
+This method has several compelling properties:
+\begin{enumerate*}
+  \item it is compatible with non-conjugate observation models;
+  \item it uses $M \ll N$ inducing points to easily trade off speed for predictive fidelity; and
+  \item it can be used in conjunction with stochastic gradient optimization for memory savings.
+\end{enumerate*}
+
+Let the random variable $\bu = [f(\bz_1, \:\: \ldots, \:\: f(\bz_M)]$ represent the function evaluated at each inducing point.
+SGPR approximates the posterior distribution $p( f(\cdot), \bu, \mid \bX, \by)$ with a Gaussian process \emph{variational distribution} $q(f(\cdot), \bu)$:
+%
+\begin{align*}
+  p(f(\cdot), \bu \mid \bX, \by) &\approx q(f(\cdot), \bu)
+  \\
+  &= p(f(\cdot) \mid \bu) q(\bu),
+  \quad
+  q(\bu) = \normaldist{\bm}{\bS},
+\end{align*}
+%
+where $\bm \in \reals^M$ and $\bS \in \reals^{M \times M}$ are learnable variational parameters.
+Under this variational distribution, note that $f(\cdot)$ matches the prior conditioned on the inducing function values $\bu$.
+Marginalizing out $\bu$ gives us the approximate Gaussian predictive distribution $q( f(\bx) )$:
+%
+\begin{align}
+  q \left( f(\bx) \right) &= \Evover{q(\bu)}{ q( f(\bx), \bu) }
+  = \Evover{q(\bu)}{ \: p\left( f(\bx) \mid \bu \right) \: }
+  \nonumber \\
+  &= \normaldist{ \bxtest; \ameantest{ \bx }} { \avartest{ \bx }}
+  %\label{eqn:approx_pred}
+  \nonumber
+  \\
+  \ameantest{\bx} &= \bk_{\bZ\bx}^\top \bK_{\bZ\bZ}^{-1} \bm
+  \label{eqn:approx_pred_mean} \\
+  \avartest{\bx} &= k(\bx, \bx) -
+    \bk_{\bZ\bx}^\top \bK_{\bZ\bZ}^{-1} \left( \bK_{\bZ\bZ} - \bS \right) \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx}
+  \label{eqn:approx_pred_covar}
+\end{align}
+%
+where $\ameantest{\cdot}$ and $\avartest{\cdot}$ are the (approximate) predictive mean and covariance functions.
+The parameters $\bm$ and $\bS$ (as well as the inducing locations $\bZ$ and associated kernel/likelihood hyperparameters) are chosen to minimize the KL-divergence between the approximate posterior $q(\bf(\cdot), \bu)$ and the true posterior $p(\bf(\cdot), \bu \mid \bX, \by)$.
+This can be accomplished by optimizing the evidence-lower bound (ELBO):
+%
+\begin{align}
+	-\loglik_\text{ELBO} = -\sum_{i=1}^N \Evover{q(f(\bx^{(i)}))}{  \: \log p( y^{(i)} \mid f(\bx^{(i)}) ) \: } + \kl{ q(\bu) }{ p(\bu) },
+	\label{eqn:elbo}
+\end{align}
+%
+where $p(y^{(i)} \mid f(\bx^{(i)})$ is the (potentially) non-conjugate likelihood function.
+The expectation $\Evover{q(f(\bx^{(i)}))}{  \: \log p( y^{(i)} \mid f(\bx^{(i)}) ) \: }$ can be approximated with Monte Carlo integration \citep{wilson2016stochastic} or with Gauss-Hermite quadrature \cite{hensman2015scalable}.
+
+\cref{eqn:elbo} is typically optimized using gradient descent or natural gradient descent methods \cite{hensman2012fast,salimbeni2017doubly}.
+Note that, because the ELBO factorizes as a sum over data points, we can instead approximate the sum over a minibatch of data.
+This ability to use stochastic optimization is a primary advantage of SVGP, as it does not require large datasets to be stored in memory.
+
+To form predictions at test time, we simply use \cref{eqn:approx_pred_mean} and \cref{eqn:approx_pred_covar} to compute $q(f(\bxtest))$ for a test point $\bxtest$.
+The predictive distribution $q(\by \mid \bxtest) = \Evover{q(f(\bxtest))}{ p(\ytest \mid f(\bxtest)) }$ can again be approximated via sampling or quadrature.
+Closed-form predictive distributions $q(\ytest \mid \bxtest)$ exist for Gaussian and Bernoulli observation models \citep{rasmussen2006gaussian}.
 
 \subsection{Summary of Notation}
 All the notation of this section is summarized in \cref{tab:gp_notation}.
