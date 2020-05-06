@@ -140,7 +140,7 @@ There are two types of operations involving these coefficients:
 %
 \begin{enumerate}
   \item updates (e.g. {\color{\colormat} $\balpha_j$ $\gets$ ${( \bR_{j-1} \circ \bZ_{j-1} )^\top \mathbf 1}/{( \bD_{j-1} \circ \bV_{j} )^\top \mathbf 1}$}) and
-  \item scalaing (e.g. {\color{\colormat} $\bU_j$ $\gets$ $\bU_{j-1} +$ \diag{$\balpha_{j}$} $\bD_{j-1}$}).
+  \item scalaing (e.g. {\color{\colormat} $\bC_j$ $\gets$ $\bC_{j-1} +$ \diag{$\balpha_{j}$} $\bD_{j-1}$}).
 \end{enumerate}
 %
 The update rules are batched versions of the update rules in the standard CG algorithm.
@@ -179,14 +179,14 @@ Similarly, for scaling,
 %
 \begin{align*}
   \begin{bmatrix}
-    \bu_j^{(0)} & \cdots & \bu_j^{(T)}
+    \bc_j^{(0)} & \cdots & \bc_j^{(T)}
   \end{bmatrix}
   &=
-  \bU_{j-1} + \text{diag}(\alpha_j) \bD_{j-1}
+  \bC_{j-1} + \text{diag}(\alpha_j) \bD_{j-1}
   \\
   &=
   \begin{bmatrix}
-    \bu_{j-1}^{(0)} & \cdots & \bu_{j-1}^{(T)}
+    \bc_{j-1}^{(0)} & \cdots & \bc_{j-1}^{(T)}
   \end{bmatrix}
   +
   \begin{bmatrix}
@@ -210,7 +210,7 @@ Each iteration requires one matrix-matrix multiply with $\trainK$ and element-wi
 Therefore, $J$ iterations of mBCG requires $\bigo{NT}$ space and $\bigo{J \: \mmm{\trainK}}$ time,
 where $\mmm{\trainK}$ is the time to multiply $\trainK$ by a $N \times (T + 1)$ matrix.\footnote{
 	There are $J$ matrix multiplications with $\trainK$, resulting in the $\bigo{J \mmm{\trainK}}$ runtime.
-	For the remainder of the algorithm, all matrices involved ($\bU_{j},\bV_j,\bR_j,\bZ_j,\bP_j$) are $n \times t$ matrices.
+	For the remainder of the algorithm, all matrices involved ($\bC_{j},\bV_j,\bR_j,\bZ_j,\bP_j$) are $n \times t$ matrices.
 	All of the lines involving only these matrices perform operations that require $\bigo{NT}$ time.
 	For example, elementwise multiplying $\bZ_{j} \circ \bZ_{j}$ accesses each element in $\bZ_{j}$ once, and and then multiplying it by the vector of ones similarly accesses every element in the matrix once.
 	Multiplying $\bV_{j}$ by the diagonal matrix with $\ba_{j}$ on the diagonal takes $\bigo{NT}$ time, because we multiply every element $\bV_{j}^{(ik)}$ by $\ba_{j}^{(i)}$.

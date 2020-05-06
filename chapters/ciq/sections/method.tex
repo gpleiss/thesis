@@ -66,13 +66,12 @@ Therefore these $Q$ solves must be efficient to compute.
 \gp{Stopped here.}
 
 \paragraph{MVM approaches to matrix solves.}
-We take inspiration from the matrix-vector multiplication (MVM) inference of \citet{gardner2018gpytorch}, who use the conjugate gradients method with large-scale kernel matrices.
-\citeauthor{gardner2018gpytorch}'s CG approach effectively utilizes GPU acceleration and reduces memory requirements when computing solves and log determinants.
-In the same vein, we introduce a variant of \citet{paige1975solution}'s minimum residuals algorithm (MINRES) to compute the shifted solves for \cref{eqn:contour_integral_quad}.
-Similarly to conjugate gradients, MINRES is a Krylov subspace method that iteratively computes $\bK^{-1} \bb$ through a 4-vector recurrence involving matrix-vector multiplications with $\bK$.
-While it find the exact solution in $N$ iterations, $J \ll N$ iterations often suffices for high accuracy (e.g. up to 6 decimal places).
-MINRES has the same computational efficiency as CG, and has been shown to converge as fast if not faster \cite{fong2012cg}.
-Importantly, the convergence properties are especially desirable for Gaussian sampling applications as we will demonstrate in \cref{sec:convergence}.
+As in the previous chapters, we will use MVM methods to perform these $Q$ solves.
+However, we will introduce a new Krylov algorithm---based on \citet{paige1975solution}'s minimum residuals algorithm (MINRES)---that is specifically designed for shifted solves.
+Our MINRES variant offers substantial computational savings and more parallelism than even mBCG affords.
+Moreover, its convergence properties are especially desirable for Gaussian sampling applications, as we will demonstrate in \cref{sec:convergence}.
+
+\gp{STOPPED HERE.}
 
 \paragraph{msMINRES for multiple shifted solves.}
 Our variant of MINRES---multi-shift MINRES or {\bf msMINRES}---simultaneously computes all shifted solves.

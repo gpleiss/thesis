@@ -15,7 +15,7 @@ In addition, we offer practical guidelines to speed up BBMM for large datasets.
 \subsection{Reducing Memory Requiremnts to $\bigo{N}$}
 
 The primary input to the modified batched conjugate gradients (mBCG) algorithm of \cref{sec:bbmm_method} is {\tt mvm\_$\trainK$}, a black-box function that performs MVMs using the kernel matrix $\trainK$.
-Besides the storage cost associated with {\tt mvm\_$\trainK$}, each iteration of mBCG updates four (batches) of vectors: $\bu$ (the current solution), $\br$ (the current error), $\bd$ (the ``search'' direction for the next solution), and $\bz$ (a preconditioned error term).
+Besides the storage cost associated with {\tt mvm\_$\trainK$}, each iteration of mBCG updates four (batches) of vectors: $\bc$ (the current solution), $\br$ (the current error), $\bd$ (the ``search'' direction for the next solution), and $\bz$ (a preconditioned error term).
 (See \cref{alg:mod_pcg}.)
 Storing these vectors requires exactly $4N$ space.
 In addtion, the mBCG algorithm stores the tridiagonal matrices for stochastic Lanczos quadrature, which requires $\bigo{J}$ memory for $J$ iterations of mBCG.

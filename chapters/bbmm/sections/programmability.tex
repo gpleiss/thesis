@@ -73,7 +73,7 @@ For a full GP code example that uses {\tt LazyTensors} under the hood, see \cref
 \[
   \bK_{\bX\bX}^{(\text{lin})} = \bX\bX^{\top}.
 \]
-A matrix multiply with this kernel against an $N \times T$ matrix $\bV$, $(\bX\bX^{\top})\bV$ requires $\bigo{TND}$ time.
+A matrix multiply with this kernel against an $N \times T$ matrix $\bB$, $(\bX\bX^{\top})\bV$ requires $\bigo{TND}$ time.
 Therefore, BBMM requires $\bigo{JTND}$ time, and is exact in $\bigo{TND^2}$ time.
 This running time complexity matches existing efficient algorithms for Bayesian linear regression, \emph{with no additional derivation}.
 
@@ -146,7 +146,7 @@ Importantly, implementing multitask GPs simply requires changing the kernel modu
 This is demonstrated by the code example in \cref{app:multitask_gp_example}.
 
 \paragraph{Compositions of kernels} can often be handled automatically.
-For example, given a BBMM routine for $\bK_{1},\bK_{2},\bK_{3}$, we can automatically perform $(\bK_{1}\bK_{2}+\bK_{3}) \bV = \bK_{1}(\bK_{2} \bV ) + \bK_{3} \bV$.
+For example, given a BBMM routine for $\bK_{1},\bK_{2},\bK_{3}$, we can automatically perform $(\bK_{1}\bK_{2}+\bK_{3}) \bB = \bK_{1}(\bK_{2} \bB ) + \bK_{3} \bB$.
 To handle the sum of two kernels, we can define a {\tt SumLazyTensor} that takes two {\tt LazyTensor}s and distributes their matrix-multiplication.
 For the product of kernels, one can use the method of \citet{gardner2018product}.
 %

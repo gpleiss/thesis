@@ -36,10 +36,10 @@ These algorithms can compute matrix solves, log determinants, and other operatio
 Instead, these methods only access $\trainK$ through MVMs.
 
 The next two chapters propose GP-specific Krylov algorithms for training and inference.
-In this remainder of this section, we introduce two common Krylov subspace methods that we use as building blocks: {\bf linear conjugate gradients} (CG) and {\bf Lanczos tridiagonalization}.
+In this remainder of this section, we introduce three common Krylov subspace methods that we use as building blocks: {\bf linear conjugate gradients} (CG), {\bf Lanczos tridiagonalization}, and {\bf MINRES}.
 
 \paragraph{Intuition.}
-At first glance, it may not be obvious how a matrix-vector multiplications---a linear operation---could compute non-linear operations like $\trainK^{-1} \bv$ or $\log \vert \trainK \vert$.
+At first glance, it may not be obvious how a matrix-vector multiplications---a linear operation---could compute non-linear operations like $\trainK^{-1} \bb$ or $\log \vert \trainK \vert$.
 To motivate the use of MVM-based algorithms, we will begin by reformulating the matrix solve and log determinant operations to make their MVM connection obvious.
 First, we will view $\trainK^{-1} \by$ through an optimization lens.
 Since $\trainK^{-1}$ is positive definite, we note that any matrix solve is the solution to the following convex problem:
@@ -66,7 +66,7 @@ For example, the \emph{power method} computes the largest eigenvector by running
 In practice computing a complete eigendecomposition of $\trainK$ through the power iteration would be a highly inefficient way to compute log determinants.
 We will instead compute these terms through stochastic Lanczos quadrature \citep{ubaru2017fast} which similarly uses MVMs but avoids a full eigendecomposition.
 
-With these intuitions in place, we will now introduce linear conjugate gradients and Lanczos tridiagonalization.
+With these intuitions in place, we will now introduce linear conjugate gradients, Lanczos tridiagonalization, and MINRES.
 These methods expand upon the simple iterative procedures we outline above, yet converge to the true solutions in many fewer iterations.
 
 
@@ -84,10 +84,10 @@ Because CG is notoriously confusing and difficult to intuit, we refer the reader
 
 \paragraph{Overview.}
 Conjugate gradients differs from vanilla gradient descent in two ways: its' choice of the decent direction and its' choice of step size.
-Standard gradient descent takes a constant step $\gamma$ in the direction of the gradient $\br_j$ at every iteration:
+Standard gradient descent takes a constant step $\varphi$ in the direction of the gradient $\br_j$ at every iteration:
 %
 \begin{equation*}
-  \bc_{j+1}^{\text(GD)} = \bc_{j} - \gamma \br_{j}, \quad
+  \bc_{j+1}^{\text(GD)} = \bc_{j} - \varphi \br_{j}, \quad
   \br_{j} = \bA \bc_{j} - \bb.
 \end{equation*}
 %
@@ -447,3 +447,124 @@ In particular, we will store the $\alpha_j$ and $\beta_j$ coefficients from \cre
 (See \cite{saad2003iterative}, Section 6.7.3.)
 In other words, we can recover the Lanczos tridiagonal matrix $\bT_J$ simply by running CG.
 However, the orthonormal matrix $\bQ_J$ cannot be as easily derived as a CG byproduct.
+
+
+\subsection{MINRES}
+The method of minimum residuals (MINRES) \cite{paige1975solution} is an alternative to linear conjugate gradients, with the advantage that it can be applied to indefinite and singular symmetric matrices $\bA$.
+\citet{paige1975solution} formulate MINRES to solve the least-squares problem $\argmin_{\bc} \Vert \bA \bc - \bb \Vert_2$.
+Each iteration $J$ produces a solution $\bc_J$ which is optimal within the $J^\text{th}$ Krylov subspace:
+%
+\begin{equation}
+	\bc_J^{(\text{MINRES})} = \argmin_{\bc \in \mathcal{K}_J(\bA, \bb)} \Vert \bA \bc - \bb \Vert_2.
+	\label{eqn:minres_highlevel}
+\end{equation}
+%
+Through some mathematical manipulation, one can reformulate \cref{eqn:minres_highlevel} as an unconstrained optimization problem:
+%
+\begin{align}
+  \bc_J^{(\text{MINRES})} &= \Vert \bb \Vert_2 \bQ_J \bz_J
+  \nonumber
+  \\
+  \bz_J &= \argmin_{\bz \in \reals^J} \left\Vert
+		\left( \widetilde \bT_J \right)\by - \be_1
+	\right\Vert_2,
+	\quad
+  \widetilde \bT_J \begin{bmatrix} \bT_J \\ \Vert \br_J \Vert_2 \be_J^\top  \end{bmatrix},
+  \label{eqn:minres_ols}
+\end{align}
+%
+where $\be_1, \be_J$ are unit vectors, and $\bQ_J$, $\bT_J$, and $\br_J$ are the outputs from the Lanczos algorithm \cite{lanczos1950iteration}:
+\begin{itemize}
+	\item $\bQ_J \in \reals^{N \times J}$ is an orthonormal basis of the $J^\text{th}$ Krylov subspace,
+	\item $\bT_J \in \reals^{J \times J}$ is a symmetric tridiagonal matrix, and
+	\item $\br_J \in \reals^J$ is a residual term.
+\end{itemize}
+%
+Since \cref{eqn:minres_ols} is a least-squares problem, we can write the analytic solution to it using the QR factorization of $ \widetilde \bT_J = \bQU_J \bR_J$ \citep[e.g.][]{golub2012matrix}:
+%
+\begin{align}
+  \bc_J^{(\text{MINRES})} = \Vert \bb \Vert_2 \: \bQ_J \left( \bR^{-1} \bQU_J^\top \right) \be_1.
+	\label{eqn:minres_qr}
+\end{align}
+%
+One way to perform MINRES is first running $J$ iterations of the Lanczos algorithm, computing $\widetilde \bT_J = \bQU_J \bR_J$, and then plugging the resulting $\bQ_J$, $\bQU_J$, and $\bR_J$ into \cref{eqn:minres_qr}.
+However, this is unsatisfactory because Lanczos can become unstable after $\approx 50$ iterations and requires storing a $N \times J$ matrix $\bQ_J$.
+\citeauthor{paige1975solution} instead introduce a vector recurrence to iteratively compute $\bc_J^\text{(MINRES)}$.
+This recurrence relation, which is given by \cref{alg:minres} and broadly described below is exactly equivalent to \cref{eqn:minres_qr}; however it uses careful bookkeeping to avoid storing any $N \times J$ terms.
+
+First we note that the $\widetilde \bT_J$ matrices are formed recursively, and thus their QR factorizations are also recursive:
+%
+\[
+  \bQU^\top \widetilde \bT_J = \begin{bmatrix}
+    \bQU_{J-1}^\top & \bqu^{\top(J,1:J-1)} \\
+    \bqu^{\top{(1:J-1,J+1)}} & \mathcal{Q}^{(J,J+1)}
+  \end{bmatrix} \begin{bmatrix}
+    \widetilde \bT_{J-1} & \bt^{(J)} \\ \bzero^\top & \Vert \br_J \Vert
+  \end{bmatrix}
+  = \begin{bmatrix}
+    \bR_{J-1} & {\br^{(J,1:J-1)}} \\
+    \bzero & R^{(J,J)}
+  \end{bmatrix} = \bR_J
+\]
+%
+where $\bt^{(J)}$ and $[\br^{(J,1:J-1)}; R^{(J,J)}]$ are the last columns of $\bT_J$ and $\bR_J$ respectively.
+Moreover, if we recursively form $\bR_J^{-1}$ as
+%
+\[
+  \bR_J^{-1} = \begin{bmatrix}
+    \bR_{J-1} & {\br^{(J,1:J-1)}} \\
+    \bzero & R^{(J,J)}
+  \end{bmatrix}^{-1}
+  = \begin{bmatrix}
+    \bR_{J-1}^{-1} & \left( \bR_{J-1}^{-1} {\br^{(J,1:J-1)}} \right) / R^{(J,J)} \\
+    \bzero & 1 / R^{(J,J)}
+  \end{bmatrix},
+\]
+%
+then \cref{eqn:minres_qr} can be re-written in a decent-style update:
+%
+\begin{align}
+  \bc_J^{(\text{MINRES})} &=
+  \Vert \bb \Vert_2 \begin{bmatrix}
+    \bQ_{J-1} \bq^{(J)}
+  \end{bmatrix} \begin{bmatrix}
+    \bR_{J-1}^{-1} & \frac{ \bR_{J-1}^{-1} {\br^{(J,1:J-1)}} }{ R^{(J,J)} } \\
+    \bzero & 1 / R^{(J,J)}
+  \end{bmatrix} \begin{bmatrix}
+    \bQU_{J-1}^\top & \bqu^{\top(J,1:J-1)} \\
+    \bqu^{\top{(1:J-1,J+1)}} & \mathcal{Q}^{(J,J+1)}
+  \end{bmatrix} \be_1
+  \nonumber \\
+  &=
+  \Vert \bb \Vert_2
+  \begin{bmatrix}
+    \bQ_{J-1} \bR_{J-1}^{-1} & \frac{ \bQ_{J-1} \bR_{J-1}^{-1} {\br^{(J,1:J-1)}} }{ R^{(J,J)} } \\
+    \bzero & 1 / R^{(J,J)} \bq_{J-1}
+  \end{bmatrix} \begin{bmatrix}
+    \bQU_{J-1}^\top \be_1
+    \\
+    \mathcal{Q}^{\top{(1,J+1)}}
+  \end{bmatrix}
+  \nonumber \\
+  &=
+  \underbracket{\left( \Vert \bb \Vert_2 \bQ_{J-1} \bR_{J-1}^{-1} \bQU_{J-1} \be_1 \right)}_{\bc_{J-1}^{(\text{MINRES})}}
+  \:\: + \:\:
+  \underbracket{\frac{\Vert \bb \Vert_2 \mathcal{Q}^{\top{(1,J+1)}}}{ R^{(J,J) }}}_{\varphi_J}
+  \underbracket{\begin{bmatrix}
+    \bQ_{J-1} \bR_{J-1}^{-1} {\br^{(J,1:J-1)}}  \\
+    \bq_{J-1}
+  \end{bmatrix}}_{\bd_J}.
+  \label{eqn:minres_descent}
+\end{align}
+%
+Thus $\bc^{(\text{MINRES})}_J = \bc^{(\text{MINRES})}_{J-1} + \varphi_J \bd_J$.
+The only seemingly expensive part of this update is computing $\bd_J$, as we need to compute $\bQ_{J-1} \bR^{-1}_{J-1} \br^{(J,1:J-1)}$.
+$\br^{(J,1:J-1)}$, which is the next entry in the QR factorization of $\widetilde \bT_J$, can be cheaply computed using Givens rotations (see \citep[e.g.][Ch. 11.4.1]{golub2012matrix}).
+Moreover, only the last two entries of $\br^{(J,1:J-1)}$ will be non-zero (due to the tridiagonal structure of $\widetilde \bT_J$.
+Consequentially, we only need to store the last two vectors of $\bQ_{J-1} \bR^{-1}_{J-1}$, which again can be computed recursively.
+
+In total, the whole procedure only requires the storage of $\approx 6$ vectors.
+Each iteration requires a single MVM with $\bA$ (to form the next Lanczos vector $\bq_J$); and all subsequent operations are $\bigo{N}$.
+The entire procedure is given by \cref{alg:minres}.
+
+\input{algorithms/minres}

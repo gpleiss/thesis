@@ -31,8 +31,5 @@
       $\blue \bR$ $\leftarrow$ \triangularsolve{ $\color{blue} \bQ^\top, \bL_\bT$ }
     }
     \tcp{$\bR \in \reals^{J \times N}$, $J \ll N$.}
-    $\bu$ $\gets$ ${\color{blue} \bR} \bk_{\bX\bxtest}$
-    $\bu'$ $\gets$ ${\color{blue} \bR} \bk_{\bX\bxtestprime}$
-    \\
-    \Return{ $k(\bxtest, \bxtestprime) - \bu^T \bu'$ } \\
+    \Return{ $k(\bxtest, \bxtestprime) - ( \bk_{\bX\bxtest}^\top {\color{blue} \bR^\top} ) ({\color{blue} \bR } \bk_{\bX\bxtestprime} )$ } \\
 \end{algorithm2e}

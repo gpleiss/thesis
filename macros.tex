@@ -32,8 +32,10 @@
 % Matrices / vectors
 \newif\ifboldmatrix
 \boldmatrixtrue
+\newcommand{\mathbcal}[1]{\pmb{\mathcal{#1}}}
 \ifboldmatrix\newcommand{\boldmatrix}[1]{\mathbf{#1}}\else\newcommand{\boldmatrix}[1]{#1}\fi
 \ifboldmatrix\newcommand{\boldgreekmatrix}[1]{\boldsymbol{#1}}\else\newcommand{\boldgreekmatrix}[1]{#1}\fi
+\ifboldmatrix\newcommand{\boldscriptmatrix}[1]{\mathbcal{#1}}\else\newcommand{\boldscriptmatrix}[1]{#1}\fi
 \newcommand{\ba}{\ensuremath{\mathbf{a}}}
 \newcommand{\balpha}{\ensuremath{\boldsymbol{\alpha}}}
 \newcommand{\bb}{\ensuremath{\mathbf{b}}}
@@ -50,6 +52,7 @@
 \newcommand{\bp}{\ensuremath{\mathbf{p}}}
 \newcommand{\bpi}{\ensuremath{\boldsymbol{\pi}}}
 \newcommand{\bq}{\ensuremath{\mathbf{q}}}
+\newcommand{\bqu}{\ensuremath{\mathbcal{Q}}}
 \newcommand{\br}{\ensuremath{\mathbf{r}}}
 \newcommand{\bs}{\ensuremath{\mathbf{s}}}
 \newcommand{\bt}{\ensuremath{\mathbf{t}}}
@@ -76,6 +79,7 @@
 \newcommand{\bP}{\ensuremath{\boldmatrix{P}}}
 \newcommand{\bPi}{\ensuremath{\boldgreekmatrix{\Pi}}}
 \newcommand{\bQ}{\ensuremath{\boldmatrix{Q}}}
+\newcommand{\bQU}{\ensuremath{\boldscriptmatrix{Q}}}
 \newcommand{\bR}{\ensuremath{\boldmatrix{R}}}
 \newcommand{\bS}{\ensuremath{\boldmatrix{S}}}
 \newcommand{\bSigma}{\ensuremath{\boldgreekmatrix{\Sigma}}}

@@ -1,0 +1,72 @@
+\begin{algorithm2e}[t!]
+  \SetAlgoLined
+  \SetKwInOut{Input}{Input}
+  \SetKwInOut{Output}{Output}
+  \newcommand\NextInput[1]{%
+    \settowidth\inputlen{\Input{}}%
+    \setlength\hangindent{1.5\inputlen}%
+    \hspace*{\inputlen}#1\\
+  }
+  \newcommand\graycomment[1]{\footnotesize\ttfamily\textcolor{gray}{#1}}
+  \SetCommentSty{graycomment}
+  \SetKw{Break}{break}
+  \SetKwData{tol}{tolerance}
+  \SetKwFunction{mvmkxx}{mvm\_$\bA$}
+  \SetKwFunction{mvmprec}{$\bP^{-1}$}
+  \SetKwFunction{size}{size}
+  \caption[(Preconditioned) MINRES.]{
+    (Preconditioned) MINRES.
+  }
+  \label{alg:minres}
+    \Input{\mvmkxx{$\cdot$} -- function for MVM with matrix $\bA$}
+    \NextInput{$\bb$ -- vector to solve against}
+    \NextInput{\mvmprec{$\cdot$} -- preconditioner (optional -- defaults to {\tt identity}$(\cdot)$)}
+    \Output{$\bc = \bA^{-1} \bb$.}
+    \BlankLine
+    $\bb$ $\gets$ \mvmprec{$\bb$} \tcp{Precondition solve vector.}
+    $\bc_{1}$ $\gets$ $\bzero$ \tcp{Current solution.}
+    $\bd_{1}, \bd_{0}$ $\gets$ $\bzero$ \tcp{Current \& prev. ``search'' direction.}
+    $\varphi_{2}$ $\gets$ $\Vert \bb \Vert_2$ \tcp{Current ``step'' size.}
+    \BlankLine
+    \BlankLine
+    $\bq_{1}$ $\gets$ $\bb / \Vert \bb \Vert_2$ \tcp{Current Lanczos vector.}
+    $\bv_{1}$ $\gets$ \mvmkxx{ $\bq_0$ } \tcp{Buffer for MVM output.}
+    $\delta_{1}$ $\gets$ $\Vert \bb \Vert_2$ \tcp{Current Lanczos residual/sub-diagonal.}
+    $\delta_{0}$ $\gets$ $1$ \tcp{Prev. Lanczos residual/sub-diagonal.}
+    $\eta_{1}$ $\gets$ $1$ \tcp{Current scaling term.}
+    $\eta_{0}$ $\gets$ $0$ \tcp{Prev. scaling term.}
+    \BlankLine
+    \For{$j \gets 2$ \KwTo J}{
+      \tcp{Run one iter of Lanczos. Gets next vector of $\bQ$ matrix, and next diag/sub-diag ($\gamma$, $\delta$) entries of $\bT$ matrix.}
+      $\bq_j$ $\gets$ $\bv_j / \delta_j$
+      \\
+      $\bv_j$ $\gets$ \mvmkxx{ $\bq_j$ } $ - \delta_j \bq_{j-1} $
+      \\
+      $\gamma_j$ $\gets$ $\bq_j \bv_j$
+      \\
+      $\bv_j$ $\gets$ $\bv_j - \gamma_j \bq_j$
+      \\
+      $\delta_j$ $\gets$ $\Vert \bv_j \Vert$
+      \\
+      \tcp{Compute the next $\br^{(J)}$ (part of QR) via Givens rotations. There are three non-0 entries: $\bR^{(J,J-2:J)} = [\epsilon_J, \zeta_J, \eta_J]$.}
+      $\epsilon_j$ $\gets$ $\delta_{j-1} \left( \delta_{j-2} / \sqrt{\delta_{j-2}^2 + \eta_{j-2}^2} \right)$
+      \\
+      $\zeta_j$ $\gets$ $\delta_{j-1} \left( \eta_{j-2} / \sqrt{\delta_{j-2}^2 + \eta_{j-2}^2} \right)$
+      \\
+      $\eta_j$ $\gets$ $\gamma_j \left( \eta_{j-1} / \sqrt{\delta_{j-1}^2 + \eta_{j-1}^2} \right) + \zeta_j \left( \delta_{j-1} / \sqrt{\delta_{j-1}^2 + \eta_{j-1}^2} \right)$% \tcp{The $R^{(J,J)}$ entry.}
+      \\
+      $\zeta_j$ $\gets$ $\zeta_j \left( \eta_{j-1} / \sqrt{\delta_{j-1}^2 + \eta_{j-1}^2} \right) + \gamma_j \left( \delta_{j-1} / \sqrt{\delta_{j-1}^2 + \eta_{j-1}^2} \right)$
+      \\
+      $\eta_j$ $\gets$ $\eta_j \left( \eta_j / \sqrt{\delta_j^2 + \eta_j^2} \right)$
+      \\
+      \tcp{Compute ``step'' size $\varphi_J = \bQU^{(1,J+1)} / R^{(J,J)} $.}
+      $\varphi_{j}$ $\gets$ $\varphi_{j-1} \left( \delta_{j-1} / \sqrt{\delta_{j-1}^2 + \eta_{j-1}^2} \right) \left( \eta_j / \sqrt{\delta_j^2 + \eta_j^2} \right) $
+      \\
+      \tcp{Update the current solution based on the $\br^{(J)}$ entries ($\epsilon_J, \zeta_J, \eta_J$) and previous search vectors $\bd_{j-1}$, $\bd_{j-2}$.}
+      $\bd_j$ $\gets$ $\left( \bq - \zeta_j \bd_{j-1} - \epsilon_j \bd_{j-2} \right) / \eta_j$
+      \\
+      $\bc_j$ $\gets$ $\bc_{j-1} + \varphi_{j} \bd_j$
+    }
+    \BlankLine
+    \Return{$\Vert \bb \Vert_2 \: \bc_{j}$}
+\end{algorithm2e}

@@ -342,13 +342,13 @@ The spectral-mixture kernel (in one dimension) is defined by a mixture of $Q$ fu
 %
 where $w_q$, $v_q$, and $\mu_q$ are learnable parameters.
 It is well-suited for interpolation and extrapolation tasks of time series or spatial data \cite{wilson2013gaussian}.
-Deep kernels \cite{wilson2016deep,wilson2016stochastic,calandra2016manifold} are kernels where the inputs $\bx$, $\bx'$ are first transformed using a deep neural network $\phi$:
+Deep kernels \cite{wilson2016deep,wilson2016stochastic,calandra2016manifold} are kernels where the inputs $\bx$, $\bx'$ are first transformed using a deep neural network $\Phi$:
 %
 \[
-  k_\text{deep} (x, x') = k_\text{base} \left( \phi(\bx), \phi(\bx') \right),
+  k_\text{deep} (x, x') = k_\text{base} \left( \Phi(\bx), \Phi(\bx') \right),
 \]
 where $k_\text{base}(\cdot, \cdot)$ is a simpler base kernel (usually the RBF kernel).
-The parameters of $\phi$ are learned by optimizing the marginal log likelihood in \cref{eqn:log_lik} \cite{wilson2016deep}.
+The parameters of $\Phi$ are learned by optimizing the marginal log likelihood in \cref{eqn:log_lik} \cite{wilson2016deep}.
 It is well suited to high-dimensional datasets or datasets with complex features.
 
 
@@ -445,11 +445,11 @@ The $\bw_\bx$ vectors approximate the training kernel matrix $\bK_{\bX\bX} \appr
 \end{align}
 %
 Here, $\bW_{\bX} = [\bw_{\bx^{(1)}}, \ldots, \bw_{\bx^{(N)}}]$ contains the interpolation vectors for all $\bx^{(i)}$.
-Performing a matrix-vector multiplication with $\widetilde \bK_{\bX\bX}$ (i.e. $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bv$ for any vector $\bv$) takes \emph{near-linear} time.
+Performing a matrix-vector multiplication with $\widetilde \bK_{\bX\bX}$ (i.e. $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bb$ for any vector $\bb$) takes \emph{near-linear} time.
 To see why, a MVM with the matrix $\bW_\bX$ require $\bigo{N}$ time due to the $\bigo{N}$ sparsity of $\bW_\bX$.
 Moreover, restrictions 2 and 3 (stationary kernel/grided inducing points) endow the inducing kernel matrix $\bK_{\bZ\bZ}$ with Toeplitz structure (or Kronecker/Toeplitz structure if the inputs $\bx^{(i)}$ are multi-dimensional).
 By exploiting this structure, $\bK_{\bZ\bZ}$ requires $\bigo{M}$ storage and MVMs with $\bK_{\bZ\bZ}$ require $\bigo{M \log M}$ time \citep[see][for details]{cunningham2008fast,saatcci2012scalable}.
-Thus, if we perform $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bv$ from right-to-left, the entire multiplication takes $\bigo{N + M \log M}$ time.
+Thus, if we perform $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bb$ from right-to-left, the entire multiplication takes $\bigo{N + M \log M}$ time.
 As we will demonstrate in the next section, exploiting these fasts MVMs results in a near-linear training time complexity for KISS-GP.
 
 %

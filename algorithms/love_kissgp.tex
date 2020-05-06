@@ -37,7 +37,7 @@
       \tcp*{$\widetilde \bR = \bL_\bT^{-1} \bQ^\top \bW^\top_\bX \bK_{\bZ\bZ}$  }
     }
     \tcp{$\widetilde \bR \in \reals^{J \times M}$, $J \ll M$.}
-    $\bu$ $\leftarrow$ \sparsemm{ $\blue \widetilde \bR$, $\bw_\bxtest$ } \\
-    $\bu'$ $\leftarrow$ \sparsemm{ $\blue \widetilde \bR$, $\bw_\bxtestprime$ } \\
-    \Return{ $k_{\bx^{*}_i, \bx^{*}_j} - \bu^T \bu'$ } \\
+    $\bv$ $\leftarrow$ \sparsemm{ $\blue \widetilde \bR$, $\bw_\bxtest$ } \\
+    $\bv'$ $\leftarrow$ \sparsemm{ $\blue \widetilde \bR$, $\bw_\bxtestprime$ } \\
+    \Return{ $k_{\bx^{*}_i, \bx^{*}_j} - \bv^T \bv'$ } \\
 \end{algorithm2e}

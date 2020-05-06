@@ -40,7 +40,7 @@
     {\color{\colornew} $\bT_{1}, \ldots \bT_{T}$ $\gets$ $0$}
     \tcp{Tridiag matrices}
     \vspace{0.32em}
-    \For{$j \gets 0$ \KwTo J}{
+    \For{$j \gets 1$ \KwTo J}{
       {\color{\colormat} $\bV_{j}$ $\gets$ \mmmkxx{ $\bD_{j-1}$ }}
       \\
       {\color{\colormat} $\balpha_j$ $\gets$ ${( \bR_{j-1} \circ \bZ_{j-1} )^\top \mathbf 1}/{( \bD_{j-1} \circ \bV_{j} )^\top \mathbf 1}$}
@@ -64,5 +64,5 @@
 			\\
       {\color{\colornew} $\forall i$ \: $T_{i}^{(j,j-1)}$ $\gets$ $\sqrt{\bbeta_{j-1}^{(i)}}/\balpha_{j}^{(i)}$}
     }
-    \Return{{\color{\colormat}$\bC_{j+1}$}, {\color{\colornew} $\bT_{1}, \ldots \bT_{T}$}}
+    \Return{{\color{\colormat}$\bC_{J}$}, {\color{\colornew} $\bT_{1}, \ldots \bT_{T}$}}
 \end{algorithm2e}
