@@ -54,7 +54,7 @@ Beyond this small eigendecomposition, the Lanczos eigenvalue estimates only requ
 
 
 
-\subsection{An Efficient Matrix-Vector Multiplication Approach to CIQ with msMINRES.}
+\subsection{An Efficient Matrix-Vector Multiplication Approach to CIQ with msMINRES}
 %
 Using the quadrature method of \citet{hale2008computing} for whitening and sampling requires performing solves with multiple shifted matrices.
 For example, drawing a sample from $\normaldist{0}{\bK}$ using \cref{eqn:contour_integral_quad} requires computing
@@ -136,7 +136,7 @@ This complexity be reduced if $\bK$ is structured, low-rank, or sparse.
 \label{sec:convergence}
 
 Combining msMINRES with the quadrature formula in \cref{eqn:contour_integral_quad} gives us an efficient MVM method for sampling an whitening.
-This approach, which will be referred to as {\bf CIQ.} is summarized by \cref{alg:ciq}.
+This {\bf CIQ} approach is summarized by \cref{alg:ciq}.
 
 With the msMINRES algorithm, the computational requires of CIQ is basically no different than CG for computing MVM-based solves.
 When using \cref{alg:ciq} to produce Gaussian samples from the distribution $\normaldist{\bzero}{\bK}$ we can obtain a bound on the error:
@@ -198,6 +198,31 @@ Therefore, the only additional work needed for the backward pass are the shifted
 Thus the backward pass takes only $\bigo{J \mvm{\bK}}$ (e.g. $\bigo{J N^2}$) additional time.
 To the best of our knowledge, this is the first use of quadrature for matrix-root back-propagation.
 
+\paragraph{Programmability.}
+As with BBMM and LOVE, CIQ can take full advantage of GPyTorch's {\tt LazyTensor} construct.
+The algorithm for CIQ (\cref{alg:ciq}) accesses $\bK$ through Lanczos and msMINRES---each of which only requires black-box access to an MVM routine.
+Therefore, CIQ can be implemented for specialty GP models using the efficient {\tt \_matmul} function of {\tt LazyTensor}s.
+
+Moreover, back-propagation via \cref{eqn:ciq_deriv} can be implemented using the {\tt \_deriv} function of LazyTensors.
+Recall that the {\tt \_deriv($ \bA, \bB $)} function computes $\partial \tr{ \bA^\top \bK \bB }/{\partial \br}$, where $\br$ is a representation of $\bK$.
+If we define $\bA$ and $\bB$ as
+%
+\begin{align*}
+  \bA &= \begin{bmatrix}
+    w_1 \left( t_q1\bI - \bK \right)^{-1} \bv
+    & \ldots &
+    w_Q \left( t_Q \bI - \bK \right)^{-1} \bv
+  \end{bmatrix},
+  \\
+  \bB &= \begin{bmatrix}
+    \left( t_q1\bI - \bK \right)^{-1} \bb
+    & \ldots &
+    \left( t_Q \bI - \bK \right)^{-1} \bb
+  \end{bmatrix},
+\end{align*}
+%
+then the vector-Jacobi product in \cref{eqn:ciq_deriv} can be re-written as $\tr{ \bA \bB^\top } = \partial \tr{ \bA^\top \bK \bB}/\partial \br = \texttt{ \_deriv($\bA, \bb$)}$.
+This allows us to easily implement efficient CIQ variants for many classes of structured matrices.
 
 
 \subsection{Preconditioning}

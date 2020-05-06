@@ -12,7 +12,7 @@ In addition, we offer practical guidelines to speed up BBMM for large datasets.
 
 
 
-\subsection{Reducing Memory Requiremnts to $\bigo{N}$}
+\subsection{Reducing Memory Requiremnts to $\mathcal{O}(N)$}
 
 The primary input to the modified batched conjugate gradients (mBCG) algorithm of \cref{sec:bbmm_method} is {\tt mvm\_$\trainK$}, a black-box function that performs MVMs using the kernel matrix $\trainK$.
 Besides the storage cost associated with {\tt mvm\_$\trainK$}, each iteration of mBCG updates four (batches) of vectors: $\bc$ (the current solution), $\br$ (the current error), $\bd$ (the ``search'' direction for the next solution), and $\bz$ (a preconditioned error term).

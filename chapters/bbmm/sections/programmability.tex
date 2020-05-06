@@ -68,7 +68,7 @@ class NonLazyTensor(LazyTensor):
 For a full GP code example that uses {\tt LazyTensors} under the hood, see \cref{app:standard_gp_example} or \url{http://github.com/cornellius-gp/gpytorch}.
 
 
-\subsection{Examples of {\tt LazyTensor}s and Specialty GP Models.}
+\subsection{Examples of {\tt LazyTensor}s and Specialty GP Models}
 \paragraph{Bayesian linear regression} can be viewed as GP regression with the special kernel matrix
 \[
   \bK_{\bX\bX}^{(\text{lin})} = \bX\bX^{\top}.
@@ -185,7 +185,7 @@ Thus KISS-GP provides $\bigo{TN \! + \! TM \log M}$ matrix-matrix multiplies.
 
 
 
-\subsection{{\tt LazyTensor}s and Pivoted Cholesky Preconditioning.}
+\subsection{{\tt LazyTensor}s and Pivoted Cholesky Preconditioning}
 In order to compute the partial pivoted Cholesky preconditioner for arbitrary {\tt LazyTensor}s, we need routines for
 \begin{enumerate*}
   \item computing the row of a matrix, and
