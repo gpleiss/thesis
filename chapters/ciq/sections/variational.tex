@@ -46,33 +46,43 @@ At each iteration, we must compute \cref{eqn:approx_pred_mean,eqn:approx_pred_co
 Optimization typically requires up to $10,\!000$ iterations of training \citep[e.g.][]{salimbeni2018natural};
 therefore, we must compute $\bK^{- \frac 1 2} \bk_{\bX \bx_i}$ and its derivative \emph{thousands of times} over the course of training.
 
-\gp{Stopped here.}
-
 \begin{figure}[t!]
   \centering
-  \includegraphics[width=\linewidth]{figures/3droad.pdf}
-  \caption{
-    SVGP models trained on the 3D-Road dataset ($D=2$, $N\geq300,\!000$), varying $M$ (the number of inducing points).
-    \gp{FINISH}
+  \includegraphics[width=\linewidth]{figures/variational_time.pdf}
+  \caption[Train time comparison of Cholesky-whitened vs CIQ-whitened SVGP models.]{
+    Train time comparison of Cholesky-whitened vs CIQ-whitened SVGP models.
+    {\bf Left:} 3DRoad dataset ($N=326155, D=2$, Gaussian likelihood).
+    {\bf Middle:} Precipitation dataset ($N=75952, D=3$, Student-T likelihood).
+    {\bf Right:} CoverType dataset ($N=435759, D=54$, Bernoulli likelihood).
+    At $M=5,\!000$ inducing points, CIQ is up to $4\times$ faster than Cholesky.
+    Moreover CIQ can scale to larger values of $M$ under a fixed computational budget.
   }
-  \label{fig:3droad}
+  \label{fig:variational_timing}
 \end{figure}
 
 \begin{figure}[t!]
   \centering
-  \includegraphics[width=\linewidth]{figures/precip.pdf}
-  \caption{
-    SVGP models trained on the Precipitation dataset ($D=3$, $N\geq300,\!000$), varying $M$ (the number of inducing points).
-    \gp{FINISH}
+  \includegraphics[width=\linewidth]{figures/variational_nll.pdf}
+  \caption[Negative log likelihood (NLL) comparison of Cholesky-whitened vs CIQ-whitened SVGP models.]{
+    Negative log likelihood (NLL) comparison of Cholesky-whitened vs CIQ-whitened SVGP models.
+    {\bf Left:} 3DRoad dataset ($N=326155, D=2$, Gaussian likelihood).
+    {\bf Middle:} Precipitation dataset ($N=75952, D=3$, Student-T likelihood).
+    {\bf Right:} CoverType dataset ($N=435759, D=54$, Bernoulli likelihood).
+    NLL improves with more inducing points ($M$), and Cholesky and CIQ models have similar performance.
+    However CIQ scales to larger values of $M$.
   }
-  \label{fig:precip}
+  \label{fig:variational_nll}
 \end{figure}
 
 \begin{figure}[t!]
   \centering
-  \caption{
-    SVGP models trained on the Robotics dataset ($D=?$, $N\geq?$), varying $M$ (the number of inducing points).
-    \gp{FINISH}
+  \includegraphics[width=0.7\linewidth]{figures/variational_stats.pdf}
+  \caption[Likelihood parameters verses number of inducing points ($M$) for Cholesky-whitened vs CIQ-whitened SVGP models.]{
+    Likelihood parameters verses number of inducing points ($M$) for Cholesky-whitened vs CIQ-whitened SVGP models (Precipitation dataset, Student-T likelihood).
+    {\bf Left:} observational noise $\sigma^2_\text{obs}$.
+    {\bf Right:} degrees of freedom $\nu$.
+    As $M$ increases, the estimated obs. noise decreases as does the estimated degrees of freedom (reflecting a heavier-tailed noise distribution).
+    This suggests that, with larger $M$, SVGP models can find more signal in the data.
   }
-  \label{fig:robotics}
+  \label{fig:variational_stats}
 \end{figure}
