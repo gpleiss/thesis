@@ -1,0 +1,66 @@
+\begin{algorithm2e}[t!]
+  \SetAlgoLined
+  \SetKwInOut{Input}{Input}
+  \SetKwInOut{Output}{Output}
+  \newcommand\NextInput[1]{%
+    \settowidth\inputlen{\Input{}}%
+    \setlength\hangindent{1.5\inputlen}%
+    \hspace*{\inputlen}#1\\
+  }
+  \newcommand\graycomment[1]{\footnotesize\ttfamily\textcolor{gray}{#1}}
+  \SetCommentSty{graycomment}
+  \SetKw{Break}{break}
+  \SetKwData{tol}{tolerance}
+  \SetKwFunction{mvmkxx}{mvm\_$\bA$}
+  \SetKwFunction{size}{size}
+  \caption[Multi-shift MINRES (msMINRES)]{
+     Multi-shift MINRES (msMINRES).
+     Differences from MINRES (Alg.~\ref{alg:minres}) are in {\color{green} green}.
+     Green {\tt for} loops are parallelizable.
+  }
+  \label{alg:msminres}
+    \Input{\mvmkxx{$\cdot$} -- function for MVM with matrix $\bA$}
+    \NextInput{$\bb$ -- vector to solve against}
+    \NextInput{$t_1, \ldots, t_Q$ -- shifts}
+    \Output{$\bc_1 = (\bA + t_1)^{-1} \bb, \ldots, \bc_Q = (\bA + t_Q)^{-1} \bb$.}
+    \BlankLine
+    $\bq_{1}$ $\gets$ $\bb / \Vert \bb \Vert_2$ \tcp{Current Lanczos vector.}
+    $\bv_{1}$ $\gets$ \mvmkxx{ $\bq_0$ } \tcp{Buffer for MVM output.}
+    $\delta_{1}$ $\gets$ $\Vert \bb \Vert_2$, $\delta_{0}$ $\gets$ $1$ \tcp{Current/prev. Lanczos residual/sub-diagonal.}
+    \For{\color{green} $q \gets 1$ \KwTo $Q$}{
+      $\bc_{1}^{(q)}$ $\gets$ $\bzero$ \tcp{Current solution.}
+      $\bd_{1}^{(q)}, \bd_{0}^{(q)}$ $\gets$ $\bzero$ \tcp{Current \& prev. ``search'' direction.}
+      $\varphi_{2}^{(q)}$ $\gets$ $\Vert \bb \Vert_2$ \tcp{Current ``step'' size.}
+      $\eta_{1}^{(q)}$ $\gets$ $1$, $\eta_{0}^{(q)}$ $\gets$ $0$ \tcp{Current/prev. scaling term.}
+    }
+    \For{$j \gets 2$ \KwTo $J$}{
+      $\bq_j$ $\gets$ $\bv_j / \delta_j$
+      \\
+      $\bv_j$ $\gets$ \mvmkxx{ $\bq_j$ } $ - \delta_j \bq_{j-1} $
+      \\
+      $\gamma_j$ $\gets$ $\bq_j \bv_j$
+      \\
+      $\bv_j$ $\gets$ $\bv_j - \gamma_j \bq_j$
+      \\
+      $\delta_j$ $\gets$ $\Vert \bv_j \Vert$
+      \\
+      \For{\color{green} $q \gets 1$ \KwTo $Q$}{
+        $\epsilon_j^{(q)}$ $\gets$ $\delta_{j-1} \left( \delta_{j-2} / \sqrt{\delta_{j-2}^2 + \eta_{j-2}^{(q)2}} \right)$
+        \\
+        $\zeta_j^{(q)}$ $\gets$ $\delta_{j-1} \left( \eta_{j-2}^{(q)} / \sqrt{\delta_{j-2}^2 + \eta_{j-2}^{(q)2}} \right)$
+        \\
+        $\eta_j^{(q)}$ $\gets$ $\green (\gamma_j + t_q) \left( \eta_{j-1}^{(q)} / \sqrt{\delta_{j-1}^2 + \eta_{j-1}^{(q)2}} \right)$ $+ \zeta_j^{(q)} \left( \delta_{j-1} / \sqrt{\delta_{j-1}^2 + \eta_{j-1}^{(q)2}} \right)$% \tcp{The $R^{(J,J)}$ entry.}
+        \\
+        $\zeta_j^{(q)}$ $\gets$ $\zeta_j^{(q)} \left( \eta_{j-1}^{(q)} / \sqrt{\delta_{j-1}^2 + \eta_{j-1}^{(q)2}} \right) + $ $\color{green} (\gamma_j + t_q) \left( \delta_{j-1} / \sqrt{\delta_{j-1}^2 + \eta_{j-1}^{(q)2}} \right)$
+        \\
+        $\eta_j^{(q)}$ $\gets$ $\eta_j^{(q)} \left( \eta_j^{(q)} / \sqrt{\delta_j^2 + \eta_j^{(q)2}} \right)$
+        \\
+        $\varphi_{j}^{(q)}$ $\gets$ $\varphi_{j-1}^{(q)} \left( \delta_{j-1} / \sqrt{\delta_{j-1}^2 + \eta_{j-1}^{(q)2}} \right) \left( \eta_j^{(q)} / \sqrt{\delta_j^2 + \eta_j^{(q)2}} \right) $
+        \\
+        $\bd_j^{(q)}$ $\gets$ $\left( \bq - \zeta_j^{(q)} \bd_{j-1}^{(q)} - \epsilon_j^{(q)} \bd_{j-2}^{(q)} \right) / \eta_j^{(q)}$
+        \\
+        $\bc_j^{(q)}$ $\gets$ $\bc_{j-1}^{(q)} + \varphi_{j}^{(q)} \bd_j^{(q)}$
+      }
+    }
+    \Return{$\Vert \bb \Vert_2 \: \bc_{j}$}
+\end{algorithm2e}

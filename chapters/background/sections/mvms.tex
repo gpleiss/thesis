@@ -450,6 +450,8 @@ However, the orthonormal matrix $\bQ_J$ cannot be as easily derived as a CG bypr
 
 
 \subsection{MINRES}
+\label{sec:minres}
+
 The method of minimum residuals (MINRES) \cite{paige1975solution} is an alternative to linear conjugate gradients, with the advantage that it can be applied to indefinite and singular symmetric matrices $\bA$.
 \citet{paige1975solution} formulate MINRES to solve the least-squares problem $\argmin_{\bc} \Vert \bA \bc - \bb \Vert_2$.
 Each iteration $J$ produces a solution $\bc_J$ which is optimal within the $J^\text{th}$ Krylov subspace:
@@ -473,17 +475,11 @@ Through some mathematical manipulation, one can reformulate \cref{eqn:minres_hig
   \label{eqn:minres_ols}
 \end{align}
 %
-where $\be_1, \be_J$ are unit vectors, and $\bQ_J$, $\bT_J$, and $\br_J$ are the outputs from the Lanczos algorithm \cite{lanczos1950iteration}:
-\begin{itemize}
-	\item $\bQ_J \in \reals^{N \times J}$ is an orthonormal basis of the $J^\text{th}$ Krylov subspace,
-	\item $\bT_J \in \reals^{J \times J}$ is a symmetric tridiagonal matrix, and
-	\item $\br_J \in \reals^J$ is a residual term.
-\end{itemize}
-%
+where $\be_1, \be_J$ are unit vectors, and $\bQ_J$, $\bT_J$, and $\br_J$ are the outputs from the Lanczos algorithm:
 Since \cref{eqn:minres_ols} is a least-squares problem, we can write the analytic solution to it using the QR factorization of $ \widetilde \bT_J = \bQU_J \bR_J$ \citep[e.g.][]{golub2012matrix}:
 %
 \begin{align}
-  \bc_J^{(\text{MINRES})} = \Vert \bb \Vert_2 \: \bQ_J \left( \bR^{-1} \bQU_J^\top \right) \be_1.
+  \bc_J^{(\text{MINRES})} = \Vert \bb \Vert_2 \: \bQ_J \left( \bR_J^{-1} \bQU_J^\top \right) \be_1.
 	\label{eqn:minres_qr}
 \end{align}
 %

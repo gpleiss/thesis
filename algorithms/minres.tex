@@ -36,7 +36,7 @@
     $\eta_{1}$ $\gets$ $1$ \tcp{Current scaling term.}
     $\eta_{0}$ $\gets$ $0$ \tcp{Prev. scaling term.}
     \BlankLine
-    \For{$j \gets 2$ \KwTo J}{
+    \For{$j \gets 2$ \KwTo $J$}{
       \tcp{Run one iter of Lanczos. Gets next vector of $\bQ$ matrix, and next diag/sub-diag ($\gamma$, $\delta$) entries of $\bT$ matrix.}
       $\bq_j$ $\gets$ $\bv_j / \delta_j$
       \\
