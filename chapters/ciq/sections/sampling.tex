@@ -72,7 +72,7 @@ We use Cholesky ({\bf TS-Chol}) for $T=1,\!000$ and $T=5,\!000$, and we use CIQ 
 Note that it would be very challenging and impractical to use Cholesky with $T\geq10,\!000$, both due to its quadratic memory and its cubic time complexity.
 
 \paragraph{Experimental details.}
-The Gaussian processes use RBF kernels and zero mean functions.
+The GPs use RBF kernels and zero mean functions.
 After each posterior update, we optimize the GP hyperparameters using 10 iterations of Adam with a learning rate of $0.1$.
 The candidate sets are sampled uniformly at random from the input space.
 As with the variational experiments, we use $Q = 15$ quadrature points for CIQ.
