@@ -143,6 +143,7 @@ In addition to these fast predictive (co)-variances, LOVE + KISS-GP offers two a
 
 When used in conjunction with KISS-GP, LOVE{} can also be used to compute samples from the predictive covariance matrix.
 This is a vary common operation: in Bayesian optimization, several popular acquisition functions---such as predictive entropy search \cite{hernandez2014predictive}, max-value entropy search \cite{wang2017max}, and knowledge gradient \cite{frazier2009knowledge}---require posterior sampling.
+(See \cref{sec:sampling_result} for more info.)
 
 Let $\bXtest = [ \bxtest_1, \ldots, \bxtest_T ]$ be a test set of $T$ points.
 To draw samples from $p( \ytest_1, \ldots, \ytest_T  \! \mid \! \dset)$---the predictive function evaluated on $\bxtest_1, \ldots, \bxtest_t$,

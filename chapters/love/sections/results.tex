@@ -139,7 +139,7 @@ Recall that $J$ also corresponds with the rank of the $\blue \bR$ matrices in \c
 \end{table}
 
 We evaluate the quality of posterior samples drawn with LOVE + KISS-GP{} as described in \cref{sec:sampling_method}.
-We compare these samples to three baselines: sampling from an {\bf Exact GP} using the Cholesky decomposition, sampling from an {\bf SGPR} model with Cholesky, and sampling with random {\bf Fourier features} \citep{rahimi2008random}---a method commonly used in Bayesian optimization \cite{hernandez2014predictive,wang2017max}.
+We compare these samples to three baselines: sampling from an {\bf Exact GP} using the Cholesky decomposition, sampling from an {\bf SGPR} model with Cholesky, and sampling with random {\bf Fourier features} \citep{rahimi2008random}.
 The LOVE + KISS-GP{} and SGPR models use the same architecture as described in the previous section.
 For Fourier features, we use 5000 random features---the maximum number of features that could be used without exhausting available GPU memory.
 We learn hyperparameters on the Exact GP and then use the same hyperparameters for the all methods.
@@ -165,6 +165,7 @@ At test time (i.e. after pre-computation), LOVE{} is up to $18,\!000$ times fast
 
 \paragraph{Bayesian optimization.}
 Many acquisition functions in Bayesian optimization rely on sampling from the posterior GP.
+(See \cref{sec:sampling_results} for more information.)
 For example, max-value entropy search \cite{wang2017max} draws samples from a posterior GP in order to estimate the function's maximum value $p(y_\text{max} \! \mid \! \dset)$.
 %
 \begin{figure}[t!]
