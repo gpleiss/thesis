@@ -126,7 +126,7 @@ With this lemma we are now able to prove our primary CIQ convergence result:
     }^{\text{Quadrature error}}
     +
     \overbracket{
-      2 \left\vert \sum_{q=1}^Q w_q \right\vert
+      2 \sum_{q=1}^Q \left\vert w_q \right\vert
       \left( \frac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^J
       \left\Vert \bb \right\Vert_2
     }^{\text{msMINRES error}}
@@ -146,7 +146,7 @@ With this lemma we are now able to prove our primary CIQ convergence result:
     \\
     &\phantom{=} \quad \left. + \underbracket{\left( \bK \sum_{q=1}^Q w_q \left( t_q \bI - \bK \right)^{-1} \right) \bb - \bK^{\frac 1 2} \bb}_{\text{Quadrature error}} \right\Vert_2
     \\
-    &\leq \sum_{q=1}^Q w_q \left\Vert \bc^{(q)}_J - \bK \left( t_q \bI - \bK \right)^{-1} \bb \right\Vert_2
+    &\leq \sum_{q=1}^Q \vert w_q \vert \left\Vert \bc^{(q)}_J - \bK \left( t_q \bI - \bK \right)^{-1} \bb \right\Vert_2
     \\
     &\phantom{=} \:\: + \left\Vert \bK \left( \sum_{q=1}^Q w_q \left( t_q \bI - \bK \right)^{-1} \right) \bb - \bK^{\frac 1 2} \bb \right\Vert_2
   \end{align*}
