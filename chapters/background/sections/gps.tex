@@ -5,16 +5,17 @@
 In the machine learning literature the term \emph{Gaussian process} describes two different objects.
 In one context it refers to a distribution over functions that can define a prior over $f(\cdot)$.
 It can also refer the class of predictive models that make use of Gaussian process priors on $f(\cdot)$.
-As we will soon see, these two uses are relatively interchangeable.
+As we will soon see, these two classes of objects are effectively the same.
 However, for clarity in this section we will explicitly distinguish when ``Gaussian process'' is describing a prior distribution over functions and when it is describing a class of predictive models.
 
 \subsection{Gaussian Process Distributions}
+\label{sec:gp_dist}
 A {\bf Gaussian process distribution} $f(\cdot) \sim \mathcal{GP}$ extends the multivariate-Gaussian distribution from finite-dimensional vectors to (infinite-dimensional) functions.
 It is defined by a \emph{mean function} $\mu(\cdot)$ and a {\bf covariance function} or {\bf kernel function} $k(\cdot, \cdot)$.\footnote{
   Throughout this thesis we will use the two terms interchangeably.
 }
 %It can only be realized by applying $f$ to some finite set of points.
-Given $N$ data points $\bX = [ \bx^{(1)}, \ldots, \bx^{(N)} ] \in \reals^{\numdata \times \numdim}$ (e.g. the $D$-dimensional features of $N$ different children in our running example),
+Given $N$ data points $\bX = [ \bx^{(1)}, \ldots, \bx^{(N)} ] \in \reals^{\numdata \times \numdim}$,
 the distribution over $\bfn = [ f(\bx^{(1)}), \ldots, f(\bx^{(N)}) ] \in \reals^\numdata$ is a multivariate Normal distribution:
 \begin{equation}
  p \left( \bfn \right) = \normaldist{ \bfn ; \bmu_\bX}{ \bK_{\bX\bX} },
@@ -26,7 +27,7 @@ The matrix $\bK_{\bX\bX} \in \reals^{\numdata \times \numdata}$ is often referre
 
 %Analogously to its finite-dimensional counterpart, a Gaussian process is completely defined by its mean and covariance functions $\mu(\cdot)$ and $k(\cdot, \cdot)$.
 $\mu(\cdot)$ can be any real-valued function, though it is common simply to choose the zero-function (i.e. $\mu(\cdot) = 0$).
-The covariance function $k(\cdot, \cdot)$ must be a valid kernel function, which means that all kernel matrices $\bK$ must be positive definite.
+The covariance function $k(\cdot, \cdot)$ must be a valid kernel function, which means that the kernel matrix $\bK$ must be positive definite.
 See \cref{sec:common_kernels} for common choices of $k(\cdot, \cdot)$.
 
 \subsection{Gaussian Process Regression Models}
@@ -40,8 +41,8 @@ Recall our high-level regression model from \cref{eqn:regression}: $y = f \left(
   \item $\epsilon$ is modelled by a Gaussian noise distribution: $\epsilon \sim \normaldist{0}{\sigma_\text{obs}^2}$.
 \end{enumerate}
 %
-Together, these two items define the prior distribution of the data.
-To make predictions on previously-unseen test points $\bxtest, \ytest$ (e.g. predict the future weight of a child), we \emph{condition} the prior model on a set of previously-seen training data $\bX, \by$ (e.g. the weights and features of other children).
+Together, these two items define the prior distribution and the likelihood, respectively.
+To make predictions on previously-unseen test points $\bxtest, \ytest$ (e.g. predict the future weight of a child), we \emph{condition} the prior model on a set of previously-seen training data $\bX, \by$ (e.g. the weights/features of other children).
 In total the predictive model is fully defined by:
 \begin{enumerate}
   \item the mean function $\mu(\cdot)$ and covariance function $k(\cdot, \cdot)$ of the GP prior,
@@ -64,10 +65,11 @@ Under this setup, the predictive distribution is given by:
   %\label{eqn:marginalize}
 \end{equation*}
 %
-This predictive distribution happens to be computable in closed form.\footnote{
-  Note that this is rare; in general, exact Bayesian inference is intractable for most ``interesting'' machine learning models.
-}
-Given the Gaussian process prior on $f(\cdot)$ and the Gaussian noise observation model for $p(\ytest \vert f(\bxtest))$, the prediction $p(\ytest \vert \bxtest, \dset_\text{train})$ for a new child's future weight is given by a Gaussian distribution:
+This predictive distribution happens to be computable in closed form.
+%\footnote{
+  %Note that this is rare; in general, exact Bayesian inference is intractable for most ``interesting'' machine learning models.
+%}
+Given the Gaussian process prior on $f(\cdot)$ and the Gaussian noise observation model for $p(\ytest \vert f(\bxtest))$, the prediction $p(\ytest \vert \bxtest, \dset_\text{train})$ is a Gaussian distribution:
 %
 \begin{equation}
   p \left(
@@ -89,16 +91,15 @@ where $\meantest{\cdot}$ and $\vartest{\cdot}$ are given by:
   \label{eqn:predictive_var}
 \end{align}
 %
-Here the shorthand $\bk_{\bX \bxtest} \in \reals^N$ is the vector of covariances between $\bxtest$ and all training points $\bX = [\bx^{(1)}, \ldots, \bx^{(N)}].$
-Note that, under \cref{eqn:predictive_mean,eqn:predictive_var}, the Gaussian process' prediction for a child's weight depends on
+Here the shorthand $\bk_{\bX \bxtest} \in \reals^N$ is the vector of covariances between test point $\bxtest$ and all training points $\bX = [\bx^{(1)}, \ldots, \bx^{(N)}].$
+Note that, under \cref{eqn:predictive_mean,eqn:predictive_var}, the Gaussian process' prediction depends on
 \begin{enumerate*}
-  \item the weights of previously-observed children and
-  \item the similarities between the children's features (as determined by their prior covariances $\bk_{\bX \bxtest}$).
+  \item the labels of the training data
+  \item the similarities between $\bx*$ and other training data (as determined by their prior covariances $\bk_{\bX \bxtest}$).
 \end{enumerate*}
-We will discuss a framework for efficiently computing the predictive distribution in \cref{chapter:bbmm,chapter:love}.
 
 \paragraph{Short derivation of the predictive distribution.}
-To understand where \cref{eqn:predictive_mean} and \cref{eqn:predictive_var} come from, we start by writing the joint prior distribution for $[\bfn, f(\bxtest)]$.
+To understand where \cref{eqn:predictive_mean} and \cref{eqn:predictive_var} come from, we start by writing the joint prior distribution $p[\bfn, f(\bxtest)]$.
 Under the Gaussian process prior of $f(\cdot)$ and \cref{eqn:prior_finite}, this joint distribution will be a multivariate-Gaussian.
 %
 \begin{align*}
@@ -149,22 +150,23 @@ Under the Gaussian noise observation model of \cref{eqn:regression}, it happens 
 \end{align*}
 where the $\sigma_\text{obs}^2$ terms come from the observational noise (which we assume is independent for all data points).
 %
-Therefore, the predictive distribution $p(\ytest \: \vert \: \bxtest, \bX, \by)$ is simply the conditional of a multivariate Gaussian.
+Therefore, the predictive distribution $p(\ytest \: \vert \: \bxtest, \dset_\text{train})$ is simply the conditional of a multivariate Gaussian.
 Applying standard Gaussian conditioning rules \citep[see e.g.][]{bishop2006pattern,rasmussen2006gaussian} results in \cref{eqn:predictive_mean} and \cref{eqn:predictive_var}.
 
 \paragraph{Predictions on multiple test points.}
 If there are multiple test points $\bxtest$, $\bxtestprime$ of interest, the predictions $p([\ytest, \ytestprime] \mid [\bxtest, \bxtestprime], \dset_\text{train})$ are jointly Gaussian distributed.
 The mean is given by \cref{eqn:predictive_mean} and the covariance between the two points is given as
 \[ \covtest{\bxtest}{\bxtestprime} = k(\bxtest, \bxtestprime) - \bk_{\bX\bxtest}^\top ( \bK_{\bX\bX} + \sigma_\text{obs}^2 \bI )^{-1} \bk_{\bX\bxtestprime}. \]
-In fact, any (finite) set of test points will be jointly Gaussian with the above covariance, meaning that the predictive distribution is also a Gaussian process.
+In fact, any (finite) set of test points will be jointly Gaussian with the above covariance.
+Recalling our definition from \cref{sec:gp_dist}, this implies that the predictive distribution is a (predictive-posterior) Gaussian process distribution.
 
 \subsection{Training Gaussian Process Models}
 \label{sec:gp_training}
 
-The predictive distribution of Gaussian process regression model is non-parametric, which leaves us few terms that need to be learned.
-However, we wish to pick the best mean function, kernel function, and observational noise that define a Gaussian process which best fits our training data $\dset_\text{train} = (\bX, \by)$.
+Gaussian process regression models are inherently non-parametric, which leaves us few terms that need to be learned.
+However, we wish to pick the best mean function, kernel function, and observational noise to best fit our training data $\dset_\text{train} = (\bX, \by)$.
 Let $\btheta$ be the set of learnable {\bf hyperparameters} of these functions.
-For example, $\btheta$ might include the lengthscale $\ell$ and outputscale $o^2$ of the kernel function (see \cref{sec:common_kernels}) as well as the observational noise parameter $\sigma_\text{obs}$.
+For example, $\btheta$ might include the lengthscale $\ell$ and outputscale $o^2$ of the kernel function (see \cref{sec:common_kernels}) as well as the observational noise parameter $\sigma_\text{obs}$ of the likelihood.
 In more complex Gaussian process models, $\btheta$ may also include inducing point locations \cite{titsias2009variational} or neural network parameters for deep kernel learning \cite{wilson2016deep}.
 We can measure the fit of these parameters through the {\bf marginal log likelihood} of the Gaussian process applied to the training data $\bX, \by$:
 %
@@ -239,16 +241,15 @@ We will discuss how to efficiently compute these terms in \cref{chapter:bbmm}.
 \subsection{Common Covariance Functions}
 \label{sec:common_kernels}
 
-Of the three objects that define a Gaussian process---the prior mean function, the prior covariance function, and the observed noise parameter---the covariance function arguably has the largest impact on the properties of the predictive distribution.
+Of the three objects that define a Gaussian process---the prior mean function, the prior covariance function, and the observed noise parameter---the covariance function arguably has the largest impact on the predictive distribution.
 While the parameters of any particular kernel function can most often be learned through gradient descent, the practitioner must first choose the class of covariance functions to optimize over.
 Choosing the right covariance function class will largely determine how the Gaussian process generalizes to unseen data points.
-This is especially crucial in the small-data regime, where the predictive distribution closely follows the prior distribution.
-If the covariance function properly encodes prior information about the function's properties, then the model can generalize well even when there are few training points.
+This is especially crucial in the small-data regime: if the covariance function properly encodes prior information about the function's properties, then the model can generalize well even when there are few training points.
 
 In the running example of predicting a child's weight, there are several known functional properties that we can encode a priori.
 For example, a child's weight will (in many cases) be roughly monotonic with respect to time.
-Additionally, children who grow up in similar socioeconomic conditions will be more likely to have similar weights.
-We will discuss how both of these properties can be encoded by choosing the appropriate kernel function.
+Additionally, children who grow up in similar household settings will be more likely to have similar weights.
+We will discuss how both of these properties can be encoded by choosing an appropriate kernel function.
 
 \paragraph{Common kernel functions.}
 Here we list some common and simple kernel functions that will be used throughout this thesis.
@@ -261,8 +262,7 @@ We will describe their functional form and their properties:
     \[ k_\text{RBF}(\bx, \bx') = o^2 \exp \left( \sum_{d=1}^D \frac{\left( x^{(d)} - x^{(d)\prime} \right)^2}{\ell_d^2}  \right) \]
     %
     where $o^2$ is referred to as the {\bf outputscale} parameter and the $\ell_1, \ldots, \ell_D$ are the {\bf lengthscales} for each dimension $d \in [1, D]$.
-    When the $\ell_d$ parameter is different across all dimensions, the kernel is referred to as the {\bf RBF-ARD } kernel, where ARD stands for {\bf automatic relevance determination }.
-    To reduce the number of learned parameters, it is sometimes common to share the same $\ell$ parameter across all dimensions.
+    When the $\ell_d$ parameters differ across all dimensions, the kernel is referred to as the {\bf RBF-ARD } kernel, where ARD stands for {\bf automatic relevance determination }.
 
     The RBF kernel is commonly considered to be a ``general'' kernel, since it is able to universally approximate any function given enough training data \cite{micchelli2006universal}.
 		However, functions drawn from $f \sim \GP{\mu}{k_\text{RBF}}$ are infinitely differentiable, which may impose an unreasonable smoothness constraint in some applications \cite{stein2012interpolation}.
@@ -272,17 +272,18 @@ We will describe their functional form and their properties:
 		More concretely, the covariance between any two points is given as:
     %
     \[
-			k_{\text{Mat}-\nu} (\bx, \bx') = o^2 \frac{2^{1 - \nu}}{\gamma(\nu)}
+      k_{\text{Mat}}^{(\nu)} (\bx, \bx') = o^2 \frac{2^{1 - \nu}}{\gamma(\nu)}
 			\left( \sqrt{2 \nu} \sum_{d=1}^D \frac{\vert x^{(d)} - x^{(d)\prime} \vert}{\ell_d}  \right)^\nu
 			K_\nu \left( \sqrt{2 \nu} \sum_{d=1}^D \frac{\vert x^{(d)} - x^{(d)\prime} \vert}{\ell_d}  \right),
 		\]
 		%
     where $o^2$ and $\ell_d$ are analogous to the parameters from the RBF kernel, and where $K_\nu$ is a modified Bessel function \cite{rasmussen2006gaussian}.
-    Functions sampled from $f \sim \GP{\mu}{k_{\text{mat}-\nu}}$ are $\lceil \nu \rceil - 1$-times differentiable.
+    Functions sampled from $f \sim \GP{\mu}{k_{\text{mat}}^{(\nu)}}$ are $\lceil \nu \rceil - 1$-times differentiable.
     As $\nu \rightarrow \infty$ we recover the RBF kernel.
 
     Typically, $o^2$ and $\ell_d$ are learned through gradient descent whereas $\nu$ is pre-selected and fixed.
-    Common values for $\nu$ and $3/2$ and $5/2$, both of which have more succinct closed-form expressions.
+    Common values for $\nu$ are $3/2$ and $5/2$, both of which have more succinct closed-form expressions.
+    These kernels are often referred to as {\bf Mat\'ern-3/2} and {\bf Mat\'ern-5/2}, respectively.
 
   \item The {\bf Linear} kernel is one of the least expressive kernels, as it only has support for linear functions.
     However, it is commonly used as a building block for more complex kernels, as we will discuss shortly.
@@ -292,32 +293,33 @@ We will describe their functional form and their properties:
     %
     where $b$, $\bc$, and $o$ are learnable parameters.
 \end{itemize}
-
-There are many other kernels that can encode different types of functional structure such as periodicity (using the periodic kernel), multiple lengthscales (using the rational quadratic kernel), or erratic/noisy dynamics (using Ornstein-Uhlenbeck kernel).
+%
+\noindent
+There are many other kernels that can encode other functional structures such as periodicity (using the periodic kernel), multiple lengthscales (using the rational quadratic kernel), or erratic/noisy dynamics (using Ornstein-Uhlenbeck kernel).
 See \cite{rasmussen2006gaussian} for more discussion on basic kernel types.
 
 \paragraph{Composing kernels.}
-Kernels can be composed together to combine the functional properties.
+Kernels can be composed together to combine functional properties.
 The two most common methods for composition are addition: $k(\bx, \bx') = k_1(\bx, \bx') + k_2(\bx, \bx')$
 and multiplication: $k(\bx, \bx') = k_1(\bx, \bx') k_2(\bx, \bx')$.
 The sub-kernels $k_1$ and $k_2$ can operate on any subset of the dimensions of $\bx$.
 In our running example, we may wish to model our data with the kernel
 %
-\[ k(\bx, \bx') = k_\text{Lin}( \bx_\text{time}, \bx_\text{time}' ) + k_\text{RBF}( \bx_\text{econ}, \bx_\text{econ}' ) \]
+\[ k(\bx, \bx') = k_\text{Lin}( \bx_\text{time}, \bx_\text{time}' ) + k_\text{RBF}( \bx_\text{household}, \bx_\text{household}' ) \]
 %
-where $\bx_\text{time}$ and $\bx_\text{econ}$ are the time and socioeconomic features of $\bx$ respectively.
+where $\bx_\text{time}$ and $\bx_\text{household}$ are the time and household features of $\bx$ respectively.
 This would encode our first prior assumption (a child's weight increases near-monotonically with time)
-and our second prior assumption (children from a similar socioeconomic background should have similar development).
+and our second prior assumption (children from a similar household environments should have similar development).
 
 
 \paragraph{Stationary kernels.}
 The RBF and Mat\'ern kernels belong to an important class of kernels known as {\bf stationary kernels}.
-This class more generally includes all kernels that are simply a function of the distance between two points:
+This class more generally includes all kernels that can be written as function of the difference between two points:
 \begin{equation}
-  k_\text{stationary} (\bx, \bx') = \phi( \vert \bx - \bx' \vert ),
+  k_\text{stationary} (\bx, \bx') = g( \vert \bx - \bx' \vert ),
   \label{eqn:stationary}
 \end{equation}
-for some function $\phi$.\footnote{
+for some function $g$.\footnote{
   Note that the linear kernel cannot be written in this way and is therefore non-stationary.
 }
 This class of kernels has many important properties; see \citep[e.g.][]{rasmussen2006gaussian,wilson2013gaussian} for more details.
@@ -326,11 +328,11 @@ For example, the computational complexity of GPs with stationary kernels is redu
 
 
 \paragraph{Spectral and Deep kernels.}
-For datasets with well-understood properties, it can be advantageous to hand-choose or construct kernels that best encode prior knowledge.
-With more complex datasets, it may be too difficult to manually encode a specific functional structure.
+%For datasets with well-understood properties, it can be advantageous to hand-choose or construct kernels that best encode prior knowledge.
+With complex datasets, it may be too difficult to manually encode a specific functional structure.
 In such settings, it is better to automatically learn functional structure directly from the data using a highly-parametric kernel, such as the {\bf spectral-mixture} kernel \cite{wilson2013gaussian} or a {\bf deep kernel} \cite{wilson2016deep}.
-At a high level, these kernels learn the $\phi$ function in \cref{eqn:stationary} using a mixture model or a neural network.
-Though such learning often requires larger datasets, it can result in kernel functions that more accurately model the data.
+At a high level, these kernels learn the $g$ function in \cref{eqn:stationary} using a mixture model or a neural network.
+%Though such learning often requires larger datasets, it can result in kernel functions that more accurately model the data.
 
 The spectral-mixture kernel (in one dimension) is defined by a mixture of $Q$ functions:
 %
@@ -348,8 +350,8 @@ Deep kernels \cite{wilson2016deep,wilson2016stochastic,calandra2016manifold} are
   k_\text{deep} (x, x') = k_\text{base} \left( \Phi(\bx), \Phi(\bx') \right),
 \]
 where $k_\text{base}(\cdot, \cdot)$ is a simpler base kernel (usually the RBF kernel).
-The parameters of $\Phi$ are learned by optimizing the marginal log likelihood in \cref{eqn:log_lik} \cite{wilson2016deep}.
-It is well suited to high-dimensional datasets or datasets with complex features.
+For both cases, the parameters of the mixture model/neural network are learned by optimizing the marginal log likelihood in \cref{eqn:log_lik}.
+%It is well suited to high-dimensional datasets or datasets with complex features.
 
 
 
@@ -361,13 +363,13 @@ It is well suited to high-dimensional datasets or datasets with complex features
 \label{sec:approx_gps}
 
 As we will discuss in detail in the next chapters, computing the marginal log likelihood (\cref{eqn:log_lik}) and the predictive distribution (\cref{eqn:predictive_mean,eqn:predictive_var}) has historically been computationally prohibitive for large datasets.
-This has motivated the development of several approximate Gaussian process regression methods \citep[e.g.][]{quinonero2005unifying,snelson2006sparse,rahimi2008random,titsias2009variational,hensman2013gaussian,wilson2015kernel,izmailov2018scalable,gardner2018product,evans2018scalable} that trade off exactness for computational scalability.
+This motivates the development of several approximate Gaussian process models \citep[e.g.][]{quinonero2005unifying,snelson2006sparse,rahimi2008random,titsias2009variational,hensman2013gaussian,wilson2015kernel,izmailov2018scalable,gardner2018product,evans2018scalable} that trade off exactness for computational scalability.
 Many of these methods approximate the training kernel matrix $\bK_{\bX\bX}$ with a structured or low-rank matrix $\approxK$ that affords faster matrix operations and requires less storage.
-Here we highlight some notable variants of the basic approach, though it is by no means an exhaustive list---see \cite{liu2018gaussian} for a more thorough review.
+Here we highlight some notable variants, though it is by no means an exhaustive list---see \cite{liu2018gaussian} for a more thorough review.
 
 
 \paragraph{Inducing Points.}
-A common mechanism for scalable methods is to introduce a set of pseudo-inputs, or {\bf inducing points}, which function as a sufficient statistic for the predictive distribution.
+A common mechanism for scalable models is to introduce a set of pseudo-inputs, or {\bf inducing points}, which function as a sufficient statistic for the predictive distribution.
 The kernel function for \emph{real}-inputs $\bx$, $\bx'$ is approximated by interpolating against the kernel matrix for the \emph{pseudo}-inputs $\bZ = [\bz^{(1)}, \ldots, \bz^{(M)}]$.
 %
 \begin{align}
@@ -382,11 +384,11 @@ The kernel function for \emph{real}-inputs $\bx$, $\bx'$ is approximated by inte
 %
 In its simplest form, it is common to choose $M \ll N$ inducing points.
 The approximate training kernel matrix $\widetilde \bK_{\bX\bX} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bX}$ will then have low-rank structure, allowing for efficient computation of \cref{eqn:predictive_mean,eqn:predictive_var,eqn:log_lik,eqn:log_lik_deriv}.
-The locations of the inducing points $\bZ$ are considered to be additional parameters to optimize via \cref{eqn:log_lik} (typically with gradient descent).
+The locations of the inducing points $\bZ$ are additional parameters to optimize via \cref{eqn:log_lik} (typically with gradient descent).
 
 Here we have presented inducing points as a mechanism for approximating kernel matrices.
-Under this view, we can use the same training/prediction equations as presented in \cref{sec:gp_models,sec:gp_training}---replacing the kernel matrices/vectors with their approximations.
-As we will discuss in \cref{chapter:bbmm}, this allows us to create a simple unifying framework to Gaussian process training and inference.
+Under this view, we can use the same training/prediction equations as presented in \cref{sec:gp_models,sec:gp_training}---replacing the kernel matrices with their corresponding approximations.
+%As we will discuss in \cref{chapter:bbmm}, this allows us to create a simple unifying framework to Gaussian process training and inference.
 We do note it is also possible to motivate/derive inducing point methods in other ways---e.g. through a greedy approximation \cite{smola2001sparse} or a variational bound \cite{titsias2009variational,hensman2013gaussian}.
 However, under these interpretations it is less straightforward to derive connections to \cref{eqn:predictive_mean,eqn:predictive_var,eqn:log_lik,eqn:log_lik_deriv}.
 
@@ -407,11 +409,10 @@ In the next section we will discuss Kernel Interpolation for Scalable Structured
        \Lambda^{(i,i)} = k(\bx^{(i)}, \bx^{(i)}) - \bk_{\bZ\bx^{(i)}}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx^{(i)}}. \]
     The diagonal correction term is motivated through a connection to approximate inference.
 
-	\item {\bf Sparse Gaussian Process Regression (SGPR) } \cite{titsias2009variational} uses the same kernel approximations as SoR.
-		However, when learning the inducing point locations and other parameters, SGPR uses an alternative objective function:
-		the marginal log likelihood of \cref{eqn:log_lik} augmented with a diagonal correction term:
+	\item {\bf Sparse Gaussian Process Regression (SGPR) } \cite{titsias2009variational} uses the same kernel approximation as SoR.
+		However, when learning the inducing point locations and other parameters, SGPR augments the marginal log likelihood of \cref{eqn:log_lik} with a diagonal correction term:
     \[ \loglik(\by \mid \bX, \btheta) = -\log p(\by \mid \bX, \btheta) + \sum_{i=1}^N \left( k(\bx^{(i)}, \bx^{(i)}) - \bk_{\bZ\bx^{(i)}}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx^{(i)}} \right). \]
-    The diagonal correction term can be derived by optimizing a variational lower bound on the function values at inducing point locations.
+    The diagonal correction term can be derived through a connection to variational methods.
 \end{itemize}
 %
 We will discuss how to exploit this low-rank kernel matrix structure for faster inference in the next chapter.
@@ -420,14 +421,15 @@ We will discuss how to exploit this low-rank kernel matrix structure for faster 
 \subsection{Kernel Interpolation for Scalable Structured Gaussian Processes (KISS-GP)}
 \label{sec:kissgp}
 
-Kernel Interpolation for Scalable Structured Gaussian Processes (KISS-GP) \cite{wilson2015kernel} utilizes inducing points in a fundamentally different way.
-While other methods tend to use $M \ll N$ inducing points, \citet{wilson2015kernel} demonstrate that it is possible to set $M \gg N$ by making the following restrictions:
+Kernel Interpolation for Scalable Structured Gaussian Processes (KISS-GP) \cite{wilson2015kernel} utilizes inducing points in a fundamentally different way than SoR, FITC, or SGPR.
+While the above methods tend to use $M \ll N$ inducing points, \citet{wilson2015kernel} demonstrate that it is possible to set $M \gg N$ by making the following restrictions:
 \begin{enumerate}
   \item the interpolation terms in \cref{eqn:inducing_interpolation} are approximated by a \emph{sparse interpolation vector} $\bw_\bx \approx \bK^{-1}_{\bZ\bZ} \bk_{\bZ\bx};$
   \item the inducing points $\bZ = [\bz^{(1)}, \ldots, \bz^{(M)}]$ must lie on a \emph{regularly-spaced grid};
   \item the kernel function is \emph{stationary} (e.g. RBF, Mat\'ern, etc.).
 \end{enumerate}
-
+%
+\noindent
 The resulting approximate kernel matrix has nice algebraic structure that can be exploited for efficient storage and fast computations.
 In particular, the approximate kernel matrix $\widetilde \bK_{\bX\bX}$ affords fast \emph{matrix-vector multiplications} (MVMs), which will translate to fast Gaussian process training and inference (using the methods described in \cref{chapter:bbmm,chapter:love}).
 
@@ -448,8 +450,7 @@ The $\bw_\bx$ vectors approximate the training kernel matrix $\bK_{\bX\bX} \appr
 Here, $\bW_{\bX} = [\bw_{\bx^{(1)}}, \ldots, \bw_{\bx^{(N)}}]$ contains the interpolation vectors for all $\bx^{(i)}$.
 Performing a matrix-vector multiplication with $\widetilde \bK_{\bX\bX}$ (i.e. $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bb$ for any vector $\bb$) takes \emph{near-linear} time.
 To see why, a MVM with the matrix $\bW_\bX$ require $\bigo{N}$ time due to the $\bigo{N}$ sparsity of $\bW_\bX$.
-Moreover, restrictions 2 and 3 (stationary kernel/grided inducing points) endow the inducing kernel matrix $\bK_{\bZ\bZ}$ with Toeplitz structure (or Kronecker/Toeplitz structure if the inputs $\bx^{(i)}$ are multi-dimensional).
-By exploiting this structure, $\bK_{\bZ\bZ}$ requires $\bigo{M}$ storage and MVMs with $\bK_{\bZ\bZ}$ require $\bigo{M \log M}$ time \citep[see][for details]{cunningham2008fast,saatcci2012scalable}.
+Moreover, restrictions 2 and 3 (stationary kernel/grided inducing points) endow the inducing kernel matrix $\bK_{\bZ\bZ}$ with Toeplitz structure (or Kronecker/Toeplitz structure if the inputs $\bx^{(i)}$ are multi-dimensional), which can be exploited for $\bigo{M}$ storage and $\bigo{M + M \log M}$ MVMs \citep[see][for details]{wilson2015thoughts}.
 Thus, if we perform $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bb$ from right-to-left, the entire multiplication takes $\bigo{N + M \log M}$ time.
 As we will demonstrate in the next section, exploiting these fasts MVMs results in a near-linear training time complexity for KISS-GP.
 
@@ -467,9 +468,9 @@ After pre-computing $\blue \ba'$, the multiplication $\bw_{\bxtest}^\top \blue \
 
 
 
-\subsection{Variational Inference for Non-Conjugate/Large-Scale GPs.}
+\subsection{Variational Inference for Non-Conjugate/Large-Scale GPs}
 \label{sec:variational}
-For most of this thesis we will focus on Gaussian process regression with a (conjugate) Gaussian observation model.
+For most of this thesis we will focus on Gaussian process regression with a (conjugate) Gaussian observation model---$p(y \mid f(x)) = \normaldist{y; f(x)}{\sigma_\text{obs}^2}$.
 Under this setting, exact Bayesian inference is tractable, which results in the closed-form predictive distribution given by \cref{eqn:predictive_mean,eqn:predictive_var}.
 Here we will briefly examine the case where exact inference is intractable, which occurs when
 %
@@ -478,32 +479,31 @@ Here we will briefly examine the case where exact inference is intractable, whic
   \item using a dataset is too large (or cumbersome) to fit into memory.
 \end{enumerate}
 %
-These settings necessitate using \emph{approximate Bayesian inference} to estimate the predictive distribution.
-Here, we would note a subtle but important distinction between ``approximate inference'' GPs differ from the ``scalable exact GPs'' presented in \cref{sec:approx_gps}.
-Scalable GP approximations like KISS-GP perform exact GP inference but approximate operations with kernel matrices.\footnote{
+These settings necessitate \emph{approximate Bayesian inference methods} to estimate the predictive distribution.
+Here, we would note a subtle but important distinction between ``approximate inference'' and the ``scalable approximations'' presented in \cref{sec:approx_gps}.
+Scalable GP approximations like KISS-GP perform exact GP inference but approximate the kernel matrix operations.\footnote{
   We note that the SGPR method \cite{titsias2009variational} is in some sense a ``hybrid'' method.
-  It is motivated and derived via variational inference, and therefore could be considered an approximate inference method.
+  It is motivated and derived via variational inference, and therefore can be considered an approximate inference method.
   However, as demonstrated in \cref{sec:approx_gps}, it can also be viewed through the lens of exact GP inference with a SoR approximated kernel.
-  Since SGPR can only be applied to GP regression, in this thesis we consider it under the lens of ``scalable exact GPs.''
+  In this thesis we consider it under the lens of ``scalable exact GPs.''
   We reserve the ``approximate inference'' label for models that can handle non-conjugate observation models.
 }
-Approximate inference GPs on the other hand compute an alternative (approximate) predictive distribution, as the standard predictive distribution is not applicable.
+Approximate inference GPs on the other hand approximate the intractable predictive distribution with a simple (often Gaussian) functional form.
 
 There are several approaches to approximate non-conjugate GP predictive distributions \citep{minka2001family,rasmussen2006gaussian,hensman2015mcmc,li2015stochastic}.
 Here we introduce a family of methods that rely on stochastic variational approximations.
 
 \paragraph{Stochastic variational Gaussian processes (SVGP)}
-\cite{hensman2013gaussian,hensman2015scalable,matthews2016sparse} are a popular class of models which approximate GP posteriors via variational inference.
-Similarly to SoR/FITC/SGPR, these models introduce a set of $M \ll N$ inducing points $\bZ = [\bz_1, \:\: \ldots, \:\: \bz_M]$.
+\cite{hensman2013gaussian,hensman2015scalable,matthews2016sparse} are a popular class of models that approximate GP posteriors via variational inference.
 This method has several compelling properties:
 \begin{enumerate*}
-  \item it is compatible with non-conjugate observation models;
   \item it uses $M \ll N$ inducing points to easily trade off speed for predictive fidelity; and
   \item it can be used in conjunction with stochastic gradient optimization for memory savings.
 \end{enumerate*}
 
+Similarly to SoR/FITC/SGPR, these models introduce a set of $M \ll N$ inducing points $\bZ = [\bz_1, \:\: \ldots, \:\: \bz_M]$.
 Let the random variable $\bu = [f(\bz_1, \:\: \ldots, \:\: f(\bz_M)]$ represent the function evaluated at each inducing point.
-SGPR approximates the posterior distribution $p( f(\cdot), \bu, \mid \bX, \by)$ with a Gaussian process \emph{variational distribution} $q(f(\cdot), \bu)$:
+SGPR approximates the joint posterior distribution $p( f(\cdot), \bu, \mid \bX, \by)$ with a Gaussian process \emph{variational distribution} $q(f(\cdot), \bu)$:
 %
 \begin{align*}
   p(f(\cdot), \bu \mid \bX, \by) &\approx q(f(\cdot), \bu)
@@ -513,8 +513,8 @@ SGPR approximates the posterior distribution $p( f(\cdot), \bu, \mid \bX, \by)$ 
   q(\bu) = \normaldist{\bm}{\bS},
 \end{align*}
 %
-where $\bm \in \reals^M$ and $\bS \in \reals^{M \times M}$ are learnable variational parameters.
-Under this variational distribution, note that $f(\cdot)$ matches the prior conditioned on the inducing function values $\bu$.
+where $\bm \in \reals^M$ and $\bS \in \reals^{M \times M}$ are learnable \emph{variational parameters}.
+Under this approximation, note that the conditional variational distribution $q(f(\cdot) \mid \bu)$ matches the prior conditional distribution.
 Marginalizing out $\bu$ gives us the approximate Gaussian predictive distribution $q( f(\bx) )$:
 %
 \begin{align}
@@ -532,16 +532,16 @@ Marginalizing out $\bu$ gives us the approximate Gaussian predictive distributio
   \label{eqn:approx_pred_covar}
 \end{align}
 %
-where $\ameantest{\cdot}$ and $\avartest{\cdot}$ are the (approximate) predictive mean and covariance functions.
-The parameters $\bm$ and $\bS$ (as well as the inducing locations $\bZ$ and kernel/likelihood hyperparameters) are chosen to minimize the KL-divergence between the approximate posterior and the true posterior $p(f(\cdot), \bu \mid \bX, \by)$.
-This can be accomplished by optimizing the evidence-lower bound (ELBO):
+where $\ameantest{\cdot}$ and $\avartest{\cdot}$ are the (approximate) posterior mean and covariance functions.
+The parameters $\bm$ and $\bS$ (as well as the inducing locations $\bZ$ and kernel/likelihood hyperparameters) are optimized to minimize the KL-divergence between the approximate posterior and the true posterior $p(f(\cdot), \bu \mid \bX, \by)$.
+This objective function is captured by the evidence-lower bound (ELBO):
 %
 \begin{align}
-	-\loglik_\text{ELBO} &= -\sum_{i=1}^N \Evover{q(f(\bx^{(i)}))}{  \: \log p( y^{(i)} \mid f(\bx^{(i)}) ) \: } + \kl{ q(\bu) }{ p(\bu) },
+	-\loglik_\text{ELBO} &= -\sum_{i=1}^N \Evover{q(f(\bx^{(i)}))}{  \: \log p( y^{(i)} \mid f(\bx^{(i)}) ) \: } + \kl{ q(\bu) }{ p(\bu) }.
 	\label{eqn:elbo}
 \end{align}
 %
-where $p(y^{(i)} \mid f(\bx^{(i)})$ is the (potentially) non-conjugate likelihood function.
+Here, $p(y^{(i)} \mid f(\bx^{(i)})$ is the (potentially) non-conjugate likelihood function.
 The expectation $\Evover{q(f(\bx^{(i)}))}{  \: \log p( y^{(i)} \mid f(\bx^{(i)}) ) \: }$ can be approximated with Monte Carlo integration \citep{wilson2016stochastic} or with Gauss-Hermite quadrature \cite{hensman2015scalable}.
 The KL divergence term is given by
 %
@@ -549,7 +549,7 @@ The KL divergence term is given by
 	\kl{ q(\bu) }{ p(\bu) } = \frac{1}{2} \Bigl( \bm^\top \bK_{\bZ\bZ}^{-1} \bm + \tr{ \bK_{\bZ\bZ}^{-1} \bS } - \log \vert \bK_{\bZ\bZ}^{-1} \bS \vert - M \Bigr).
 \]
 
-\cref{eqn:elbo} is typically optimized using gradient descent or natural gradient descent methods \cite{hensman2012fast,salimbeni2017doubly}.
+\cref{eqn:elbo} is typically optimized using gradient descent or natural gradient descent methods \cite{hensman2012fast,salimbeni2018natural}.
 Note that, because the ELBO factorizes as a sum over data points, we can instead approximate the sum over a minibatch of data.
 This ability to use stochastic optimization is a primary advantage of SVGP, as it does not require large datasets to be stored in memory.
 
