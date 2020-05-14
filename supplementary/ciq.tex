@@ -2,6 +2,129 @@
 \label{app:quadrature}
 
 \section{Selecting Quadrature Locations and Weights}
+Here we briefly describe the quadrature formula derived by \citet{hale2008computing} for use with Cauchy's integral formula.
+We refer the reader to the original publication for more details.
+
+Assume that $\bK$ is a positive semi-definite matrix, and thus has real non-negative eigenvalues.
+Our goal is to approximate Cauchy's integral formula with a quadrature estimate:
+%
+\begin{align}
+	f(\bK)
+  &= \frac{1}{2 \pi i} \oint_\Gamma f(t) \left( t \bI - \bK \right)^{-1} \intd t
+  \label{eqn:contour_integral_2}
+  \\
+  &\approx
+  \frac{1}{2 \pi i} \sum_{i=1}^Q w'_q f(t_q) \left( t_q \bI - \bK \right)^{-1},
+  \label{eqn:contour_integral_quad_2}
+\end{align}
+%
+where $f(\cdot)$ is an arbitrary matrix function, $w_q'$ and $t_q$ are quadrature weights and locations respectively.
+Note that \cref{eqn:contour_integral_2} holds true for any contour $\Gamma$ in the complex plane that encompasses the spectrum of $\bK$.
+
+\paragraph{A na\"ive approach with uniformly-spaced quadrature.}
+For now, assume that $\lambda_\text{min}$ and $\lambda_\text{max}$---the minimum and maximum eigenvalues of $\bK$---are known.
+(We will later address how they can be efficiently estimated.)
+A na\"ive first approach to \cref{eqn:contour_integral_quad_2} is to uniformly place the quadrature locations in a circle that surrounds the eigenvalues:
+%
+\[
+  t_q = \lambda_\text{min} + \frac 1 2 \left( \lambda_\text{max} - \lambda_\text{min} \right) \left( 1 + e^{2 i \pi \left( q / Q \right)} \right),
+  \quad
+  w'_q = \frac 1 Q.
+\]
+%
+This corresponds to a standard trapezoidal quadrature rule.
+However, \citet{hale2008computing} demonstrate that the convergence of this quadrature rule depends linearly on the condition number $\kappa(\bK) = \lambda_\text{max} / \lambda_\text{min}$.
+As many kernel matrices tend to be approximately low-rank and therefore ill-conditioned, this simple quadrature rule would require a large $Q$ for numerical accuracy.
+
+\paragraph{Improving convergence with a change of variables.}
+Rather than uniformly spacing the quadrature points, it makes more sense to place more quadrature points near $\lambda_\text{min}$ and fewer near $\lambda_\text{max}$.
+Intuitively, shifts near $\lambda_\text{max}$ will closely approximate a constant scaling matrix and so differences between these shifts will be minimal.
+To accomplish this, \cite{hale2008computing} suggest performing a change of variables that projects \cref{eqn:contour_integral_2} onto an annulus.
+Uniformly spaced quadrature points inside the annulus will cluster near $\lambda_\text{min}$ when projected back into the complex plane.
+Importantly, this change of variables has a simple analytic formula involving Jacobi elliptic functions.
+(See \citep[][Sec. 2]{hale2008computing} for details.)
+
+\subsection{A Specific Quadrature Formula for $f(\bK) = \bK^{-1/2}$}
+In the special case of $f(\bK) = \bK^{-1/2}$, we can utilize an additional change of variables for an even more efficient quadrature formulation \citep[][Sec. 4]{hale2008computing}.
+Setting $s = t^{1/2}$, we have
+%
+\begin{align}
+	\bK^{-\frac 1 2}
+  &= \frac{1}{\pi i} \oint_{\Gamma_u} \left( s^2 \bI - \bK \right)^{-1} \intd s.
+  \nonumber
+  \\
+  &\approx
+  \frac{1}{2 \pi i} \sum_{i=1}^Q w_q \left( s_q^2 \bI - \bK \right)^{-1},
+  \label{eqn:contour_integral_quad_3}
+\end{align}
+%
+Since the integrand is symmetric with respect to the real axis, we only need to consider a contour of $s$ that exclusively lies on the imaginary axis.
+Consequentially, all the $t_q$ quadrature locations (back in the original space) will be real-valued.
+Combining this with the annulus change of variables results in the following quadrature weights/locations for \cref{eqn:contour_integral_quad_3}:
+%
+\begin{equation}
+  \begin{split}
+    t_q = s_q^2
+    &= \lambda_\text{min}^{-1} \Bigl( \text{sn}_k(u_q) \Bigr)^2,
+    \\
+    w_q
+    &= -\frac{ 2 \lambda_\text{min}^{-1/2}  }{ \pi Q }
+    \: \left[
+    \mathcal{K}'( k )
+    \: \text{cn}_k \left( u_q \right)
+    \: \text{dn}_k \left( u_q \right)
+    \right],
+  \end{split}
+  \label{eqn:quad_points_and_locations}
+\end{equation}
+%
+where we adopt the following notation:
+\begin{itemize}
+  \item $k = \lambda_\text{min} / \lambda_\text{max} = \kappa(\bA^{-1})$;
+  \item $\mathcal{K}'(k)$ is the complete elliptic integral of the first kind with respect to the complimentary elliptic modulus $\sqrt{1 - k^2}$;
+  \item $u_q = \frac{i}{Q}(q - \frac 1 2) \mathcal{K}'(k)$; and
+  \item $\text{sn}_k(\cdot)$, $\text{cn}_k(\cdot)$, and $\text{dn}_k(\cdot)$ are the Jacobi elliptic functions with respect to elliptic modulus $k$.
+\end{itemize}
+Using these values of $w_q$ and $t_q$ leads to the $\log(\lambda_\text{max} / \lambda_\text{min})$ convergence in \cref{lemma:hale}.
+
+\subsection{Estimating the Minimum and Maximum Eigenvalues}
+The equations for the quadrature weights/locations requires on knowing the extreme eigenvalues $\lambda_\text{max}$ and $\lambda_\text{min}$.
+Using the Lanczos algorithm \cite{lanczos1950iteration}---which is a Krylov subspace method---we can obtain accurate estimates of these extreme eigenvalues through $\approx 10$ matrix-vector multiplies with $\bK$.
+
+\paragraph{The Lanczos algorithm}
+is a method for computing a partial tridiagonalization of a symmetric matrix $\bA$.
+Given an initial vector $\bb$, the algorithm iteratively factorizes $\bA$ as:
+\[
+  \bA \bQ_J = \bQ_J \bT_J + \br_J \be_J^\top
+\]
+where $\be_J$ is a unit vector, and
+%
+\begin{itemize}
+  \item $\bQ_J \in \reals^{N \times J}$ is an orthonormal basis of the $J^\text{th}$ Krylov subspace $\mathcal{K}(\bA, \bb)$,
+	\item $\bT_J \in \reals^{J \times J}$ is a symmetric tridiagonal matrix, and
+	\item $\br_J \in \reals^J$ is a residual term.
+\end{itemize}
+%
+At a high level, the Lanczos iterations first form the $J^\text{th}$ Krylov subspace and then perform Gram Schmidt orthogonalization:
+\[
+  \text{span} \{ \bq^{(1)}, \:\: \ldots, \:\: \bq^{(J)} \} = \mathcal{K}(\bA, \bb) = \text{span} \{ \bb, \:\: \bA\bb, \:\: \bA^2\bb, \:\: \ldots, \:\: \bA^{J-1} \bb \}.
+\]
+The orthogonal basis vectors are collected into $\bQ$ and the orthogonalization coefficients are collected into $\bT$.
+Due to the symmetry of $\bA$, each vector $\bq^{(j)}$ only has to be orthogonalized against the two previous basis vectors $\bq^{(j-1)}$, $\bq^{(j-2)}$---which results in the tridiagonal structure of $\bT$.
+
+\paragraph{Estimating Extreme Eigenvalues from Lanczos.}
+To estimate $\lambda_\text{min}$ and $\lambda_\text{max}$ from Lanczos, we perform an eigendecomposition of $\bT_J$.
+If $J$ is small (i.e. $J \approx 10$) then this eigendecomposition will require minimal computational resources.
+A well-known convergence result of the Lanczos algorithm is that the extreme eigenvalues of $\bT_J$ tend to converge rapidly to $\lambda_\text{min}$ and $\lambda_\text{max}$ \cite[e.g.][]{saad2003iterative,golub2012matrix}.
+
+
+\subsection{The Complete Quadrature Algorithm}
+\cref{alg:quadrature} obtains the quadrature weights $w_q$ and locations $t_q$ corresponding to the approach of \citet{hale2008computing}.
+The convergence of this quadrature is extremely rapid (as demonstrated by \cref{lemma:hale}), typically requiring no more than $Q \approx 15$ for high accuracy.
+Computing these weights requires $\approx 10$ matrix-vector multiplies with $\bK$---corresponding to the Lanczos iterations---for a total time complexity of $\bigo{N}$.
+All computations involving elliptic integrals can be readily computed using routines available in e.g. the SciPy library.
+
+\input algorithms/quadrature
 
 \section{Convergence Analysis of CIQ}
 
