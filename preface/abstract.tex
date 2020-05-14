@@ -1,0 +1,24 @@
+Gaussian processes (GPs) exhibit a classic tension of many machine learning methods:
+they possess desirable modelling capabilities yet suffer from important practical limitations.
+In many instances, GPs are able to offer well-calibrated uncertainty estimates, interpretable predictions, and the ability to encode prior knowledge.
+These properties have made them an indispensable tool for black-box optimization, time series forecasting, and high-risk applications like health care.
+Despite these desirable properties, GPs are typically not applied to datasets with more than a few thousand data points-in part because of an inference procedure that requires matrix inverses, determinants, and other expensive operations.
+Moreover, implementing specialty models often requires significant implementation efforts.
+
+This thesis aims to alleviate these practical concerns through a single simple design decision:
+taking inspiration from neural network libraries, we construct GP inference algorithms using only \emph{matrix-vector multiplcations} (MVMs) and other linear operations.
+As we will demonstrate, this MVM-based approach address several of these practical concerns simultaneously.
+It reduces asymptotic complexity, effectively utilize GPU hardware, and provide straight-forward implementations for many specialty GP models.
+
+The chapters of this thesis each address a different aspect of Gaussian process inference.
+\cref{chapter:bbmm} introduces an MVM-iteration method for training Gaussian process regression models.
+This approach unifies the computation of previous methods into a highly-parallel and stable algorithm.
+\cref{chapter:love} focuses on making predictions with Gaussian processes.
+A memory-efficient cache can be computed through an iterative MVM algorithm, significantly reducing the computation required for predictive distributions.
+\cref{chapter:ciq} introduces a multi-purpose MVM algorithm that can be used to draw samples from GP posteriors and perform approximate Gaussian process inference.
+These methods offer speedups ranging from $4\times$ to $40\times$.
+Importantly, applying any of these algorithms to specialty models (e.g. multitask GPs and scalable approximations) simply requires a routine for efficient matrix-vector multiplication with the kernel matrix.
+
+The MVM methods from this thesis from the building blocks of the {\tt GPyTorch} library, an open-sourced GP implementation designed for scalability and simple implementations.
+In the final chapter, we evaluate GPyTorch models to several large-scale regression datasets.
+Using the proposed MVM methods, we can apply exact Gaussian processes to datasets that are \emph{2 orders of magnitude larger} than what has previously been reported.
