@@ -35,7 +35,12 @@ All speed experiments are run on an Intel Xeon E5-2650 CPU and an NVIDIA Titan X
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\textwidth]{figures/sparse_gp_results}
+  \includegraphics[width=0.45\textwidth]{figures/bbmm_speedup_exact_gp.pdf}
+  \quad
+  \includegraphics[width=0.45\textwidth]{figures/bbmm_speedup_sgpr.pdf}
+  \vspace{1em}
+
+  \includegraphics[width=0.45\textwidth]{figures/bbmm_speedup_dkl+kiss-gp.pdf}
   \caption[Speedup of GPU-accelerated GP training.]{
     Speedup of GPU-accelerated GP training.
     BBMM is in blue; competing GPU methods are in gray.
@@ -48,7 +53,12 @@ All speed experiments are run on an Intel Xeon E5-2650 CPU and an NVIDIA Titan X
 %
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\textwidth]{figures/exact_gp_chol_vs_mvm}
+  \includegraphics[width=0.45\textwidth]{figures/bbmm_error_exact_gp_RBF.pdf}
+  \quad
+  \includegraphics[width=0.45\textwidth]{figures/bbmm_error_exact_gp_Matern.pdf}
+  \vspace{1em}
+
+  \includegraphics[width=0.45\textwidth]{figures/bbmm_error_sgpr_Matern.pdf}
   \caption[Predictive error comparison of mBCG versus Cholesky.]{
 		Predictive error comparison of mBCG versus Cholesky (MAE of predictive mean).
 		The left two plots compare errors using Exact GPs with RBF and Mat\'ern-5/2 kernels,
@@ -69,7 +79,7 @@ This speedup is because BBMM is able to calculate all inference terms in paralle
 
 \begin{figure}[t!]
   \begin{center}
-    \includegraphics[width=0.70\textwidth]{figures/cg_error}
+    \includegraphics[width=0.50\textwidth]{figures/cg_error}
   \end{center}
   \caption{Solve error for mBCG and Cholesky. \label{fig:cg_error}}
 \end{figure}

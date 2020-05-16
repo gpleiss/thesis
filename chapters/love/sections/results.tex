@@ -170,18 +170,18 @@ For example, max-value entropy search \cite{wang2017max} draws samples from a po
 %
 \begin{figure}[t!]
   \centering
-  \includegraphics[width=0.70\columnwidth]{figures/thompson_sampling_comparison.pdf}
+  \includegraphics[width=0.70\columnwidth]{figures/love_sampling_comparison.pdf}
   \caption[Comparison of LOVE and Random Fourier Features for BayesOpt sampling.]{
     Comparison of LOVE and Random Fourier Features for BayesOpt sampling.
     Each line represents an approximation of maximum value distribution $p(y_\text{max} \mid \dset)$ using different sampling methods (exact sampling, Random Fourier Features, and LOVE + KISS-GP).
     Samples drawn with LOVE+KISSGP closely match samples drawn using an Exact GP.
     (Dataset: (normalized) Eggholder function after 100 iterations of BayesOpt.)
-    \label{fig:thompson_sampling_comparison}
+    \label{fig:love_sampling_comparison}
   }
 \end{figure}
 %
-In \cref{fig:thompson_sampling_comparison}, we visualize each method's sampled distribution of $p(y_\text{max} \! \mid \! \dset)$ for the Eggholder benchmark.
-We plot kernel density estimates of the sampled maximum value distributions after $100$ BayesOpt iterations.
+In \cref{fig:love_sampling_comparison}, we visualize each method's sampled distribution of $p(y_\text{max} \! \mid \! \dset)$ for the Eggholder benchmark.
+We plot kernel density estimates of the sampled maximum value distributions after $100$ BayesOpt iterations using the max-value entropy search acquisition function \citep{wang2017max}.
 Since the Exact GP sampling method uses the exact Cholesky decomposition, its sampled max-value distribution can be considered closest to ground truth.
 The Fourier feature sampled distribution differs significantly.
 In contrast, LOVE{}'s sampled distribution very closely resembles the Exact GP distribution, yet

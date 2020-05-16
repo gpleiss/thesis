@@ -93,20 +93,6 @@ Each optimizer uses an initial learning rate of $0.01$\footnote{
 For CIQ we use $Q = 15$ quadrature points.
 MINRES terminates when the $\bd_j$ vectors achieve a relative norm of $0.001$ or after $J=200$ iterations.
 
-\begin{figure}[t!]
-  \centering
-  \includegraphics[width=\linewidth]{figures/variational_time.pdf}
-  \caption[Train time comparison of Cholesky-whitened vs CIQ-whitened SVGP models.]{
-    Train time comparison of Cholesky-whitened vs CIQ-whitened SVGP models.
-    {\bf Left:} 3DRoad dataset ($N=326155, D=2$, Gaussian likelihood).
-    {\bf Middle:} Precipitation dataset ($N=75952, D=3$, Student-T likelihood).
-    {\bf Right:} CoverType dataset ($N=435759, D=54$, Bernoulli likelihood).
-    At $M=5,\!000$ inducing points, CIQ is up to $4\times$ faster than Cholesky.
-    Moreover CIQ can scale to larger values of $M$ under a fixed computational budget.
-  }
-  \label{fig:variational_timing}
-\end{figure}
-
 \paragraph{Training time.}
 In \cref{fig:variational_timing} we plot the training time (in hours) of CIQ/Cholesky models as a function of $M$.
 Each model is trained for $20$ epochs on a single NVIDIA Titan-RTX GPU.
