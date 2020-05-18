@@ -29,11 +29,10 @@ All theorems are restated from \cref{sec:piv_chol_precond}.
 \begin{proof}
   Let $\bE$ be the difference between $\bK_{\bX\bX}$ and its rank-$R$ pivoted Cholesky approximation $\bar\bL_R \bar\bL_R^\top$:
   \[
-    \bE = \bK_{\bX\bX} - \bar\bL_R \bar\bL_R^\top = \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix}
+    \bE = \bK_{\bX\bX} - \bar\bL_R \bar\bL_R^\top = \begin{bmatrix} \bzero & \bzero \\ \bzero & \bar \bS_{R+1} \end{bmatrix}
   \]
-  where $\bS_{R+1}$ is the Schur compliment that arises as the Cholesky error term---\cref{eqn:chol_error}.
+  where $\bar \bS_{R+1}$ is the Schur compliment that arises as the Cholesky error term---\cref{eqn:chol_error}.
   The error $\bE$ is therefore a positive semi definite matrix.
-
   By definition, the condition number $\kappa ( \trainP^{-1}\trainK )$ is given by
   \begin{align*}
     \kappa \left( \trainP^{-1}\trainK \right)
@@ -63,7 +62,7 @@ All theorems are restated from \cref{sec:piv_chol_precond}.
     &= \left\Vert \bI - \left(\bK_{\bX\bX} + \sigma^2_\text{obs} \bI \right)^{-1} \bE \right\Vert_{2}
   \end{align*}
   %
-  Since $\bK_{\bX\bX}$ and $\bar\bL_R \bar\bL_R^\top$ are both positive (semi-)definite,
+  Since $\bK_{\bX\bX}$ and $\bar\bL_R \bar\bL_R^\top$ are both positive semi-definite,
   $(\bK_{\bX\bX} + \sigma^2_\text{obs})$ and $(\bar\bL_R \bar\bL_R^\top + \sigma^2_\text{obs})$ will both have a minimum eigenvalue $\lambda_\text{min} \geq \sigma^2_\text{obs}$.
   Therefore,
   %
@@ -88,7 +87,6 @@ All theorems are restated from \cref{sec:piv_chol_precond}.
     &= \left( 1 + \sigma^{-2}_\text{obs} \Vert \bE \Vert_2 \right)^2.
     \label{eqn:cond_number_bound}
   \end{align}
-
   Since $\bE$ is positive semi-definite, we have that $\Vert \bE \Vert_2 \leq \tr{\bE}$.
   The eigenvalue condition from \cref{eqn:pcp_condition} allows us to bound $\tr{\bE}$ using \cref{thm:harbrecht}:
   %

@@ -1,9 +1,9 @@
 %!TEX root=main.tex
 \section{Introduction}
 
-Training a Gaussian process regression model ensures that the mean function, kernel function, and likelihood are well suited to model a given dataset.
+Training a Gaussian process regression model ensures that the mean function, kernel function, and likelihood are well suited to a given dataset.
 It is worth noting that GPs have few learnable parameters, especially compared to highly-parametric models like neural networks.
-Nevertheless, the kernel lengthscale, outputscale, observational noise $\sigma^2_\text{obs}$, and inducing point locations $\bZ$ have great influence on the performance of the model and therefore should be well-chosen.
+Nevertheless, the mean, kernel, and likelihood parameters greatly influence on the performance of the model and therefore should be well-chosen.
 We will denote this set of parameters by the vector $\btheta$.
 
 Typically, $\btheta$ is learned by optimizing the GP marginal log likelihood (\cref{eqn:log_lik}) via a gradient descent method \cite{rasmussen2006gaussian}.
@@ -15,7 +15,7 @@ Most GP implementations compute the marginal log likelihood and its derivative u
 As described in \cref{chapter:introduction} this has numerous drawbacks.
 Besides its $\bigo{N^3}$ time complexity and $\bigo{N^2}$ space requirements, the Cholesky factorization is an inherently sequential algorithm that does not effectively utilize modern hardware like GPUs.
 Scalable approximations can remedy these concerns to some extent, yet such approximations tend to require significant implementation efforts.
-This entanglement of model specification and inference procedure impedes rapid prototyping of different model types and obstructs innovation.
+%This entanglement of model specification and inference procedure impedes rapid prototyping of different model types and obstructs innovation.
 
 In this chapter, we introduce a highly efficient framework for Gaussian process training.
 Whereas previous approaches require the user to provide routines for computing the GP marginal log likelihood for a sufficiently complex model,
@@ -23,38 +23,38 @@ our framework only requires access to a blackbox routine that performs matrix-ma
 Accordingly, we refer to our method as Black-Box Matrix~\texttimes~Matrix (BBMM) Inference.
 
 In contrast to the Cholesky decomposition, matrix multiplication fully utilizes GPU acceleration.
-We will demonstrate that this matrix approach also significantly eases implementation for a wide class of existing GP models from the literature.
+We will demonstrate that this matrix approach also significantly eases implementation for a wide class of specialty GP models.
 In particular, we make the following contributions:
 
 \begin{enumerate}
-	\item Inspired by iterative matrix-vector multiplication (MVM)-based inference methods, we provide a modified \emph{batched} version of linear conjugate gradients (mBCG) that provides all computations necessary for both the marginal likelihood and its derivatives.
-		mBCG uses large matrix-matrix multiplications that more efficiently utilize modern hardware than both existing Cholesky and MVM based training.
+	\item Inspired by iterative matrix-vector multiplication (MVM)-based inference methods, we introduce a modified \emph{batched} version of linear conjugate gradients (mBCG) that provides all computations necessary for both the marginal likelihood and its derivatives.
+		mBCG uses matrix-matrix multiplications that more efficiently utilize modern hardware than both existing Cholesky and MVM based training.
 		It also circumvents several critical space complexity and numerical stability issues present in existing MVM methods.
 		Perhaps most notably, mBCG reduces the time complexity of exact GP inference from $\bigo{N^3}$ to $\bigo{N^2}$.
 
-	\item We introduce a method for \emph{preconditioning} this modified conjugate gradients algorithm based on the pivoted Cholesky decomposition \cite{bach2013sharp,harbrecht2012low}.
+	\item We introduce a method for \emph{preconditioning} this modified conjugate gradients algorithm based on the pivoted Cholesky decomposition \cite{harbrecht2012low}.
 		All required operations with this preconditioner are efficient, and in practice require negligible time.
-		We demonstrate both empirically and theoretically that this preconditioner significantly accelerates inference.
+		We demonstrate both empirically and theoretically that this preconditioner significantly accelerates training.
 
 	\item We empirically demonstrate the efficacy of BBMM for medium-scale exact GPs and several scalable methods.
 		On datasets with up to $3000$ data points, we show that exact GPs with BBMM are up to $20\times$ faster than Cholesky-based GPs.
 		Moreover, the popular SKI \cite{wilson2015kernel} and SGPR \cite{titsias2009variational} frameworks with BBMM achieve up to $15\times$ and $4\times$ speedups (respectively) on datasets as large as $500,\!000$ data points.
-		We also demonstrate that BBMM often results in higher predictive accuracy than Cholesky-based solves in single-precision arithmetic.
+		We also demonstrate that BBMM computes solves with higher accuracy than Cholesky in single-precision arithmetic.
 \end{enumerate}
 %
 \noindent
 In addition, we discuss how BBMM is incorporated into the GPyTorch software package.
-We demonstrate how BBMM enables simple implementations of exact GPs, multi-output GPs, and specialty models like the SKI and SGPR approximations.
+We demonstrate that BBMM enables simple implementations of exact GPs, multi-output GPs, and specialty models like the SKI and SGPR approximations.
 
 \paragraph{Related work.}
 Recently, a number of researchers have proposed alternatives to Cholesky-based training, instead relying on iterative numerical algorithms to compute \cref{eqn:log_lik,eqn:log_lik_deriv} \cite{cunningham2008fast,murray2009gaussian,saatcci2012scalable,wilson2014thesis,wilson2015kernel,cutajar2016preconditioning,dong2017scalable,gardner2018product}.
-These approaches rely on the conjugate gradients and Lanczos algorithms described in \cref{sec:mvms}, both of which rely on matrix-vector multiplication (MVMs) with the training kernel matrix.
+These approaches rely on the conjugate gradients and Lanczos algorithms described in \cref{sec:mvms}, both of which perform matrix-vector multiplication (MVMs) with the training kernel matrix.
 One key advantage is that MVM approaches can exploit algebraic structure for increased computational efficiencies.
 Notably, the structured kernel interpolation (SKI) method \cite{wilson2015kernel} uses structured kernel matrices with fast MVMs to achieve a remarkable asymptotic complexity.
 
 The method proposed in this chapter builds upon this prior work in a few notable ways.
 Firstly, the mBCG method computes all training terms through a single iterative method.
-This is in contrast to existing methods that use separate algorithms for matrix solves and log determinants.
+This is in contrast to existing methods that use separate algorithms for matrix solves (conjugate gradients) and log determinants (Lanczos quadrature).
 Secondly, our BBMM framework is designed to be an \emph{general purpose} training approach.
 Many of the existing MVM-based methods are employed only when the training kernel matrix has structure that affords $< \bigo{N^2}$ MVM routines.
 (The notable exception is the work of \citet{cutajar2016preconditioning}, which uses MVM techniques for standard un-structured GPs.)

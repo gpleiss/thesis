@@ -1,7 +1,7 @@
 \section{Preconditioning}
 \label{sec:preconditioning}
 
-While each iteration of mBCG performs large parallel matrix~\texttimes~matrix operations that utilize hardware efficiently, the iterations themselves are sequential.
+While each iteration of mBCG performs large parallel matrix~\texttimes~matrix operations, the iterations themselves are sequential.
 A natural goal for better utilizing hardware is to trade off fewer sequential steps for slightly more effort per step.
 We accomplish this goal using \emph{preconditioning} \citep[e.g.][]{demmel1997applied,saad2003iterative,van2003iterative,golub2012matrix}, which introduces a matrix $\bP$ to solve the related linear system
 \begin{equation}
@@ -10,9 +10,10 @@ We accomplish this goal using \emph{preconditioning} \citep[e.g.][]{demmel1997ap
 \end{equation}
 instead of $\trainK^{-1} \left[  \by, \:\:, \bz^{(1)}, \:\:, \ldots, \:\: \bz^{(T)} \right].$.
 Both systems are guaranteed to have the same solution, but the preconditioned system's convergence depends on the conditioning of $\trainP^{- \frac 1 2} \trainK \trainP^{- \frac 1 2}$ rather than that of $\trainK$.
-Despite the matrix square roots in \cref{eqn:precond_system}, preconditioned CG only needs access to $\trainP$ and its inverse $\trainP^{-1}$ (see \cref{alg:std_pcg}).
+Despite the matrix square roots in \cref{eqn:precond_system}, preconditioned CG/mBCG only need access to $\trainP$ and its inverse $\trainP^{-1}$ (see \cref{alg:std_pcg}).
 
 
+\gp{CONTINUE HERE}
 
 \subsection{Modifying mBCG for Preconditioning}
 \label{sec:precond_requirements}

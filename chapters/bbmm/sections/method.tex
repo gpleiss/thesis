@@ -25,26 +25,25 @@ These equations have three operations that dominate their time complexity:
 \begin{enumerate}
   \item the linear solve $\trainK^{-1}\by$,
   \item the log determinant $\log \vert \trainK \vert$, and
-  \item a trace term $\tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}}$.
+  \item the trace term $\tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}}$.
 \end{enumerate}
 
 \paragraph{The Cholesky decomposition} is used in many GP implementations to compute these three terms.
 This procedure factorizes $\trainK$ as $\bL \bL^\top$, where $\bL$ is lower triangular.
-The columns of $\bL = [ \bl^{(1)}, \:\: \ldots, \:\: \bl^{(N)} ]$ are computed recursively \citep{golub2012matrix}.
-Computing $\bL$ requires $\bigo{N^3}$ time and $\bigo{N^2}$ memory.
+As discussed in \cref{sec:piv_chol}, computing $\bL$ requires $\bigo{N^3}$ time and $\bigo{N^2}$ memory.
 After computing this factorization, matrix solves and log determinants take $\bigo{N^2}$ and $\bigo{N}$ time respectively.
 In general, this asymptotic complexity cannot be reduced even if $\trainK$ has nice structure (e.g. Toeplitz).
-Although concurrent work by \citet{nguyen2019exact} uses the Cholesky decomposition for large scale GP inference through distributed computing, it requires quadratic communication costs and quadratic memory.
 Furthermore, its recursive nature makes the Cholesky algorithm less amenable to GPU acceleration since GPUs are designed to parallelize matrix-vector multiplications.
+\citet{nguyen2019exact} aim to alleviate these costs through distributed computing, yet their approach requires quadratic communication costs and quadratic memory.
 
 \paragraph{MVM-based training methods.}
-Recently, there is a growing line of research that computes these operations with iterative routines based on matrix-vector multiplications (MVMs).
+%Recently, there is a growing line of research that computes these operations with iterative routines based on matrix-vector multiplications (MVMs).
 As described in \cref{sec:mvms},
-$\trainK^{-1}\by$ can be computed using \emph{conjugate gradients} (CG) \cite{cunningham2008fast,cutajar2016preconditioning},
+$\trainK^{-1}\by$ can also be computed using \emph{conjugate gradients} (CG) \cite{cunningham2008fast,cutajar2016preconditioning},
 and the other two quantities can be computed using the Lanczos tridiagonalization algorithm \cite{ubaru2017fast,dong2017scalable}.
 These MVM-based methods are asymptotically faster and more space efficient than Cholesky based methods \cite{wilson2015kernel,dong2017scalable}.
 Additionally, these methods are able to exploit algebraic structure in the data for further efficiencies \cite{cunningham2008fast,saatcci2012scalable,wilson2015kernel}.
-We aim to expand on these methods.
+We aim to expand on these existing methods.
 In particular, our goals are to
 \begin{enumerate}
   \item introduce a unified MVM algorithm that simultaneously computes all terms and thus improve parallelization/GPU utilization; and
@@ -55,8 +54,8 @@ In particular, our goals are to
 \label{sec:mbcg}
 
 For this purpose, we introduce a \emph{modified Batched Conjugate Gradients Algorithm} (mBCG) algorithm.
-Standard conjugate gradients takes as input a vector $\by$ and a routine for computing a matrix vector product $\trainK\by$, and, after $J$ iterations, outputs an approximate solve $\bc_{J} \approx \trainK^{-1}\by$ (with exact equality when $J = N$).
-We modify conjugate gradients to 1. perform linear solves with multiple right hand sides simultaneously, and 2. return tridiagonal matrices corresponding to partial Lanczos tridiagonalizations of $\trainK$ with respect to each right hand side.
+Standard conjugate gradients takes as input a vector $\by$ and a routine for computing a matrix vector product $\trainK\by$, and, after $J$ iterations, outputs an approximate solve $\bc_{J} \approx \trainK^{-1}\by$ (with equality when $J = N$).
+We modify conjugate gradients to 1. perform linear solves with multiple right hand sides simultaneously, and 2. return tridiagonal matrices corresponding to partial Lanczos tridiagonalizations of $\trainK$.
 %\footnote{
   %mBCG differes from Block CG algorithms \cite{o1980block} in that mBCG returns Lanczos tridiagonalization terms.
 %}
@@ -97,7 +96,8 @@ $\trainK^{-1} \by$, $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \btheta}
 
   \item $\log \vert \trainK \vert$
     can be estimated using the stochastic Lanczos quadrature routine of \citet{ubaru2017fast}, as described in \cref{sec:lanczos}.
-    To briefly summarize, this approach approximates the matrix logarithm as $\left( \log \bA \right) \bz^{(i)} \approx \bQ^{(i)} \left( \log \bT^{(i)} \right) \bQ^{(i)^\top} \bz^{(i)}$,
+    To briefly summarize, this approach approximates the matrix logarithm as
+    \[ \left( \log \bA \right) \approx \bz^{(i)} \bQ^{(i)} \left( \log \bT^{(i)} \right) \bQ^{(i)^\top} \bz^{(i)}, \]
     where $\bQ^{(i)}$ and $\bT^{(i)}$ are the orthogonal and tridiagonal matrices from Lanczos with initial vector $\bz^{(i)}$.
     Combining stochastic trace estimation with this approximation gives us
     %
@@ -109,14 +109,14 @@ $\trainK^{-1} \by$, $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \btheta}
     \end{align*}
     %
     where $\be^{(1)} = [1, 0, \:\:, \ldots, \:\: 0]$.
-    (The reduction in the second line comes from the orthogonality of $\bQ^{(i)}$ and $\bz^{(i)} / \Vert \bz^{(i)} \Vert_2$ is the first column of $\bQ^{(i)}$.)
+    (The reduction in the second line comes from the orthogonality of $\bQ^{(i)}$ with $\bz^{(i)} / \Vert \bz^{(i)} \Vert_2$ being its first column.)
     Therefore, we can estimate the log determinant of $\trainK$ simply by computing logarithms of the tridiagonal matrices returned by mBCG in \cref{eqn:mod_cg_call}.
 \end{enumerate}
 %
 We note that our derivative and log determinant estimates are also proposed by \citet{cutajar2016preconditioning} and \citet{dong2017scalable}, respectively.
 Notably, \citet{cutajar2016preconditioning} does not return a log determinant estimate and therefore their approach cannot be used for sampling $\btheta$ or Bayesian model selection.
 We further differ from \citet{cutajar2016preconditioning} in that we use batched operations to compute all terms simultaneously.
-We differ from \citet{dong2017scalable} by avoiding the explicit Lanczos tridiagonalization algorithm (\cref{alg:lanczos}) and thus circumventing its storage and numerical stability issues \cite{golub2012matrix}.
+We differ from \citet{dong2017scalable} in that we avoid the explicit Lanczos tridiagonalization algorithm (\cref{alg:lanczos}) and thus circumvent its storage and numerical stability issues \cite{golub2012matrix}.
 
 Now that we have motivated the terms produced by mBCG, we will present the algorithm itself.
 
@@ -200,24 +200,25 @@ To compute the Lanczos tridiagonal matrices  that correspond to inputs $\bz^{(1)
 From \cref{obs:lanczos_cg}, the diagonal and subdiagonal entries of $\bT^{(1)}, \ldots, \bT^{(T)}$ are simple deterministic transforms of the $\balpha_j$ and $\bbeta_j$ coefficients from mBCG.
 The final three lines in {\color{\colornew} \colornew} in \cref{alg:mod_pcg} use the $\balpha_j$ and $\bbeta_j$ coefficients to iteratively compute the Lanczos matrices from \cref{obs:lanczos_cg}.
 Notably, these matrices can be formed with $\bigo{T}$ extra computation, and we are able to avoid running the Lanczos algorithm.
-This is an advantage over existing MVM-based training methods, as mBCG avoids the numerical instabilities associated with Lanczos (see \cref{sec:lanczos}).
+%This is an advantage over existing MVM-based training methods, as mBCG avoids the numerical instabilities associated with Lanczos (see \cref{sec:lanczos}).
 
 
 \subsection{Runtime and Space}
-As shown above, we are able to approximate all inference terms from \emph{a single call to mBCG}.
+As shown above, we are able to approximate all training terms from \emph{a single call to mBCG}.
 These approximations improve with the number of mBCG iterations.
-Each iteration requires one matrix-matrix multiply with $\trainK$ and element-wise operations on $N \times T$ matrices.
+Each iteration requires one matrix multiplication with $\trainK$ and element-wise operations on $N \times T$ matrices.
 Therefore, $J$ iterations of mBCG requires $\bigo{NT}$ space and $\bigo{J \: \mmm{\trainK}}$ time,
-where $\mmm{\trainK}$ is the time to multiply $\trainK$ by a $N \times (T + 1)$ matrix.\footnote{
-	There are $J$ matrix multiplications with $\trainK$, resulting in the $\bigo{J \mmm{\trainK}}$ runtime.
-	For the remainder of the algorithm, all matrices involved ($\bC_{j},\bV_j,\bR_j,\bZ_j,\bP_j$) are $n \times t$ matrices.
-	All of the lines involving only these matrices perform operations that require $\bigo{NT}$ time.
-	For example, elementwise multiplying $\bZ_{j} \circ \bZ_{j}$ accesses each element in $\bZ_{j}$ once, and and then multiplying it by the vector of ones similarly accesses every element in the matrix once.
-	Multiplying $\bV_{j}$ by the diagonal matrix with $\ba_{j}$ on the diagonal takes $\bigo{NT}$ time, because we multiply every element $\bV_{j}^{(ik)}$ by $\ba_{j}^{(i)}$.
-	Therefore, all other lines in the algorithm are dominated by the matrix multiply with $\trainK$, and the total running time is also $\bigo{J \mmm{\trainK}}$.
-	Furthermore, because these intermediate matrices are $N \times T$, the space requirement is also $\bigo{NT}$.
-}
-This multiplication takes $\bigo{N^2 T}$ time with a standard matrix.
+where $\mmm{\trainK}$ is the time to multiply $\trainK$ by a $N \times (T + 1)$ matrix.
+%\footnote{
+	%There are $J$ matrix multiplications with $\trainK$, resulting in the $\bigo{J \mmm{\trainK}}$ runtime.
+	%For the remainder of the algorithm, all matrices involved ($\bC_{j},\bV_j,\bR_j,\bZ_j,\bP_j$) are $N \times T$ matrices.
+	%All of the lines involving only these matrices perform operations that require $\bigo{NT}$ time.
+	%For example, elementwise multiplying $\bZ_{j} \circ \bZ_{j}$ accesses each element in $\bZ_{j}$ once, and and then multiplying it by the vector of ones similarly accesses every element in the matrix once.
+	%Multiplying $\bV_{j}$ by the diagonal matrix with $\ba_{j}$ on the diagonal takes $\bigo{NT}$ time, because we multiply every element $\bV_{j}^{(ik)}$ by $\ba_{j}^{(i)}$.
+	%Therefore, all other lines in the algorithm are dominated by the matrix multiply with $\trainK$, and the total running time is also $\bigo{J \mmm{\trainK}}$.
+	%Furthermore, because these intermediate matrices are $N \times T$, the space requirement is also $\bigo{NT}$.
+%}
+This takes $\bigo{N^2 T}$ time with a standard matrix.
 It is worth noting that this is a lower asymptotic complexity that standard Cholesky-based training, which is $\bigo{N^3}$.
 Therefore, \emph{BBMM offers a computational speedup for exact GPs}.
 As we will show in \cref{sec:programmability}, this time complexity can be further reduced with structured data or sparse GP approximations.
@@ -234,6 +235,5 @@ This only requires an additional $\mmm{\frac{\partial \trainK}{\partial \btheta}
 }
 Computing $\log \vert \trainK \vert$ dominates the post-mBCG running time; however, it negligible assuming $J \ll N$ iterations of mBCG.
 %mBCG gives us $J \times J$ tridiagonal matrices  ${\bT}^{(1)}, \ldots, {\bT}^{(T)}$.
-To compute the log determinant estimate, we must compute $\be^{(1)^\top} \log \bT^{(i)} \be^{(1)}$ for each $i$.
-To do this, we eigendecompose ${\bT}^{(i)} = \bV^{(i)} \bLambda^{(i)} \bV^{(i)^\top}$, which takes $\bigo{J^{2}}$ time for tridiagonal matrices.
-This is again significantly less than the running time complexity of mBCG itself.
+To compute the log determinant estimate, we must compute $\be^{(1)^\top} \log \bT^{(i)} \be^{(1)}$ for each $i$, which requires eigendecomposing the $\bT^{(i)}$ matrices.
+This costs $\bigo{T J^3}$ time, which again is significantly less than the running time complexity of mBCG.
