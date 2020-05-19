@@ -72,7 +72,6 @@ where each $\bl_i$ has exactly $i-1$ leading zero ($\bl_i = [0, \:\: \ldots, \:\
 The $\sum_{i=1}^R \bl_i \bl_i^\top$ outer product matrix gives us a low-rank approximation to $\bK$, with
 \begin{equation}
   \left\Vert \bK - \sum_{i=1}^{R}{\bl}_{i}{\bl}_{i}^{\top} \right\Vert_{2} = \left\Vert \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix} \right\Vert_2.
-  \label{eqn:chol_low_rank}
 \end{equation}
 After all $N$ iterations the sum of the outer products is exact: $\bK = \sum_{i=1}^N \bl_i \bl_i^\top$.
 

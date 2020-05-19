@@ -47,7 +47,7 @@ Addressing these challenges in the context of GPs however is a relatively new ar
 
 An key insight of this thesis is that non-linear operations on large-scale kernel matrices are surprisingly tractable when used in conjunction with GPU acceleration and efficient numerical techniques.
 While we motivate this finding through GPs, it is worth noting that the algorithms in this thesis are applicable to other classes of models.
-For example, a common relaxation to optimal transport problems is solved via the Sinkhorn algorithm \cite{cuturi2013sinkhorn}, which relys on iterative MVMs with an exponentiated distance matrix \cite{altschuler2019massively}.
+For example, a common relaxation to optimal transport problems is solved via the Sinkhorn algorithm \cite{cuturi2013sinkhorn}, which relys on iterative MVMs with an exponentiated distance matrix.
 %This exponentiated distance matrix can be interpreted as a scaled RBF kernel, and therefore the preconditioning and partitioning techniques from this thesis might scale this algorithm beyond its current limits.
 Second-order optimization is another application where large-scale solves are necessary.
 GPU-accelerated MVM methods may make such methods applicable to higher dimensional problems \cite{koh2017understanding}.

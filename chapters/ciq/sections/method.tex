@@ -155,7 +155,7 @@ Below we bound the error of CIQ:
 %As a corollary, when CIQ is used to sample $\normaldist{\bzero}{\bK}$ via  $\bK^{1/2} \bb$, the bias of these samples decreases exponentially with more quadrature points and msMINRES iterations.
 \noindent
 For $\ba'_J \approx \bK^{-1/2}$, the bound incurs an additional factor of $1/\lambda_\text{min}$.
-(See \cref{app:quadrature} for proofs.)
+(See \cref{app:ciq_proofs} for proofs.)
 \cref{thm:ciq_convergence} suggests that the linear solves produced by msMINRES will be the primary source of error as they are more dependent on the conditioning of $\bK$.
 We view this as a strength, as in many of our applications the rapid convergence of Krylov subspace methods for linear solves is well established.
 For covariance matrices up to $N=50,\!000$, often $Q=8$ and $J\leq300$ suffices for 4 decimal places of accuracy.

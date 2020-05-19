@@ -40,7 +40,7 @@ Furthermore, its recursive nature makes the Cholesky algorithm less amenable to 
 %Recently, there is a growing line of research that computes these operations with iterative routines based on matrix-vector multiplications (MVMs).
 As described in \cref{sec:mvms},
 $\trainK^{-1}\by$ can also be computed using \emph{conjugate gradients} (CG) \cite{cunningham2008fast,cutajar2016preconditioning},
-and the other two quantities can be computed using the Lanczos tridiagonalization algorithm \cite{ubaru2017fast,dong2017scalable}.
+and the other two quantities can be computed using the Lanczos tridiagonalization algorithm \cite{ubaru2017fast,dong2017scalable} or entropic estimates \cite{fitzsimons2016improved}.
 These MVM-based methods are asymptotically faster and more space efficient than Cholesky based methods \cite{wilson2015kernel,dong2017scalable}.
 Additionally, these methods are able to exploit algebraic structure in the data for further efficiencies \cite{cunningham2008fast,saatcci2012scalable,wilson2015kernel}.
 We aim to expand on these existing methods.
