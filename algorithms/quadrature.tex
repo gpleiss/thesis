@@ -31,27 +31,29 @@
     \tcp{Compute elliptic integral of the first kind.}
     \tcp{We use the relation $\mathcal{K}'(k) = \mathcal{K}(k')$, where $k' = \sqrt{1 - k^2}$ is the complementary elliptic modulus.}
     $k^2$ $\gets$ $\lambda_\text{min} / \lambda_\text{max}$ \tcp{The elliptic modulus.}
-    $k^{\prime 2}$ $\gets$ $1 - k$ \tcp{The complementary elliptic modulus.}
-    $\mathcal{K}'(k)$ $\gets$ \ellipke{$k^{\prime 2}$}
+    $k^{\prime 2}$ $\gets$ $\sqrt{1 - k^2}$ \tcp{The complementary elliptic modulus.}
+    ${\tt K}'$ $\gets$ \ellipke{$k^{\prime 2}$} \tcp{${\tt K}' = \mathcal{K}'(k)$}
     \BlankLine
     \tcp{Compute each quadrature weight/location.}
     \For{$q$ $\gets$ $1$ \KwTo $Q$}{
-      $u_q$ $\gets$ $i(q - 1/2) \mathcal{K} / Q$
+      $u_q$ $\gets$ $(q - 1/2) / Q$
       \\
-      \tcp{Compute Jacobi elliptic fn's $\text{sn}_{k}(u_q)$, $\text{cn}_{k}(u_q)$, $\text{dn}_{k}(u_q)$.}
-      \tcp{Since the inputs $u_q$ are imaginary, we compute the functions via Jacobi's imaginary transformation.}
-      $\text{sn}_{k^{\prime}}(i u_q)$, $\text{cn}_{k^{\prime}}(i u_q)$, $\text{dn}_{k^{\prime}}(i u_q)$ $\gets$ \ellipj{$t_q$, $k^{\prime 2}$}
+      \tcp{Compute Jacobi elliptic fn's via Jacobi's imaginary transform.}
+      \tcp{First we compute $\overline{\tt{sn}}_q = \text{sn}(u_q \mathcal{K}'(k) | k')$, $\overline{\tt{cn}}_q = \text{cn}(u_q \mathcal{K}'(k) | k')$, $\overline{\tt{dn}}_q = \text{dn}(u_q \mathcal{K}'(k) | k')$.}
+      $\overline{\tt{sn}}_q$, $\overline{\tt{cn}}_q$, $\overline{\tt{dn}}_q$ $\gets$ \ellipj{$u_q {\tt K}'$, $k^{\prime 2}$}
       \\
-      $\text{sn}_{k}(u_q)$ $\gets$ $i \left[ \text{sn}_{k^{\prime}}(i u_q) / \text{cn}_{k^{\prime}}(i u_q) \right]$
+      \tcp{Use identities to convert $\overline{\tt{sn}}_q$, $\overline{\tt{cn}}_q$, $\overline{\tt{dn}}_q$ values into}
+      \tcp{${\tt sn}_q = \text{sn}(i u_q \mathcal{K}'(k) | k)$, ${\tt cn}_q = \text{cn}(i u_q \mathcal{K}'(k) | k)$, ${\tt dn}_q = \text{dn}(i u_q \mathcal{K}'(k) | k)$.}
+      ${\tt sn}_q$ $\gets$ $i \left[ \overline{\tt{sn}}_q / \overline{\tt{cn}}_q \right]$
       \\
-      $\text{dn}_{k}(u_q)$ $\gets$ $\text{dn}_{k^{\prime}}(i u_q) / \text{cn}_{k^{\prime}}(i u_q)$
+      ${\tt dn}_q$ $\gets$ $\left[ \overline{\tt{dn}}_q / \overline{\tt{cn}}_q \right]$
       \\
-      $\text{cn}_{k}(u_q)$ $\gets$ $1 / \text{cn}_{k^{\prime}}(i u_q)$
+      ${\tt cn}_q$ $\gets$ $\left[ 1 / \overline{\tt{cn}}_q \right]$
       \BlankLine
-      \tcp{Quadrature weight $w_q$}
-      $w_q$ $\gets$ $(-2 \lambda_\text{min}^{-1/2})/(\pi Q) \: \mathcal{K'}(k) \: \text{cn}_{k}(u_q) \: \text{dn}_{k}(u_q)$
+      \tcp{Quadrature weight $w_q$ and location $t_q$}
+      $w_q$ $\gets$ $(-2 \lambda_\text{min}^{-1/2})/(\pi Q) \: {\tt K}' \: {\tt cn}_q \: {\tt dn}_q$
       \\
-      $t_q$ $\gets$ $\lambda_\text{min}^{-1} \left( \text{sn}_{k}(u_q) \right)^2$
+      $t_q$ $\gets$ $\lambda_\text{min}^{-1} \left( {\tt sn}_q \right)^2$
     }
     \Return{$w_1, \ldots, w_Q$, $t_1, \ldots, t_Q$}
 \end{algorithm2e}

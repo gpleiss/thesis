@@ -192,7 +192,6 @@ Comparatively, computing gradients of the Cholesky factorization requires invert
 As with BBMM and LOVE, CIQ can take full advantage of GPyTorch's {\tt LazyTensor} construct.
 The algorithm for CIQ (\cref{alg:ciq}) accesses $\bK$ through Lanczos and msMINRES---each of which only requires black-box access to an MVM routine.
 Therefore, CIQ can be implemented for specialty GP models using the efficient {\tt \_matmul} function of {\tt LazyTensor}s.
-
 Moreover, back-propagation via \cref{eqn:ciq_deriv} can be implemented using the {\tt \_deriv} function of LazyTensors.
 Recall that the {\tt \_deriv($ \bA, \bB $)} function computes $\partial \tr{ \bA^\top \bK \bB }/{\partial \br}$, where $\br$ is a representation of $\bK$.
 If we define $\bA$ and $\bB$ as
