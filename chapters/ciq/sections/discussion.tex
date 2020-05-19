@@ -1,37 +1,21 @@
 \section{Discussion}
 
-This chapter extends the MVM-based methods from previous chapters to non-regression tasks (via SVGP) and optimization problems (via BayesOpt with Thompson sampling).
-We have introduced Cauchy Integral Quadrature (CIQ)---a MVM-based method for computing $\trainK^{1/2} \bb$ and $\trainK^{-1/2} \bb$.
+This chapter introduced Cauchy Integral Quadrature (CIQ)---a MVM-based method for computing $\bK^{1/2} \bb$ and $\bK^{-1/2} \bb$.
 In sampling and whitening applications, CIQ can be used as a $\bigo{N^2}$ drop-in replacement for the $\bigo{N^3}$ Cholesky decomposition.
 Its scalability and GPU utilization enable us to use more inducing points with SVGP models and larger candidate sets with BayesOpt acquisition functions.
-In both applications, this increased fidelity results in better performance.
+This increased fidelity leads to better performance.
 
 
 \paragraph{Advantages and disadvantages.}
 One advantage of the Cholesky decomposition is its reusability.
-While the initial cost of computing $\bL \bL^\top = \bK$ is cubic, applying $\bL$ to a vector (either for sampling and whitening) is only quadratic.
-Therefore, its cubic complexity is well amortized if we wish to draw $\bigo{M}$ samples or whiten $\bigo{M}$ vectors.
-Whitening or sampling $\bigo{M}$ vectors with CIQ would incur a $\bigo{M^3}$ cost, eroding its computational benefits.
-
-There are two conditions in which CIQ is clearly advantageous:
-%
-\begin{enumerate*}
-  \item when we wish to apply $\bK^{1/2}$ or $\bK^{-1/2}$ to a limited number of vectors; and
-  \item when $\bK$ is otherwise too large to apply Cholesky.
-\end{enumerate*}
-%
-The first condition is met by both the SVGP and BayesOpt applications.
-During SVGP training the $\bK_{\bZ\bZ}$ changes during every optimization iteration.
-Similarly, during BayesOpt the posterior covariance changes after each Thompson sampling iteration.
-
-
-\paragraph{Using CIQ with structured kernel matrices.}
-Throughout this chapter we only apply CIQ to dense matrices that do not afford $o(N^2)$ MVMs.
-Our results demonstrate that CIQ offers a substantial computational benefit in this setting.
-We suggest that future work should explore applications of the CIQ algorithm that involve sparse or structure matrices.
-A key advantage of MVM methods is their ability to exploit efficient MVM routines in these settings.
-We restrict our experiments to non-structured kernel matrices to be most generally compatible with SVGP and Bayesian optimization.
-However, it is reasonable to expect that CIQ becomes even more computational advantages when, for example, used in conjunction with KISS-GP models.
+As discussed in \cref{sec:ciq_empirical}, the cubic cost of computing $\bL \bL^\top$ is amortized when drawing $\bigo{M}$ samples or whitening $\bigo{M}$ vectors.
+%While the initial cost of computing $\bL \bL^\top = \bK$ is cubic, applying $\bL$ to a vector (either for sampling and whitening) is only quadratic.
+%Therefore, its cubic complexity is well amortized if we wish to draw $\bigo{M}$ samples or whiten $\bigo{M}$ vectors.
+On the other hand, applying CIQ to $\bigo{M}$ vectors would incur a $\bigo{M^3}$ cost, eroding its computational benefits. Thus, CIQ is primarily advantageous
+in either scenarios with a small number of right hand sides or scenarios where $\bK$ is too large to apply Cholesky.
+%\paragraph{Using CIQ with structured kernel matrices.}
+We would also note that CIQ---like all Krylov methods---can take advantage of fast MVMs afforded by structured covariances.
+Though this paper primarily applies CIQ to dense matrices, we suggest that future work explores applications of the CIQ algorithm involving sparse or structured matrices.
 
 
 \paragraph{Scaling beyond $M=10,\!000$ and $T=50,\!000$.}
