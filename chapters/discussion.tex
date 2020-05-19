@@ -24,13 +24,13 @@ Combined, these methods expand what is considered tractable for exact GPs, as de
 \section{Beyond Matrix-Vector Multiplication}
 
 The framework presented in this thesis makes large-scale GP models increasingly practical.
-Standard GP models with relatively simple kernels can be an effective model class for many large datasets (as demonstrated in \cref{sec:largeexact_results}).
+Moreover, standard GP models can be an effective model class for many large datasets (as demonstrated in \cref{sec:largeexact_results}).
 However, larger datasets also allow for more powerful classes of GP models, which opens up many exciting and challenging research problems.
 %These problems go beyond the scope of what is addressed by the MVM methods in this thesis.
 
-High dimensional data is naturally amenable to GP models with highly-parametric kernels \cite{wilson2013gaussian,wilson2016stochastic}, models that use GPs as components of larger pipelines \cite{schulam2015framework,futoma2017learning}, and hierarchical models \cite{wilson2012gaussian,salimbeni2017doubly,jankowiak2020deep}.
+To increase the representational capacity of Gaussian processes, researchers have proposed highly-parametric kernels \cite{wilson2013gaussian,wilson2016stochastic}, using GPs as components of larger pipelines \cite{schulam2015framework,futoma2017learning}, and hierarchical GP models \cite{wilson2012gaussian,salimbeni2017doubly,jankowiak2020deep}.
 %These models are an attractive choice for large-scale modelling: combining the expressively and capacity of techniques like deep learning with the probabilistic capabilities afforded by Gaussian processes.
-Of course, the additional complexity of these approaches may pose training and inference challenges.
+Of course, the additional complexity of these approaches may pose new training and inference challenges.
 Advances in large-scale optimization have mostly targeted the piece-wise linear geometry of ReLU neural networks and may need to be adapted to the geometry of Gaussian processes-based models.
 This is especially true for GP models that use alternative objective functions for learning \cite{sheth2017excess,knoblauch2019generalized,jankowiak2020parametric}.
 Moreover, hierarchical GP models are more computationally intensive than simpler models.
