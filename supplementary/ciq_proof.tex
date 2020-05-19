@@ -1,11 +1,11 @@
 \section{Proof of Theorem~\ref{thm:ciq_convergence}}
 \label{app:ciq_proofs}
 
-To prove the convergence result in \cref{thm:ciq_convergence}, we first prove the following lemmas about msMINRES convergence for positive definite matrices $\bK$ and positive shifts $t$.
+To prove the convergence result in \cref{thm:ciq_convergence}, we first prove the following lemmas.
 
 \begin{lemma}
   Let $\bK \succ 0$ be symmetric positive definite and let shifts $t_1$, $\ldots$, $t_Q > 0$ be real-valued and positive.
-  After $J$ iterations of msMINRES, the shifted solve residuals are bounded by:
+  After $J$ iterations of msMINRES, all shifted solve residuals are bounded by:
   %
   \begin{align*}
     \bigl\Vert (\bK + t_q \bI) \bc_J^{(q)} - \bb \bigr\Vert_2
@@ -21,8 +21,6 @@ To prove the convergence result in \cref{thm:ciq_convergence}, we first prove th
       \sqrt{\kappa(\bK)} + 1
     }\right)^J
     \Vert \bb \Vert_2,
-    \quad
-    q \in [1, Q],
 	\end{align*}
   %
   where $\bb$ is the vector to solve against, $\bc^{(1)}_J$, $\ldots$, $\bc^{(Q)}$ are the msMINRES outputs, and $\kappa(\bK)$ is the condition number of $\bK$.
@@ -74,7 +72,7 @@ To prove the convergence result in \cref{thm:ciq_convergence}, we first prove th
     &= P'_q(\bK + t_q \bI) \bb, \quad P'_q(\cdot) \in \widetilde{\mathcal{P}_J}
     \nonumber
   \end{align}
-  %
+
   where $\widetilde{\mathcal{P}_J}$ is the class of $J$-degree polynomials that additionally satisfy the condition $P'_q(0) = -1$ for some $\xi$.
   Therefore, \cref{eqn:minres_krylov} is equivalent to an optimal polynomial problem:
 	\begin{align}
@@ -137,7 +135,7 @@ To prove the convergence result in \cref{thm:ciq_convergence}, we first prove th
 \end{proof}
 
 \cref{lemma:minres} is a very loose bound, as it doesn't assume anything about the spectrum of $\bK$.
-In practice, we find that smMINRES converges for many covariance matrices with $J \approx 300$, even when the conditioning is on the order of $\kappa(\bK) \approx 10^4$.
+In practice, we find that smMINRES converges for many covariance matrices with $J \approx 100$, even when the conditioning is on the order of $\kappa(\bK) \approx 10^4$.
 This convergence is faster with preconditioning.
 
 
@@ -174,7 +172,7 @@ This convergence is faster with preconditioning.
 \end{lemma}
 
 \begin{proof}
-  Using facts about elliptical integrals and functions we have\cite{yang2019convexity,siegl2016extremal,olver2010nist}:
+  Using facts about elliptical integrals and functions, we have:
   \begin{align}
     \mathcal{K}'(k) < \log(1 + 4 / k) \leq \log( 5 / k) \qquad {\rm for} \qquad k \in [0, 1]
     \tag{From \citep[][Thm. 2]{yang2019convexity}}
@@ -265,26 +263,27 @@ This convergence is faster with preconditioning.
 
 
 
-With these lemmata we are now able to prove our primary CIQ convergence result:
+With these lemmas we are able to prove our primary CIQ convergence result:
 %
 \newtheorem*{ciq_convergence}{Theorem~\ref{thm:ciq_convergence} (Restated)}
 \begin{ciq_convergence}
   Let $\bK$ and $\bb$ be the inputs to CIQ, producing the output $\bv_J \approx \bK^{1/2} \bb$ after $J$ iterations of msMINRES with $Q$ quadrature points.
   The difference between $\bv_J$ and $\bK^{1/2} \bb$ is bounded by:
   %
-  \begin{equation*}
-    \left\Vert \bv_J - \bK^{\frac 1 2} \bb \right\Vert_2
-    \leq
+  \begin{align*}
+    \left\Vert \ba_J - \bK^{\frac 1 2} \bb \right\Vert_2
+    &\leq
     \overbracket{
-      \bigo{\exp\left( -\tfrac  {2 Q \pi^2}{\log \kappa(\bK) + 3} \right)}
+      \bigo{\exp\left( -\frac  {2 Q \pi^2}{\log \kappa(\bK) + 3} \right)}
     }^{\text{Quadrature error}}
-    +
+    \\
+    &\phantom{=} +
     \overbracket{
-      \tfrac{ 2 \log \left( 5 \sqrt{\kappa(\bK)} \right)  \left( Q \lambda_\text{max} \sqrt{\lambda_\text{min}} \right) }{\pi}
-      \left( \tfrac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^{J-1}
+      \frac{ 2 \log \left( 5 \sqrt{\kappa(\bK)} \right)  \left( Q \lambda_\text{max} \sqrt{\lambda_\text{min}} \right) }{\pi}
+      \left( \frac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^{J-1}
       \left\Vert \bb \right\Vert_2.
     }^{\text{msMINRES error}}
-  \end{equation*}
+  \end{align*}
   %
   where $\lambda_\text{max},\lambda_{\text{min}}$ are the max and min eigenvalues of $\bK$, and $\kappa(\bK)$ is the condition number of $\bK$.
 \end{ciq_convergence}
@@ -338,25 +337,24 @@ With these lemmata we are now able to prove our primary CIQ convergence result:
   Plugging in this bound and \cref{lemma:hale} into \cref{eqn:pre_bound} completes the proof.
 \end{proof}
 
-We can also prove this simple corollary:
-%
 \begin{corollary}
   Let $\bK$ and $\bb$ be the inputs to \cref{alg:ciq}, producing the output $\ba_J' \approx \bK^{-1/2} \bb$ after $J$ iterations with $Q$ quadrature points.
   The difference between $\ba_J$ and $\bK^{1/2} \bb$ is bounded by:
   %
-  \begin{equation*}
+  \begin{align*}
     \left\Vert \ba_J' - \bK^{-\frac 1 2} \bb \right\Vert_2
-    \leq
+    &\leq
     \overbracket{
-      \bigo{ \tfrac{1}{\lambda_\text{min}} \exp\left( -\tfrac  {2 Q \pi^2}{\log \kappa(\bK) + 3} \right)}
+      \bigo{\frac{1}{\lambda_\text{min}} \exp\left( -\frac  {2 Q \pi^2}{\log \kappa(\bK) + 3} \right)}
     }^{\text{Quadrature error}}
-    +
+    \\
+    &\phantom{=} +
     \overbracket{
-      \tfrac{ 2 \log \left( 5 \sqrt{\kappa(\bK)} \right)  \left( Q \lambda_\text{max}  \right) }{\pi \sqrt{\lambda_\text{min}}}
-      \left( \tfrac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^{J-1}
+      \frac{ 2 \log \left( 5 \sqrt{\kappa(\bK)} \right)  \left( Q \lambda_\text{max} \right) }{\pi \sqrt{\lambda_\text{min}}}
+      \left( \frac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^{J-1}
       \left\Vert \bb \right\Vert_2.
     }^{\text{msMINRES error}}
-  \end{equation*}
+  \end{align*}
   %
   where $\lambda_\text{max}$ is the maximum eigenvalue of $\bK$, and $\kappa(\bK)$ is the condition number of $\bK$.
   \label{thm:ciq_convergence_inverse}
