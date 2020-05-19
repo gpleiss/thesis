@@ -80,7 +80,7 @@ Combining this with the annulus change of variables results in the following qua
 %
 where we adopt the following notation:
 \begin{itemize}
-  \item $k = \lambda_\text{min} / \lambda_\text{max} = \kappa(\bA^{-1})$;
+  \item $k = \lambda_\text{min} / \lambda_\text{max} = \kappa(\bK^{-1})$;
   \item $\mathcal{K}'(k)$ is the complete elliptic integral of the first kind with respect to the complimentary elliptic modulus $\sqrt{1 - k^2}$;
   \item $u_q = \frac{i}{Q}(q - \frac 1 2) \mathcal{K}'(k)$; and
   \item $\text{sn}_k(\cdot)$, $\text{cn}_k(\cdot)$, and $\text{dn}_k(\cdot)$ are the Jacobi elliptic functions with respect to elliptic modulus $k$.
@@ -92,25 +92,25 @@ The equations for the quadrature weights/locations requires on knowing the extre
 Using the Lanczos algorithm \cite{lanczos1950iteration}---which is a Krylov subspace method---we can obtain accurate estimates of these extreme eigenvalues through $\approx 10$ matrix-vector multiplies with $\bK$.
 
 \paragraph{The Lanczos algorithm}
-is a method for computing a partial tridiagonalization of a symmetric matrix $\bA$.
-Given an initial vector $\bb$, the algorithm iteratively factorizes $\bA$ as:
+is a method for computing a partial tridiagonalization of a symmetric matrix $\bK$.
+Given an initial vector $\bb$, the algorithm iteratively factorizes $\bK$ as:
 \[
-  \bA \bQ_J = \bQ_J \bT_J + \br_J \be_J^\top
+  \bK \bQ_J = \bQ_J \bT_J + \br_J \be_J^\top
 \]
 where $\be_J$ is a unit vector, and
 %
 \begin{itemize}
-  \item $\bQ_J \in \reals^{N \times J}$ is an orthonormal basis of the $J^\text{th}$ Krylov subspace $\mathcal{K}(\bA, \bb)$,
+  \item $\bQ_J \in \reals^{N \times J}$ is an orthonormal basis of the $J^\text{th}$ Krylov subspace $\mathcal{K}(\bK, \bb)$,
 	\item $\bT_J \in \reals^{J \times J}$ is a symmetric tridiagonal matrix, and
 	\item $\br_J \in \reals^J$ is a residual term.
 \end{itemize}
 %
 At a high level, the Lanczos iterations first form the $J^\text{th}$ Krylov subspace and then perform Gram Schmidt orthogonalization:
 \[
-  \text{span} \{ \bq^{(1)}, \:\: \ldots, \:\: \bq^{(J)} \} = \mathcal{K}(\bA, \bb) = \text{span} \{ \bb, \:\: \bA\bb, \:\: \bA^2\bb, \:\: \ldots, \:\: \bA^{J-1} \bb \}.
+  \text{span} \{ \bq^{(1)}, \:\: \ldots, \:\: \bq^{(J)} \} = \mathcal{K}(\bK, \bb) = \text{span} \{ \bb, \:\: \bK\bb, \:\: \bK^2\bb, \:\: \ldots, \:\: \bK^{J-1} \bb \}.
 \]
 The orthogonal basis vectors are collected into $\bQ$ and the orthogonalization coefficients are collected into $\bT$.
-Due to the symmetry of $\bA$, each vector $\bq^{(j)}$ only has to be orthogonalized against the two previous basis vectors $\bq^{(j-1)}$, $\bq^{(j-2)}$---which results in the tridiagonal structure of $\bT$.
+Due to the symmetry of $\bK$, each vector $\bq^{(j)}$ only has to be orthogonalized against the two previous basis vectors $\bq^{(j-1)}$, $\bq^{(j-2)}$---which results in the tridiagonal structure of $\bT$.
 
 \paragraph{Estimating Extreme Eigenvalues from Lanczos.}
 To estimate $\lambda_\text{min}$ and $\lambda_\text{max}$ from Lanczos, we perform an eigendecomposition of $\bT_J$.
@@ -131,21 +131,21 @@ All computations involving elliptic integrals can be readily computed using rout
 To prove the convergence result in \cref{thm:ciq_convergence}, we first prove the following lemma about msMINRES convergence.
 
 \begin{lemma}
-  Let $c^{(1)}_J$, $\ldots$, $c^{(Q)}$ be the outputs after $J$ iterations of msMINRES with input $\bA$, $\bb$, and shifts $t_1$, $\ldots$, $t_Q$.
+  Let $c^{(1)}_J$, $\ldots$, $c^{(Q)}$ be the outputs after $J$ iterations of msMINRES with input $\bK$, $\bb$, and shifts $t_1$, $\ldots$, $t_Q$.
   The residuals of the solves are bounded by
   %
   \begin{align*}
-    \bigl\Vert (\bA - t_q \bI) \bc_J^{(q)} - \bb \bigr\Vert_2
+    \bigl\Vert (\bK - t_q \bI) \bc_J^{(q)} - \bb \bigr\Vert_2
     &\leq 2 \left( \frac{
-      \sqrt{\kappa(\bA)} - 1
+      \sqrt{\kappa(\bK)} - 1
     }{
-      \sqrt{\kappa(\bA)} + 1
+      \sqrt{\kappa(\bK)} + 1
     }\right)^J
     \Vert \bb \Vert_2,
     q \in [1, Q],
 	\end{align*}
   %
-  where $\kappa(\bA)$ is the condition number of $\bA$.
+  where $\kappa(\bK)$ is the condition number of $\bK$.
   \label{lemma:minres}
 \end{lemma}
 %
@@ -160,8 +160,8 @@ To prove the convergence result in \cref{thm:ciq_convergence}, we first prove th
   %
 	\begin{align}
     \bc^{(q)}_J
-    = \argmin_{\bc^{(q)} \in \mathcal{K}_J(\bA, \bb)} \Bigl[
-      \bigl\Vert (\bA - t_q \bI) \bc^{(q)} - \bb \bigr\Vert_2
+    = \argmin_{\bc^{(q)} \in \mathcal{K}_J(\bK, \bb)} \Bigl[
+      \bigl\Vert (\bK - t_q \bI) \bc^{(q)} - \bb \bigr\Vert_2
     \Bigr],
     \quad
     q \in [1, Q],
@@ -169,43 +169,43 @@ To prove the convergence result in \cref{thm:ciq_convergence}, we first prove th
 	\end{align}
   %
   where we assume $\bc_0^{(q)} = \bzero$ for simplicity.
-  Since the Krylov subspace $\mathcal{K}^{(j)} (\bA, \bb)$ contains powers of $\bA$ applied to the vector $\bb$, we can rewrite
+  Since the Krylov subspace $\mathcal{K}^{(j)} (\bK, \bb)$ contains powers of $\bK$ applied to the vector $\bb$, we can rewrite
   %
-  $(\bA - t_q \bI) \bc^{(q)} - \bb$
-  as a polynomial of $\bA$ applied to $\bb$:
-  \[ (\bA - t_q \bI) \bc^{(q)} - \bb = \sum_{j=0}^J \alpha_j^{(q)} \bA^j \bb, \quad \alpha_j \in \reals \]
+  $(\bK - t_q \bI) \bc^{(q)} - \bb$
+  as a polynomial of $\bK$ applied to $\bb$:
+  \[ (\bK - t_q \bI) \bc^{(q)} - \bb = \sum_{j=0}^J \alpha_j^{(q)} \bK^j \bb, \quad \alpha_j \in \reals \]
   for some coefficients $\alpha_0$, $\ldots$, $\alpha_J$.
   Therefore, \cref{eqn:minres_krylov} can be reframed as an optimal polynomial problem:
   %
 	\begin{align*}
-    %\min_{\bc^{(q)} \in \mathcal{K}_J(\bA, \bb)} \Bigl[
-      %\bigl\Vert (\bA - t_q \bI) \bc^{(q)} - \bb \bigr\Vert_2
+    %\min_{\bc^{(q)} \in \mathcal{K}_J(\bK, \bb)} \Bigl[
+      %\bigl\Vert (\bK - t_q \bI) \bc^{(q)} - \bb \bigr\Vert_2
     %\Bigr]
-    \bigl\Vert (\bA - t_q \bI) \bc_J^{(q)} - \bb \bigr\Vert_2
+    \bigl\Vert (\bK - t_q \bI) \bc_J^{(q)} - \bb \bigr\Vert_2
     &= \min_{P_q \in \mathcal{P}_J} \Bigl[
-      \Vert P_q(\bA) \bb \Vert_2
+      \Vert P_q(\bK) \bb \Vert_2
     \Bigr],
     \quad
     q \in [1, Q]
     \\
     &\leq \min_{P_q \in \mathcal{P}_J} \Bigl[
-      \Vert P_q(\bA) \Vert_2
+      \Vert P_q(\bK) \Vert_2
     \Bigr] \Vert \bb \Vert_2
     \\
     &= \min_{P_q \in \mathcal{P}_J} \Bigl[
-      \sigma^{(\max)}_{P_q(\bA)}
+      \sigma^{(\max)}_{P_q(\bK)}
     \Bigr] \Vert \bb \Vert_2,
   \end{align*}
   where $\mathcal{P}_J$ is the class of $J$-degree polynomials such that $P(0) = 1$ for any $P \in \mathcal{P}_J$,
-  and $\sigma^{(\max)}_{P_q(\bA)}$ is the maximum singular value of the matrix $P_q(\bA)$.
-  Since $\bA$ is symmetric, we have that $\sigma^{(\max)}_{P_q(\bA)}$ must be equal to $P_q(\sigma^{(i)}_{\bA})$, where $\sigma^{(i)}_{\bA}$ is a singular value of $\bA$.
+  and $\sigma^{(\max)}_{P_q(\bK)}$ is the maximum singular value of the matrix $P_q(\bK)$.
+  Since $\bK$ is symmetric, we have that $\sigma^{(\max)}_{P_q(\bK)}$ must be equal to $P_q(\sigma^{(i)}_{\bK})$, where $\sigma^{(i)}_{\bK}$ is a singular value of $\bK$.
   Therefore,
   %
   \begin{align}
-    \bigl\Vert (\bA - t_q \bI) \bc_J^{(q)} - \bb \bigr\Vert_2
+    \bigl\Vert (\bK - t_q \bI) \bc_J^{(q)} - \bb \bigr\Vert_2
     &\leq \min_{P_q \in \mathcal{P}_J} \Bigl[
       \max_{i}
-      \left\vert P_q(\sigma^{(i)}_\bA) \right\vert
+      \left\vert P_q(\sigma^{(i)}_\bK) \right\vert
     \Bigr] \Vert \bb \Vert_2,
     \quad
     q \in [1, Q].
@@ -213,26 +213,26 @@ To prove the convergence result in \cref{thm:ciq_convergence}, we first prove th
 	\end{align}
   %
   We can replace the minimum in \cref{eqn:bound} with any $J^\text{th}$ degree polynomial $P(\cdot)$ that satisfies $P(0) = 1$.
-  One natural choice is the Chebychev polynomial $T_J(\cdot)$ where the input is shifted/scaled so that $\vert T_j(\cdot) \vert \leq 1$ on the domain $\sigma^{(\min)}_{\bA} \leq (\cdot) \leq \sigma^{(\max)}_{\bA}$.
+  One natural choice is the Chebychev polynomial $T_J(\cdot)$ where the input is shifted/scaled so that $\vert T_j(\cdot) \vert \leq 1$ on the domain $\sigma^{(\min)}_{\bK} \leq (\cdot) \leq \sigma^{(\max)}_{\bK}$.
   For this choice of polynomial, we have that
   %
   \begin{equation}
     T_J( \gamma )
     \leq 2 \left( \frac{
-      \sqrt{\kappa(\bA)} - 1
+      \sqrt{\kappa(\bK)} - 1
     }{
-      \sqrt{\kappa(\bA)} + 1
+      \sqrt{\kappa(\bK)} + 1
     }\right)^J,
     \quad
-    \gamma \in [\sigma^{(\min)}_{\bA}, \sigma^{(\max)}_{\bA}]
+    \gamma \in [\sigma^{(\min)}_{\bK}, \sigma^{(\max)}_{\bK}]
     \label{eqn:chebychev}
   \end{equation}
   (See \citep[e.g.][Sec. 9.2]{shewchuk1994introduction} or \citep[e.g.][Thm. 38.5]{trefethen1997numerical} for a detailed derivation.)
   Plugging \cref{eqn:chebychev} into \cref{eqn:bound} as an upper bound on $P_q(\cdot)$ completes the proof.
 \end{proof}
 
-\cref{lemma:minres} is a very loose bound, as it doesn't assume anything about the spectrum of $\bA$.
-In practice, we find that smMINRES converges typically in $J \approx 100$ for kernel matrices, even when the conditioning is on the order of $\kappa(\bA) \approx 10^4$.
+\cref{lemma:minres} is a very loose bound, as it doesn't assume anything about the spectrum of $\bK$.
+In practice, we find that smMINRES converges typically in $J \approx 100$ for kernel matrices, even when the conditioning is on the order of $\kappa(\bK) \approx 10^4$.
 This convergence is faster with preconditioning.
 With this lemma we are now able to prove our primary CIQ convergence result:
 %

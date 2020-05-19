@@ -14,7 +14,7 @@
   \SetCommentSty{graycomment}
   \SetKw{Break}{break}
   \SetKwData{tol}{tolerance}
-  \SetKwFunction{mmmkxx}{mmm\_$\bA$}
+  \SetKwFunction{mmmkxx}{mmm\_$\bK$}
   \SetKwFunction{mmmprec}{$\trainP^{-1}$}
   \SetKwFunction{size}{size}
   \SetKwFunction{diag}{diag}
@@ -24,10 +24,10 @@
     Terms in {\color{\colornew} \colornew} compute the Lanczos tridiagonalization matrices.
   }
   \label{alg:mod_pcg}
-    \Input{{\color{\colormat} \mmmkxx{$\cdot$}} -- function for {\color{\colormat} matrix-matrix multiplication} with matrix $\bA$}
+    \Input{{\color{\colormat} \mmmkxx{$\cdot$}} -- function for {\color{\colormat} matrix-matrix multiplication} with matrix $\bK$}
     \NextInput{{\color{\colormat} $\bB$ -- $N \times (T + 1)$ matrix} to solve against}
     \NextInput{{\color{\colormat} \mmmprec{$\cdot$}} -- func. for preconditioner}
-    \Output{{\color{\colormat} $\bC = \bA^{-1} \bB$}, {\color{\colornew} $\bT_{1}$, $\ldots$, $\bT_{T}$} (tridiag. matrices for $\bb^{(2)}$, $\ldots$, $\bb^{(T+1)}$).}
+    \Output{{\color{\colormat} $\bC = \bK^{-1} \bB$}, {\color{\colornew} $\bT_{1}$, $\ldots$, $\bT_{T}$} (tridiag. matrices for $\bb^{(2)}$, $\ldots$, $\bb^{(T+1)}$).}
     \BlankLine
     {\color{\colormat} $\bC_0$ $\gets$ $\mathbf 0$}
     \tcp{Current solutions}

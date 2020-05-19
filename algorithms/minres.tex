@@ -11,19 +11,19 @@
   \SetCommentSty{graycomment}
   \SetKw{Break}{break}
   \SetKwData{tol}{tolerance}
-  \SetKwFunction{mvmkxx}{mvm\_$\bA$}
+  \SetKwFunction{mvmkxx}{mvm\_$\bK$}
   \SetKwFunction{mvmprec}{$\bP^{-1}$}
   \SetKwFunction{size}{size}
-  \caption[(Preconditioned) MINRES.]{
-    (Preconditioned) MINRES.
+  \caption[Method of Minimum Residuals (MINRES).]{
+    Method of Minimum Residuals (MINRES).
   }
   \label{alg:minres}
-    \Input{\mvmkxx{$\cdot$} -- function for MVM with matrix $\bA$}
+    \Input{\mvmkxx{$\cdot$} -- function for MVM with matrix $\bK$}
     \NextInput{$\bb$ -- vector to solve against}
-    \NextInput{\mvmprec{$\cdot$} -- preconditioner (optional -- defaults to {\tt identity}$(\cdot)$)}
-    \Output{$\bc = \bA^{-1} \bb$.}
+    %\NextInput{\mvmprec{$\cdot$} -- preconditioner (optional -- defaults to {\tt identity}$(\cdot)$)}
+    \Output{$\bc = \bK^{-1} \bb$.}
     \BlankLine
-    $\bb$ $\gets$ \mvmprec{$\bb$} \tcp{Precondition solve vector.}
+    %$\bb$ $\gets$ \mvmprec{$\bb$} \tcp{Precondition solve vector.}
     $\bc_{1}$ $\gets$ $\bzero$ \tcp{Current solution.}
     $\bd_{1}, \bd_{0}$ $\gets$ $\bzero$ \tcp{Current \& prev. ``search'' direction.}
     $\varphi_{2}$ $\gets$ $\Vert \bb \Vert_2$ \tcp{Current ``step'' size.}

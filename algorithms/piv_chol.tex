@@ -1,4 +1,4 @@
-\begin{algorithm2e}[t!]
+\begin{algorithm2e}[h!]
   \SetAlgoLined
   \SetKwInOut{Input}{Input}
   \SetKwInOut{Output}{Output}
@@ -11,11 +11,11 @@
   \SetCommentSty{graycomment}
   \SetKw{Break}{break}
   \SetKwData{tol}{tolerance}
-  \SetKwFunction{row}{row\_$\bA$}
+  \SetKwFunction{row}{row\_$\bK$}
   \caption{Partial (Rank-$R$) Pivoted Cholesky Decomposition.}
   \label{alg:piv_chol}
-    \Input{$\bd_\bA$ -- diagonal of $\bA$.}
-    \NextInput{\row{$i$} -- function for computing the $i^\text{th}$ of matrix $\bA$.}
+    \Input{$\bd_\bK$ -- diagonal of $\bK$.}
+    \NextInput{\row{$i$} -- function for computing the $i^\text{th}$ of matrix $\bK$.}
     \Output{$\bar\bL_\text{R}$ -- the partial (rank-$R$) pivoted Cholesky factor.}
     \BlankLine
     $\bpi$ $\gets$ $[1, \:\: 2, \:\: \ldots, \:\: R]$
@@ -23,8 +23,8 @@
 	  $\bc_0$ $\gets$ $\mathbf 0$
     \BlankLine
     \For{$i \gets 1$ \KwTo $R$}{
-      \tcp{Find index of largest entry in permutted $\bd_\bA$.}
-      $m$ $\gets$ $\argmax_{j \in [i, N]} \bar \bd_\bA^{\left( \pi(j) \right)}$
+      \tcp{Find index of largest entry in permutted $\bd_\bK$.}
+      $m$ $\gets$ $\argmax_{j \in [i, N]} \bar \bd_\bK^{\left( \pi(j) \right)}$
       \\
       \tcp{Update permutation.}
       $\pi^{(i)}, \pi^{(m)}$ $\gets$ $\pi^{(m)}, \pi^{(i)}$
@@ -35,7 +35,7 @@
       \tcp{Cholesky iteration (with permuted indices).}
       $\bl^{(i)}$ $\gets$ $\bzero$
       \\
-      $\ell^{\left(i, \pi(i) \right)}$ $\gets$ $\sqrt{ \bd_\bA^{\left( \pi(i) \right)} }$
+      $\ell^{\left(i, \pi(i) \right)}$ $\gets$ $\sqrt{ \bd_\bK^{\left( \pi(i) \right)} }$
       \\
       \tcp{This inner for-loop can be vectorized for paralleism.}
       \For{$j \gets (i + 1)$ \KwTo $N$}{

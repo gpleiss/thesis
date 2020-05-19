@@ -1,6 +1,6 @@
 \section{The Cholesky Factorization and its Pivoted Variant}
 
-The Cholesky factorization decomposes a positive definite matrix $\bA$ as $\bL \bL^{\top}$, where $\bL$ is lower triangular.
+The Cholesky factorization decomposes a positive definite matrix $\bK$ as $\bL \bL^{\top}$, where $\bL$ is lower triangular.
 It is typically used to compute matrix solves and determinants of positive definite matrices.
 Historically, it has been the primary numerical tool for GP training and predictions.
 
@@ -14,23 +14,22 @@ The Cholesky decomposition is defined by a recursive algorithm:
 %
 \begin{equation}
  \label{eqn:cholesky_full}
- \begin{bmatrix} \bA^{(11)} & \bA^{(12)} \\ \bA^{(12)^\top} & \bA^{(22)}\end{bmatrix}
+ \begin{bmatrix} \bK^{(11)} & \bK^{(12)} \\ \bK^{(12)^\top} & \bK^{(22)}\end{bmatrix}
  =
- \begin{bmatrix} \bL^{(11)} & \bzero \\ \bL^{(11)^{-1}} \bA^{(12)} & \bL^{(22)}\end{bmatrix}
- \begin{bmatrix} \bL^{(11)^\top} & \bA^{(12)^\top} \bL^{(11)^{-\top}} \\ \bzero & \bL^{(22)^\top}\end{bmatrix}
+ \begin{bmatrix} \bL^{(11)} & \bzero \\ \bL^{(11)^{-1}} \bK^{(12)} & \bL^{(22)}\end{bmatrix}
+ \begin{bmatrix} \bL^{(11)^\top} & \bK^{(12)^\top} \bL^{(11)^{-\top}} \\ \bzero & \bL^{(22)^\top}\end{bmatrix}
 \end{equation}
 %
-%Note that that $\bA^{(11)} = \bL^{(11)} \bL^{(11)^\top}$, $\bA^{(12)} = \bL^{(11)} \bL^{(21)^\top}$, and $\bA^{(22)} = \bL^{(21)} \bL^{(21)^\top} + \bL^{(22)} \bL^{(22)^\top}$.
-where $\bL^{(11)}$ is the Cholesky factor of $\bA^{(11)}$ and $\bL^{(22)}$ is the Cholesky factor of the Schur compliment $\bS_2 = \left( \bA^{(22)} - \bA^{(12)^\top} \bL^{(11)^{-\top}} \bL^{(11)^{-1}} \bA^{(12)} \right)$.
-The base case is for $1 \times 1$ matrices: $\text{Chol}(A) = \sqrt{A}$.
+%Note that that $\bK^{(11)} = \bL^{(11)} \bL^{(11)^\top}$, $\bK^{(12)} = \bL^{(11)} \bL^{(21)^\top}$, and $\bK^{(22)} = \bL^{(21)} \bL^{(21)^\top} + \bL^{(22)} \bL^{(22)^\top}$.
+where $\bL^{(11)}$ is the Cholesky factor of $\bK^{(11)}$ and $\bL^{(22)}$ is the Cholesky factor of the Schur compliment $\bS_2 = \left( \bK^{(22)} - \bK^{(12)^\top} \bL^{(11)^{-\top}} \bL^{(11)^{-1}} \bK^{(12)} \right)$.
+The base case is for $1 \times 1$ matrices: $\text{Chol}(K) = \sqrt{K}$.
 
 \paragraph{Runtime and Space.}
 The Cholesky algorithm is inherently sequential, requiring $N$ steps to decompose an $N \times N$ matrix.
 Each step $i \in [1, N]$ computes the Schur compliment of a $(N-i) \times (N-i)$ matrix, which takes $\bigo{i^2}$ time (see \citep[][Sec. 4.2]{golub2012matrix} for a complete derivation).
 Thus in total the factorization takes $\bigo{M^3}$ time.
 Storing the Cholesky factor requires $\bigo{N^2}$ space.
-
-It is worth noting that in general these computation and storage requirements cannot be improved upon even when $\bA$ has exploitable structure (e.g. Toeplitz).
+It is worth noting that in general these computation and storage requirements cannot be improved upon even when $\bK$ has exploitable structure (e.g. Toeplitz).
 Moreover, this sequential nature of the recursive algorithm prevents it from fully exploiting the full possibilities of GPU acceleration.
 
 
@@ -39,16 +38,15 @@ Moreover, this sequential nature of the recursive algorithm prevents it from ful
 The Cholesky factorization is considered a {\bf direct numerical method}.
 In other words, the recursion defined by \cref{eqn:cholesky_full} is run to completion before computing any solves/determinants.
 Any computations performed with the Cholesky factor $\bL$ are considered to be ``exact'' up to numerical round-off errors.
-
-However, we can also view the Cholesky decomposition as an {\bf iterative method}, where each iteration produces a slightly higher rank approximation to the matrix $\bA$.
-In particular, if  $ \bA = \left[ A^{(11)}, \:\: \bb^{\top}; \:\:\:\: \bb, \:\: \bA^{(22)} \right], $
-then $\bL^{(11)} = \sqrt{A^{(11)}}$, $\bL^{(21)} = \left( 1 / \sqrt{A^{(11)}} \right) \bb$, and the Schur complement is $\bS_2 = \bA^{(22)} - \left(1/ A^{(11)} \right) \bb \bb^{\top}$.
+Alternatively, we can view the Cholesky decomposition as an {\bf iterative method}, where each iteration produces a higher rank approximation to the matrix $\bK$.
+In particular, if  $ \bK = \left[ K^{(11)}, \:\: \bb^{\top}; \:\:\:\: \bb, \:\: \bK^{(22)} \right], $
+then $\bL^{(11)} = \sqrt{K^{(11)}}$, $\bL^{(21)} = \left( 1 / \sqrt{K^{(11)}} \right) \bb$, and the Schur complement is $\bS_2 = \bK^{(22)} - \left(1/ K^{(11)} \right) \bb \bb^{\top}$.
 Therefore:
 %
 \begin{align}
-  \bA &=
-    \overbracket{\begin{bmatrix} \sqrt{ A^{(11)} } \\ \frac{1}{\sqrt{A^{(11)}}} \bb \end{bmatrix}}^{\widehat \bl_1}
-    \overbracket{\begin{bmatrix} \sqrt{ A^{(11)} } & \frac{1}{\sqrt{A^{(11)}}} \bb^\top \end{bmatrix}}^{\widehat \bl_1^\top}
+  \bK &=
+    \overbracket{\begin{bmatrix} \sqrt{ K^{(11)} } \\ \frac{1}{\sqrt{K^{(11)}}} \bb \end{bmatrix}}^{\widehat \bl_1}
+    \overbracket{\begin{bmatrix} \sqrt{ K^{(11)} } & \frac{1}{\sqrt{K^{(11)}}} \bb^\top \end{bmatrix}}^{\widehat \bl_1^\top}
     +
     \begin{bmatrix} 0 & 0 \\ 0 & \bS_2 \end{bmatrix}
   \nonumber \\
@@ -56,28 +54,27 @@ Therefore:
   \label{eqn:chol_incomplete}.
 \end{align}
 %
-Running this same procedure on $\bS_2$ gives us $\bS_2 = \widehat \bl_{2} \widehat \bl_{2}^{\top} + \left[0, \:\: 0; \:\:\:\: 0, \:\: \bS_3 \right]$.
-Therefore:
+Running this same procedure on $\bS_2$ gives us $\bS_2 = \widehat \bl_{2} \widehat \bl_{2}^{\top} + \left[0, \:\: 0; \:\:\:\: 0, \:\: \bS_3 \right]$:
 %
 \begin{align*}
-  \bA  = \bl_{1}\bl_{1}^{\top} + \begin{bmatrix} 0 \\ \widehat \bl_{2} \end{bmatrix} \begin{bmatrix} 0 & \widehat \bl_2^\top \end{bmatrix} +
+  \bK  = \bl_{1}\bl_{1}^{\top} + \begin{bmatrix} 0 \\ \widehat \bl_{2} \end{bmatrix} \begin{bmatrix} 0 & \widehat \bl_2^\top \end{bmatrix} +
   \begin{bmatrix} 0 & 0 \\ 0 & \bS_3 \end{bmatrix}
 \end{align*}
 %
-After $R$ recursive iterations of the Cholesky algorithm, defining $\bl_{i} = \left[ \bzero; \:\: \widehat \bl_i \right]$ we obtain
+After $R$ recursive iterations, defining $\bl_{i} = \left[ \bzero; \:\: \widehat \bl_i \right]$ we obtain
 %
 \begin{align}
-  \bA  = \sum_{i=1}^{R} \widehat {\bl}_{i} \widehat {\bl}_{i}^{\top} + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix},
+  \bK  = \sum_{i=1}^{R} \widehat {\bl}_{i} \widehat {\bl}_{i}^{\top} + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix},
   \label{eqn:chol_low_rank}
 \end{align}
 %
 where each $\bl_i$ has exactly $i-1$ leading zero ($\bl_i = [0, \:\: \ldots, \:\: 0, \:\: \widehat \bl_i]$).
-The $\sum_{i=1}^R \bl_i \bl_i^\top$ outer product matrix gives us a low-rank approximation to $\bA$, with
+The $\sum_{i=1}^R \bl_i \bl_i^\top$ outer product matrix gives us a low-rank approximation to $\bK$, with
 \begin{equation}
-  \left\Vert \bA - \sum_{i=1}^{R}{\bl}_{i}{\bl}_{i}^{\top} \right\Vert_{2} = \left\Vert \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix} \right\Vert_2.
+  \left\Vert \bK - \sum_{i=1}^{R}{\bl}_{i}{\bl}_{i}^{\top} \right\Vert_{2} = \left\Vert \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix} \right\Vert_2.
   \label{eqn:chol_low_rank}
 \end{equation}
-After all $N$ iterations the sum of the outer products is exact: $\bA = \sum_{i=1}^N \bl_i \bl_i^\top$.
+After all $N$ iterations the sum of the outer products is exact: $\bK = \sum_{i=1}^N \bl_i \bl_i^\top$.
 
 
 \subsection{The Partial Pivoted Cholesky Factorization}
@@ -85,46 +82,46 @@ After all $N$ iterations the sum of the outer products is exact: $\bA = \sum_{i=
 
 To improve the low rank approximation in \cref{eqn:chol_low_rank}, one natural goal is to minimize the norm of the Schur complement $\Vert \bS_{i} \Vert$ at each iteration.
 \citet{harbrecht2012low} suggest a greedy approach, permuting the rows and columns of $\bS_{i}$ so that the upper-leftmost entry in $\bS_{i}$ is the maximum diagonal element.
-In the first step (where $\bS_1 = \bA$), this amounts to replacing $\bA$ with $\bPi_{1} \bA \bPi_{1}^\top$, where $\bPi_{1}$ is a permutation matrix that swaps the first row/column with whichever row/column corresponds to the maximum diagonal element.
+In the first step (where $\bS_1 = \bK$), this amounts to replacing $\bK$ with $\bPi_{1} \bK \bPi_{1}^\top$, where $\bPi_{1}$ is a permutation matrix that swaps the first row/column with whichever row/column corresponds to the maximum diagonal element.
 Thus:
 %
 \begin{align*}
-  \bPi_{1} \bA \bPi_{1}^\top = \bl_{1}\bl_{1}^{\top} + \begin{bmatrix} 0 & 0 \\ 0 & \bar \bS_2 \end{bmatrix}.
+  \bPi_{1} \bK \bPi_{1}^\top = \bl_{1}\bl_{1}^{\top} + \begin{bmatrix} 0 & 0 \\ 0 & \bar \bS_2 \end{bmatrix}.
 \end{align*}
 %
 To proceed, one can apply the same pivoting rule to $\bS_2$ to achieve $\bPi_{2}$:
 %
 \begin{align*}
-  \left( \bPi_{2} \bPi_{1} \right) \bA \left( \bPi_{1}^\top \bPi_{2}^\top \right) = \bPi_{2} \bl_{1}\bl_{1}^{\top} \bPi_2^\top
+  \left( \bPi_{2} \bPi_{1} \right) \bK \left( \bPi_{1}^\top \bPi_{2}^\top \right) = \bPi_{2} \bl_{1}\bl_{1}^{\top} \bPi_2^\top
   + \bl_2 \bl_2^\top + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bar \bS_3 \end{bmatrix}.
 \end{align*}
 %
 In general, after $R$ steps, we obtain:
 \begin{align}
-  \bA = \sum_{i=1}^{R} \left( \prod_{j=1}^i \bPi_j \right) {\bl}_{i} {\bl}_{i} \left( \prod_{j=1}^i \bPi_{i-j+1}^\top \right)
+  \bK = \sum_{i=1}^{R} \left( \prod_{j=1}^i \bPi_j \right) {\bl}_{i} {\bl}_{i} \left( \prod_{j=1}^i \bPi_{i-j+1}^\top \right)
   + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bar \bS_{R+1} \end{bmatrix}.
 \end{align}
-Collecting the $\left( \prod_{j=1}^i \bPi_j \right) {\bl}_{i}$ vectors in to a matrix $\bar\bL_R$ gives us a rank-$R$ approximation of $\bA$:
+Collecting the $\left( \prod_{j=1}^i \bPi_j \right) {\bl}_{i}$ vectors in to a matrix $\bar\bL_R$ gives us a rank-$R$ approximation of $\bK$:
 %
 \begin{equation}
-  \bA = \bar\bL_{R} \bar\bL_{R}^{\top} + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bar \bS_{R+1} \end{bmatrix} \approx \bar\bL_{R} \bar\bL_{R}^{\top}.
+  \bK = \bar\bL_{R} \bar\bL_{R}^{\top} + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bar \bS_{R+1} \end{bmatrix} \approx \bar\bL_{R} \bar\bL_{R}^{\top}.
   \label{eqn:chol_error}
 \end{equation}
 %
-$\bar\bL_{R} \in \reals^{N \times R}$ is referred to as the {\bf partial pivoted Cholesky factor} of $\bA$.
+$\bar\bL_{R} \in \reals^{N \times R}$ is referred to as the {\bf partial pivoted Cholesky factor} of $\bK$.
 
 
 \paragraph{Properties.}
-Unlike the standard Cholesky algorithm, it is more common to run $R \ll N$ iterations of the pivoted variant---producing a low-rank approximation of $\bA$ instead of a complete factorization \cite{harbrecht2012low}.
+Unlike the standard Cholesky algorithm, it is more common to run $R \ll N$ iterations of the pivoted variant---producing a low-rank approximation of $\bK$ instead of a complete factorization \cite{harbrecht2012low}.
 For matrices with rapidly decaying spectra, the partial pivoted Cholesky factor is a remarkably effective approximation.
 \citet{harbrecht2012low} prove an \emph{exponential} convergence guarantee for matrices with exponentially-decaying eigenvalues:
 %
 \begin{theorem}[Partial Pivoted Cholesky Convergence \citep{harbrecht2012low}]
 \label{thm:harbrecht}
-  If the first $R$ eigenvalues $\lambda_1$, $\ldots$, $\lambda_R$ of a positive-definite $\bA \in \reals^{N \times N}$ satisfy $\left( 4^{i}\lambda_{i} \right) \leq \bigo{e^{-Bi}}$ for some $B>0$,
+  If the first $R$ eigenvalues $\lambda_1$, $\ldots$, $\lambda_R$ of a positive-definite $\bK \in \reals^{N \times N}$ satisfy $\left( 4^{i}\lambda_{i} \right) \leq \bigo{e^{-Bi}}$ for some $B>0$,
   then the rank-$R$ pivoted Cholesky decomposition $\bar\bL_{R} \bar\bL_R^\top$ gives
   \[
-    \tr{\bA -  \bar\bL_R \bar\bL_R^\top} \leq \bigo{N e^{-BR}}.
+    \tr{\bK -  \bar\bL_R \bar\bL_R^\top} \leq \bigo{N e^{-BR}}.
   \]
 \end{theorem}
 
@@ -139,11 +136,12 @@ The pivoted Cholesky algorithm adds two additional steps to each Cholesky iterat
 %
 Each addition is $\bigo{N}$ extra time (see \citep[][Thm. 1]{harbrecht2012low}).
 Therefore, the rank-$R$ pivoted Cholesky factor is not much different than $R$ iterations of Cholesky, requiring $\bigo{N R^2}$ time and $\bigo{NR}$ space.
-
-Importantly, the pivoted Cholesky algorithm can produce low-rank approximations \emph{without explicitly computing $\bA$}.
-This is useful if $\bA$ is structured or sparse and requires $o(N^2)$ storage.
-All that's required is a routine for computing the diagonal of $\bA$ and an arbitrary row $\ba^{(i)}$.
-When $\bA$ is not explicitly computed, the complexity is $\bigo{R^2 \row{\bA}}$, where $\row{\bA}$ is the time to compute a row and/or a diagonal (see \cref{alg:piv_chol}).
-For most structured/low-rank matrices it will be the case that $\row{\bA} \approx \bigo{N}$.
+Importantly, the pivoted Cholesky algorithm can produce low-rank approximations \emph{without explicitly computing $\bK$}.
+This is useful if $\bK$ is structured or sparse and requires $o(N^2)$ storage.
+All that's required is a routine for computing the diagonal of $\bK$ and an arbitrary row $\ba^{(i)}$.
+When $\bK$ is not explicitly computed, the complexity is $\bigo{R^2 \row{\bK}}$, where $\row{\bK}$ is the time to compute a row and/or a diagonal (see \cref{alg:piv_chol}).
+For most structured/low-rank matrices it will be the case that $\row{\bK} \approx \bigo{N}$.
 
 \input algorithms/piv_chol
+
+\clearpage

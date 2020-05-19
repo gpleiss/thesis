@@ -11,14 +11,14 @@
   \SetCommentSty{graycomment}
   \SetKw{Break}{break}
   \SetKwData{tol}{tolerance}
-  \SetKwFunction{mvmkxx}{mvm\_$\bA$}
+  \SetKwFunction{mvmkxx}{mvm\_$\bK$}
   \SetKwFunction{mvmprec}{$\bP^{-1}$}
   \SetKwFunction{size}{size}
   \caption{Standard conjugate gradients (CG).}
   \label{alg:cg}
-    \Input{\mvmkxx{$\cdot$} -- function for matrix-vector multiplication (MVM) with matrix $\bA$}
+    \Input{\mvmkxx{$\cdot$} -- function for matrix-vector multiplication (MVM) with matrix $\bK$}
     \NextInput{$\bb$ -- vector to solve against}
-    \Output{$\bc = \bA^{-1} \bb$.}
+    \Output{$\bc = \bK^{-1} \bb$.}
     \BlankLine
 	  $\bc_0$ $\gets$ $\mathbf 0$
     \tcp{Current solution}

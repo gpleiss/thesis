@@ -10,11 +10,11 @@
   \newcommand\graycomment[1]{\footnotesize\ttfamily\textcolor{gray}{#1}}
   \SetCommentSty{graycomment}
   \SetKw{Break}{break}
-  \SetKwFunction{mvmkxx}{mvm\_$\bA$}
+  \SetKwFunction{mvmkxx}{mvm\_$\bK$}
   \SetKwFunction{size}{size}
   \caption{Lanczos tridiagonalization.}
   \label{alg:lanczos}
-    \Input{\mvmkxx{} -- function for matrix-vector multiplication (MVM) with matrix $\bA$}
+    \Input{\mvmkxx{} -- function for matrix-vector multiplication (MVM) with matrix $\bK$}
     \NextInput{$\bb$ -- initial (probe) vector}
     \NextInput{$J$ -- number of iterations}
     \Output{$\bQ_J, \bT_J$ -- orthonormal and tridiagonal matrices}

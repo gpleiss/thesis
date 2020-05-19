@@ -11,7 +11,7 @@
   \SetCommentSty{graycomment}
   \SetKw{Break}{break}
   \SetKwData{tol}{tolerance}
-  \SetKwFunction{mvmkxx}{mvm\_$\bA$}
+  \SetKwFunction{mvmkxx}{mvm\_$\bK$}
   \SetKwFunction{size}{size}
   \caption[Multi-shift MINRES (msMINRES)]{
      Multi-shift MINRES (msMINRES).
@@ -19,10 +19,10 @@
      Green {\tt for} loops are parallelizable.
   }
   \label{alg:msminres}
-    \Input{\mvmkxx{$\cdot$} -- function for MVM with matrix $\bA$}
+    \Input{\mvmkxx{$\cdot$} -- function for MVM with matrix $\bK$}
     \NextInput{$\bb$ -- vector to solve against}
     \NextInput{$t_1, \ldots, t_Q$ -- shifts}
-    \Output{$\bc_1 = (\bA + t_1)^{-1} \bb, \ldots, \bc_Q = (\bA + t_Q)^{-1} \bb$.}
+    \Output{$\bc_1 = (\bK + t_1)^{-1} \bb, \ldots, \bc_Q = (\bK + t_Q)^{-1} \bb$.}
     \BlankLine
     $\bq_{1}$ $\gets$ $\bb / \Vert \bb \Vert_2$ \tcp{Current Lanczos vector.}
     $\bv_{1}$ $\gets$ \mvmkxx{ $\bq_0$ } \tcp{Buffer for MVM output.}
