@@ -2,12 +2,12 @@
 \section{Adapting BBMM and LOVE to Large-Scale Exact GPs}
 \label{sec:largeexact_method}
 
-The BBMM and LOVE methods presented in \cref{chapter:bbmm,chapter:love} effectively utilize GPU acceleration and reduce the time complexity of GP training/predictions to $\bigo{N^2}$.
+The BBMM and LOVE methods presented in \cref{chapter:bbmm,chapter:love} effectively utilize GPU acceleration and reduce the time complexity of GPs to $\bigo{N^2}$.
 As we will demonstrate, these advantages make it possible to scale exact GPs to very large datasets---up to two orders of magnitude than what is possible with Cholesky-based training/inference \cite{nguyen2019exact}.
 
-In this section, we make slight modifications to the BBMM and LOVE algorithms for large-scale exact GPs.
-Firstly, we reduce the memory requirements of MVMs to $\bigo{N}$ using partitioned and distributed kernel matrices.
-In addition, we offer practical guidelines to speed up BBMM for large datasets.
+In this section, we make slight modifications to the BBMM and LOVE algorithms for large-scale GPs.
+Firstly, we reduce the MVM memory requirements to $\bigo{N}$ using partitioned and distributed kernel matrices.
+Secondly, we offer practical guidelines to speed up BBMM convergence for large datasets.
 
 
 
@@ -15,18 +15,16 @@ In addition, we offer practical guidelines to speed up BBMM for large datasets.
 \subsection{Reducing Memory Requiremnts to $\mathcal{O}(N)$}
 
 The primary input to the modified batched conjugate gradients (mBCG) algorithm of \cref{sec:bbmm_method} is {\tt mvm\_$\trainK$}, a black-box function that performs MVMs using the kernel matrix $\trainK$.
-Besides the storage cost associated with {\tt mvm\_$\trainK$}, each iteration of mBCG updates four (batches) of vectors: $\bc$ (the current solution), $\br$ (the current error), $\bd$ (the ``search'' direction for the next solution), and $\bz$ (a preconditioned error term).
-(See \cref{alg:mod_pcg}.)
+Each iteration of mBCG updates four (batches) of vectors: $\bc$ (the current solution), $\br$ (the current error), $\bd$ (the ``search'' direction for the next solution), and $\bz$ (a preconditioned error term).
 Storing these vectors requires exactly $4N$ space.
 In addtion, the mBCG algorithm stores the tridiagonal matrices for stochastic Lanczos quadrature, which requires $\bigo{J}$ memory for $J$ iterations of mBCG.
-The quadratic space cost associated with MVM-based exact GPs comes from storing the matrix $\trainK$.
+Therefore, the quadratic space cost associated with MVM-based exact GPs comes from storing the matrix $\trainK$.
 
-Typically, {\tt mvm\_$\trainK$} is implemented by first computing the full $N \times N$ kernel matrix $\trainK$, then computing the matrix-vector product with the full matrix.
+Typically, {\tt mvm\_$\trainK$} is implemented by first computing the full $N \times N$ kernel matrix $\trainK$.
 Although forming $\trainK$ requires $\bigo{N^2}$ memory, the \emph{output} of the MVM $\trainK \bb$ requires only $\bigo{N}$ memory.
-By using a \emph{map-reduce style algorithm} to compute $\trainK \bb$, we can reduce the memory requirement of {\tt mvm\_$\trainK$} to \emph{linear in $N$}.
+By using a \emph{map-reduce style algorithm} for this computation, we can reduce the memory requirement of {\tt mvm\_$\trainK$} to \emph{linear in $N$}.
 
 \paragraph{Partitioned kernel MVMs.}
-To compute $\trainK \bb$ in a map-reduce fashion, we partition the kernel matrix $\trainK$ such that \textit{we only store a constant number of rows at any given time}.
 We first partition the data matrix $\bX \in \reals^{N \times D}$ into $P$ partitions, each of which contains roughly $N/P$ data points:
 %
 \[
@@ -66,24 +64,19 @@ We discard each kernel partition $\widehat \bK_{\bX^{(\ell)}\!\bX}$ once its MVM
 This MVM only allocates new memory to temporarily store the $(N / P) \times N$ kernel matrix partition $\widehat \bK_{\bX^{(\ell)}\!\bX}$.
 The other memory requirements (i.e. storing $\bX$ and $\bb$) are linear in $N$.
 
-This algorithm allows us to reduce memory usage in exchange for sequential but easily parallelizable computations.
+This algorithm allows us to reduce memory usage in exchange for additional yet easily parallelizable computations.
 If $P=1$ then we have the na\"ive $\bigo{N^2}$ memory MVM procedure. As $P \to N$, PCG will only require $\bigo{N}$ memory.
-By keeping a partition in memory only until its component of the MVM has been computed, we can train GPs with an $\bigo{N}$ memory requirement.
 
-After developing our own custom partitioned-MVM approach, we were made aware of the KeOps software package \cite{charlier2020kernel} which computes map-reduced kernel-vector products.
-This library contains a very efficient GPU implementation in which partitioned MVMs can even be faster than their non-partitioned counterparts.
+After developing our own custom partitioned-MVM approach, we were made aware of the KeOps software package \cite{charlier2020kernel} which uses low-level GPU code to speed up partitioned MVMs.
+With this library, partitioned MVMs can even be faster than standard MVMs.
 
 
 \paragraph{Distributed parallel MVMs.}
 MVM-based training/inference can easily take advantage of multiple GPUs or distributed computational resources.
 Each MVM partition $\widehat \bK_{\bX^{(l)}\!\bX} \bb$ can be performed on a different device.
-Thus we can compute partitioned MVMs in parallel to attain wall-clock speedups proportional to the number of devices available.
-
-Additionally, we note that distributed parallel MVMs require only $O(N)$ communication.
-Each partitioned matrix multiplication only has to supply each device with a new right-hand-side vector $\bb$.
-Finally, if $W$ devices are used, the output from each device will be a vector of length $N / PW$.
-Thus only $\bigo{N}$ memory is copied to or from the devices.
+Additionally, we note that distributed/parallel MVMs require only $O(N)$ communication between devices (i.e. the memory required to share $\bX$ and the partial output vector $\widehat \bK_{\bX^{(l)}\!\bX} \bb$).
 In contrast, distributing the Cholesky decomposition requires $\bigo{N^2}$ communication \citep{nguyen2019exact}.
+
 
 
 
@@ -91,37 +84,36 @@ In contrast, distributing the Cholesky decomposition requires $\bigo{N^2}$ commu
 
 \subsection{Practical Considerations}
 
-\paragraph{Predictions with large-scale GPs.}
-At test time, we must compute the predictive mean and variance given in \cref{eqn:predictive_mean} and \cref{eqn:predictive_var}.
-As described in \cref{sec:motivation_means}, predictive means require the inner product between $\bk_{\bX \bxtest}$ and the cached vector $\blue \ba = \trainK^{-1} \by$.
-Similarly, the LOVE method of \cref{chapter:love} generates a cachable low-rank approximation ${\color{blue} \bR^\top \bR} \approx {\color{blue} \trainK^{-1}}$ for predictive variances.
-After these caches have been computed, predictive distributions can be computed through $\bigo{N}$ vector inner products---an especially fast operation on GPUs.
-In practice, we observe that both the predictive mean and variance can be computed in less than a second on a single GPU regardless of dataset size.
+%\paragraph{Predictions with large-scale GPs.}
+%At test time, we must compute the predictive mean and variance given in \cref{eqn:predictive_mean} and \cref{eqn:predictive_var}.
+%As described in \cref{sec:motivation_means}, predictive means require the inner product between $\bk_{\bX \bxtest}$ and the cached vector $\blue \ba = \trainK^{-1} \by$.
+%Similarly, the LOVE method of \cref{chapter:love} generates a cachable low-rank approximation ${\color{blue} \bR^\top \bR} \approx {\color{blue} \trainK^{-1}}$ for predictive variances.
+%After these caches have been computed, predictive distributions can be computed through $\bigo{N}$ vector inner products---an especially fast operation on GPUs.
+%In practice, we observe that both the predictive mean and variance can be computed in less than a second on a single GPU regardless of dataset size.
 
 
 \paragraph{Preconditioning.}
-As in \cref{chapter:bbmm}, we use the partial pivoted Cholesky preconditioner when training and computing predictive means.
-In \cref{chapter:bbmm} the preconditioner size is typically limited to $R=5$; however, we find that preconditioners of up to size $R=100$ provide a noticeable wall-clock speed improvement for large exact GPs.
-Computing a rank $R$ partial pivoted Cholesky preconditioner requires only $R$ kernel matrix rows: an already $\bigo{N}$ space dependence.
-While each iteration of CG requires computing each kernel matrix partition from scratch, the preconditioner is computed only once.
-Therefore, for large values of $N$ it can be efficient to increase the size of the preconditioner to an extent if it reduces the number of CG iterations.
+As in \cref{chapter:bbmm}, we use the partial pivoted Cholesky preconditioner for training and computing predictive means.
+In \cref{chapter:bbmm} the preconditioner size is typically limited to $R=5$; however, we find that preconditioners of size $R=100$ provide a noticeable speed improvement for large GPs.
+Computing a rank $R$ partial pivoted Cholesky preconditioner requires only $R$ kernel matrix rows: a $\bigo{N}$ space dependence.
+While each partitioned MVM computes the kernel sub-matrices from scratch, the preconditioner is computed only once.
+Therefore, for large values of $N$ it can be efficient to increase the size of the preconditioner to reduce the number of mBCG iterations.
 
 
 \paragraph{mBCG convergence criteria.}
 Importantly, mBCG is \emph{not} an approximate method for performing linear solves.
-Rather, it is a method that consumes time to perform solves to a specified tolerance.
-If this tolerance is low, the solve is exact up to machine precision.
-Thus, it is analogous to using gradient descent to solve a convex optimization problem (which is in fact what is happening).
+Rather, it is a method that performs solves to a specified tolerance.
+If this tolerance is sufficiently tight, solve are exact up to machine precision.
+Thus, it is analogous to using gradient descent for convex optimization problems (which is in fact what is happening).
 
 At test time, we find that (nearly) exact solves $\widehat \bK_{\bX \! \bX}^{-1} \by$  are critical for good predictive means.
 Therefore, we set the convergence criterion of CG to be $\Vert \trainK^{-1} \bc - \by \Vert_2 / \Vert \by \Vert_2 \leq 0.001$, where $\bc$ is the solution from mBCG.
-For hyperparameter training, however, we find that, interestingly, less strict convergence criteria suffice.
+For hyperparameter optimization, we find that less strict tolerances are surprisingly sufficient.
 A looser convergence criterion of up to $\Vert \trainK^{-1} \bc - \by \Vert_2 / \Vert \by \Vert_2 = 1$ has little impact on final model performance.
-Given that predictions using our approach are highly efficient (see \cref{tab:large_exact_gp_timings}), it may be interesting to investigate alternative approximate methods for finding good hyperparameters, and then using the techniques in this chapter for exact inference and predicitons.
 
 
 \paragraph{Pre-training.}
-On large datasets, each training iteration (i.e. each call to mBCG) may take several minutes or hours.
+On large datasets, each training iteration (i.e. each call to mBCG) may take several minutes.
 We can reduce the total number of training iterations by first initializing the hyperparameters to sensible defaults.
-As a simple initialization strategy, we first pre-train exact Gaussian process models on a subset of training data (e.g. $N=10,\!000$).
-After this initialization, only a few iterations (i.e. $< 10$ gradient descent steps) are necessary on the full dataset (see \cref{fig:initialization}).
+As a simple initialization strategy, we pre-train exact Gaussian process models on a subset of training data (e.g. $N=10,\!000$).
+After this initialization, only a few iterations (i.e. $< 5$ gradient descent steps) are necessary on the full dataset (see \cref{fig:initialization}).

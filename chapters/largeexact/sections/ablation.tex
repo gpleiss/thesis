@@ -5,8 +5,8 @@ Here, we demonstrate how the amount of data affects exact GP performance, and ho
 \begin{figure}[t!]
   \centering
   \includegraphics[width=0.7\linewidth]{figures/subsampling.pdf}
-  \caption[Effect of training set subsampling on exact GP performance.]{
-    Effect of training set subsampling on exact GP performance, as measured by test set RMSE (lower is better).
+  \caption[Effect of subsampling on exact GP performance.]{
+    Effect of subsampling on exact GP performance, as measured by test set RMSE (lower is better).
     Subsampled exact GPs outperform approximate GPs, even when only quarter of the training set is used.
     Exact GP error continues to decrease as data is added.
   }
@@ -14,13 +14,12 @@ Here, we demonstrate how the amount of data affects exact GP performance, and ho
 \end{figure}
 
 \paragraph{Do GPs need the entire dataset?}
-As a non-parametric model, Gaussian processes naturally adapt to the amount of training data available.
+As non-parametric models, Gaussian processes naturally adapt to the amount of data available.
 \cref{fig:subsampling_results} shows an increase in accuracy as we increase the amount of training data on the KEGGU, 3DRoad, and Song datasets.
-For each dataset, we subsample a fraction of the training data and plot the resulting test set RMSE as a function of training set size.
+For each dataset, we subsample a fraction of the data and plot the resulting test set RMSE as a function of training set size.
 As expected, the error decreases monotonically as we increase the subsample size.
-\cref{fig:subsampling_results} also shows the performance of exact GPs, SGPR, and SVGP trained on the entire dataset.
-Strikingly, in all three cases, \textit{an exact GP with less than a quarter of the training data outperforms approximate GPs trained on the entire training set}.
-Test error continues to decrease with the addition of training data.
+\cref{fig:subsampling_results} also shows the performance of SGPR and SVGP models trained on the entire dataset.
+Strikingly, in all three cases, \textit{an exact GP with less than a quarter of the training data outperforms approximate GPs trained on the entire dataset}.
 
 \begin{figure}[!t]
   \centering
