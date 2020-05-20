@@ -18,8 +18,8 @@ Variance computations with \cref{eqn:predictive_covar_2_fast} take $\bigo{JN}$ t
 \paragraph{An MVM-based low-rank approximation with Lanczos.}
 There are many possible ways to form a low-rank approximation of $\blue \trainK^{-1}$.
 Our proposed method will make use of the Lanczos algorithm from \cref{sec:lanczos}, which will generate the low-rank approximation through matrix-vector multiplication (MVMs).
-This makes it possible to easily transfer this approximation to specialty GP models (e.g. scalable models, multitask models, etc.) and the computation will effectively utilize GPU acceleration.
-Moreover, as we will demonstrate in \cref{sec:love_results}, the Lanczos low-rank approximation rapidly converges to the true inverse.
+%This makes it possible to easily transfer this approximation to specialty GP models (e.g. scalable models, multitask models, etc.) and the computation will effectively utilize GPU acceleration.
+As we will demonstrate in \cref{sec:love_results}, the Lanczos low-rank approximation rapidly converges to the true inverse.
 
 Recall from \cref{sec:lanczos} that $J$ iterations of Lanczos tridiagonalization approximates matrix solves:
 \[
@@ -27,11 +27,10 @@ Recall from \cref{sec:lanczos} that $J$ iterations of Lanczos tridiagonalization
 \]
 where the orthonormal matrix ${\color{blue} \bQ} \in \reals^{N \times J}$ and tridiagonal matrix ${\color{blue} \bT} \in \reals^{J \times J}$ are computed with respect to probe vector $\bb$.
 As argued by \citet{parlett1980new}, \citet{saad1987lanczos}, and \citet{schneider2001krylov}, the $\blue \bQ$ and $\blue \bT$ matrices can be used to approximate subsequent solves
-${\color{blue} \trainK^{-1}} \bb' \approx {\color{blue} \bQ \bT^{-1}} \bQ^\top \bb'$.
+${\color{blue} \trainK^{-1}} \bb' \approx {\color{blue} \bQ \bT^{-1} \bQ^\top} \bb'$.
 We exploit this fact and use $\blue \bQ \bT^{-1} \bQ^\top$ to be a general-purpose approximation to $\blue \trainK^{-1}$.
-When $J \ll N$ (e.g. $J \approx 100$), then this will be a low-rank approximation.
-
-To compute the $\bR$ matrix in \cref{eqn:predictive_covar_2_fast}, we simply run $J$ iterations of Lanczos:
+By running $J \ll N$ Lanczos iterations (e.g. $J \approx 100$), the resulting approximation will be low-rank.
+In particular, we have
 \begin{align*}
   {\color{blue} \trainK^{-1}} &\approx \overbracket{\color{blue} \bQ \bT^{-1} \bQ^\top}^{\text{apply Lanczos}}
   \\
@@ -41,7 +40,7 @@ To compute the $\bR$ matrix in \cref{eqn:predictive_covar_2_fast}, we simply run
 \end{align*}
 %
 where $\blue \bL_\bT$ is the Cholesky factor of $\blue \bT$.
-Applying Lanczos to $\blue \trainK$ requires $J$ MVMs for a total of $\bigo{J \mvm(\trainK)}$ time ($\mvm(\trainK)$ is the complexity of one MVM with $\blue \trainK$, which is nominally $\bigo{N^2}$).
+Applying Lanczos to $\blue \trainK$ requires $J$ MVMs for a total of $\bigo{J \mvm{\trainK}}$ time ($\mvm{\trainK}$ is the complexity of one MVM with $\blue \trainK$, which is nominally $\bigo{N^2}$).
 Computing and applying the Cholesky factor $\blue \bL_\bT$ is $\bigo{J}$ time due to the tridiagonal structure of $\blue \bT$.
 
 In total, the entire pre-computation phase takes $\bigo{J N^2}$ time for standard GPs.
@@ -88,7 +87,7 @@ Empirically find that $J\leq100$ is sufficient for most matrices for $N \leq 20,
 Because LOVE is an MVM-based algorithm, it affords the same modularity as BBMM.
 When LOVE is used in conjunction with scalable GP approximations/multitask models, we can take advantage of fast kernel MVMs for a $o(N^2)$ asymptotic complexity.
 In GPyTorch we use the {\tt LazyTensor} construct from \cref{sec:programmability} to adapt LOVE to specialty models.
-The same {\tt \_matmul} function we use for mBCG can also be used in conjunction with LOVE for fast predictive (co)-variances.
+The same {\tt \_matmul} function we use for mBCG can also be used for fast (co)-variances with LOVE.
 
 
 
@@ -99,8 +98,6 @@ The same {\tt \_matmul} function we use for mBCG can also be used in conjunction
 
 \input algorithms/love_kissgp
 
-As with BBMM, LOVE solely relies on matrix-vector multiplication and makes no assumption about the structure of $\blue \trainK$.
-Therefore, \cref{alg:love} can be applied out-of-the-box to any specialty GP model including scalable approximations.
 In this section, we demonstrate that LOVE is an especially compelling algorithm for the scalable KISS-GP framework.
 With a few modifications to \cref{alg:love}, KISS-GP + LOVE can achieve \emph{constant-time covariance approximations} and \emph{linear time posterior samples}.
 
@@ -114,7 +111,7 @@ In particular,
   \nonumber
   \\
   &\approx k(\bxtest, \bxtestprime) - \left( \bw^\top_{\bxtest} \right. \underbracket{\left. {\color{blue} \bK_{\bZ\bZ} \bW_\bX} \right) {\color{blue} \bR^\top}}_{\color{blue} \widetilde \bR^\top}
-  \underbracket{{\color{blue} \bR} \left( {\color{blue} \bW_\bX^\top \bK_{\bZ\bZ}} \right.}_{\color{blue} \bR} \left. \bw_{\bxtestprime} \right) + \sigma^2_\text{obs}
+  \underbracket{{\color{blue} \bR} \left( {\color{blue} \bW_\bX^\top \bK_{\bZ\bZ}} \right.}_{\color{blue} \widetilde \bR} \left. \bw_{\bxtestprime} \right) + \sigma^2_\text{obs}
   \nonumber
   \\
   &\approx k(\bxtest, \bxtestprime) -
@@ -125,9 +122,9 @@ In particular,
 %
 The matrix $\color{blue} \widetilde \bR = \bR \bK_{\bZ\bZ} \bW_\bX$ is a $J \times M$ matrix.
 Variance computations with \cref{eqn:pred_covar_ski_fast} take $\bigo{J}$ time due to the sparsity of $\bw_{\bxtest}$ and $\bw_{\bxtestprime}$.
-Choosing $J \approx 100$, which is sufficient for the conditioning of most matrices, KISS-GP covariance computations with \cref{eqn:pred_covar_ski_fast} take \emph{constant time}.
+Taking $J$ to be a constant (as $J \approx 100$ suffices for most kernel matrices), KISS-GP covariance computations with \cref{eqn:pred_covar_ski_fast} take \emph{constant time}.
 
-Moreover, this additional precomputation step takes negligible time.
+Moreover, this additional work to compute $\color{blue} \widetilde \bR$ from $\blue \bR$ takes negligible time.
 The complexity of computing $\color{blue} \bR$ is $\bigo{J(N + M \log M)}$, as Lanczos requires $J$ MVMs with $\color{blue} \trainK$ and KISS-GP affords $\bigo{N + M \log M}$ MVMs.
 Forming $\color{blue} \widetilde \bR$ requires multiplying the $J \! \times \! N$ $\color{blue} \bR$ matrix by $\color{blue} \bK_{\bZ\bZ}$ and $\color{blue} \bW_\bX$, which also takes $\bigo{J(N + M \log M)}$ time.
 Therefore, the modified KISS-GP + LOVE precomputation is \emph{near-linear time}.
@@ -156,7 +153,7 @@ We sample $\bepsilon \sim p( \bfn(\bxtest_1), \ldots, \bfn(\bxtest_T) \! \mid \!
     \covtest{\bxtest_1}{\bxtest_1} & \cdots & \covtest{\bxtest_1}{\bxtest_T} \\
     & \ddots & \\
     \covtest{\bxtest_T}{\bxtest_1} & \cdots & \covtest{\bxtest_T}{\bxtest_T} \\
-  \end{bmatrix} - \sigma^2 \bI,
+  \end{bmatrix},
 \]
 \begin{equation}
   \bepsilon = \bmeantest + \bS \bepsilon' \sim p( \bfn(\bxtest_1), \ldots, \bfn(\bxtest_T) \! \mid \! \dset)
@@ -182,7 +179,7 @@ We use LOVE{} and KISS-GP to rewrite \cref{eqn:pred_covar_ski_fast} as
   &\approx \overbracket{
     \bW^\top_{\bXtest} {\color{blue} \bK_{\bZ\bZ} } \bW_{\bXtest}
   }^\text{KISS-GP approximation}
-    \bW^\top_{\bXtest} \left( {\color{blue} \widetilde \bR^\top \widetilde \bR} \right) \bW_{\bXtest}
+   - \bW^\top_{\bXtest} \left( {\color{blue} \widetilde \bR^\top \widetilde \bR} \right) \bW_{\bXtest}
   \nonumber
   \\
   &= \bW^\top_{\bXtest} \left( {\color{blue} \bK_{\bZ\bZ} - \widetilde \bR^\top \widetilde \bR } \right) \bW_{\bXtest}
@@ -200,7 +197,7 @@ We apply the Lanczos algorithm on this term during pre-computation to obtain a r
   \label{eqn:lancapprox}
 \end{align}
 %
-where again $\bQ \in \reals^{M \times J}$ is orthonormal and $\bT \in \reals^{J \times J}$ is tridiagonal.
+where again ${\blue \bQ'} \in \reals^{M \times J}$ is orthonormal and ${\blue \bT'} \in \reals^{J \times J}$ is tridiagonal.
 This Lanczos decomposition $\blue \bQ' \bT' \bQ^{\prime\top}$ requires $J$ matrix vector multiplies with $\blue{ \bK_{\bZ\bZ} - \widetilde \bR^{\top} \widetilde \bR }$, each of which requires $\bigo{M \log M}$ time.
 Substituting \cref{eqn:lancapprox} into \cref{eqn:pred_covar_ski_interp_form12}, we get:
 %
@@ -215,11 +212,10 @@ Substituting \cref{eqn:lancapprox} into \cref{eqn:pred_covar_ski_interp_form12},
 \end{align}
 where ${\color{blue} \bL_{\bT'} }$ is the Cholesky factor of $\blue \bT'$ (a $\bigo{J}$ operation due to the tridiagonal structure).
 Setting $\blue{ \bS = \bQ' \bL_{\bT} }$, we see that $\Covtest = (\bW_{\bXtest}^\top {\blue \bS}) (\bW_{\bXtest}^\top {\blue \bS})^{\top}$.
-${\blue S} \in \reals^{M \times J}$ can be pre-computed and cached since it does not depend on test data.
+Moreover, ${\blue \bS} \in \reals^{M \times J}$ can be pre-computed and cached since it does not depend on test data.
 In total, this pre-computation takes $\bigo{J M \log M + M J^2}$ time in addition to what is required for fast variances.
-To sample from the predictive distribution, we need to evaluate \cref{eqn:sample}, which involves multiplying $\bW^\top_{\bXtest} {\blue \bS} \bepsilon'$.
-Multiplying $\bepsilon'$ by $\bS$ requires $\bigo{MJ}$ time, and finally multiplying by $\bW^{\top}_{\bXtest}$ takes $\bigo{TJ}$ time.
-Therefore, drawing $S$ samples (corresponding to $S$ different values of $\bepsilon'$) takes $\bigo{SJ(T + M)}$ time total during the testing phase (see \cref{tab:running_times_sampling})---a \emph{linear} dependence on $T$.
+A matrix-vector multiplication with $(\bW_\bX^\top {\blue \bS})$ takes $\bigo{TJ}$ time due to the $\bigo{T}$ sparsity of $\bW_\bX$.
+Therefore, drawing $S$ samples (corresponding to $S$ different values of $\bepsilon'$) takes $\bigo{SJ(T + M)}$ time after precomputation (see \cref{tab:running_times_sampling})---a \emph{linear} dependence on $T$.
 
 
 
