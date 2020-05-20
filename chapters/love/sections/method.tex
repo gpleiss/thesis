@@ -138,11 +138,11 @@ In addition to these fast predictive (co)-variances, LOVE + KISS-GP offers two a
 \subsection{Predictive Distribution Sampling with LOVE{} + KISS-GP}
 \label{sec:sampling_method}
 
-When used in conjunction with KISS-GP, LOVE{} can also be used to compute samples from the predictive covariance matrix.
+When used in conjunction with KISS-GP, LOVE{} can also be used to compute samples from the posterior covariance matrix.
 This is a vary common operation: in Bayesian optimization, several popular acquisition functions---such as predictive entropy search \cite{hernandez2014predictive}, max-value entropy search \cite{wang2017max}, and knowledge gradient \cite{frazier2009knowledge}---require posterior sampling.
 
 Let $\bXtest = [ \bxtest_1, \ldots, \bxtest_T ]$ be a test set of $T$ points.
-To draw samples from $p( \ytest_1, \ldots, \ytest_T  \! \mid \! \dset)$---the predictive function evaluated on $\bxtest_1, \ldots, \bxtest_t$,
+To draw samples from $p( \ytest_1, \ldots, \ytest_T  \! \mid \! \dset)$---the posterior function evaluated on $\bxtest_1, \ldots, \bxtest_t$,
 the cross-covariance terms (i.e. $\covtest{\bxtest_i}{\bxtest_j}$) are necessary in addition to the variance terms ($\vartest{\bxtest_i}$).
 We sample $\bepsilon \sim p( \bfn(\bxtest_1), \ldots, \bfn(\bxtest_T) \! \mid \! \dset)$ through the reparameterization trick \cite{kingma2014auto,rezende2014stochastic}:
 %
@@ -187,7 +187,7 @@ We use LOVE{} and KISS-GP to rewrite \cref{eqn:pred_covar_ski_fast} as
 \end{align}
 %
 where $\bW_{\bXtest} = [\bw_{\bxtest_1}, \ldots, \bw_{\bxtest_T}]$ is the interpolation matrix for test points.
-We have reduced the full covariance matrix to a test-independent term ($\blue{ \bK_{\bZ\bZ} - \widetilde \bR^\top \widetilde \bR }$) that can be pre-computed.
+We have thus reduced the full covariance matrix to a test-independent term ($\blue{ \bK_{\bZ\bZ} - \widetilde \bR^\top \widetilde \bR }$) that can be pre-computed.
 We apply the Lanczos algorithm on this term during pre-computation to obtain a rank-$J$ approximation:
 %
 \begin{align}
@@ -229,7 +229,7 @@ LOVE{} is applicable even when the KISS-GP approximation is used with an additiv
 \end{equation}
 Additive structure has recently been a focus in several Bayesian optimization settings, since the cumulative regret of additive models depends linearly on the number of dimensions
 \cite{kandasamy2015high,wang2017batched,gardner2017discovering,wang2017max}.
-Additionally, deep kernel learning GPs \citep{wilson2016deep,wilson2016stochastic} typically uses sums of one-dimensional kernel functions.
+Additionally, deep kernel learning GPs \citep{wilson2016deep,wilson2016stochastic} typically use sums of one-dimensional kernel functions.
 To apply LOVE{}, we note that additive composition can be re-written as
 %
 \begin{equation}

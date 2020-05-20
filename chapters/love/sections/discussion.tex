@@ -2,27 +2,33 @@
 \section{Discussion}
 \label{sec:love_discussion}
 
-This chapter has focused on LOVE{} in the context of exact GPs and KISS-GP models.
-Whereas the running times of previous state-of-the-art methods depend on dataset size, LOVE{} + KISS-GP provides \emph{constant time} and near-exact predictive variances.
-
-It is worth noting that LOVE is fully compatible with other inducing point techniques as well.
-Many inducing point methods make use of the subset of regressors (SOR) kernel approximation $\bK_{\bX\bX} \approx \bK_{\bX\bZ}\bK_{\bZ\bZ}^{-1}\bK_{\bZ\bX}$,
-optionally with a diagonal correction \cite{snelson2006sparse}, and focus on the problem of learning the inducing point locations \cite{quinonero2005unifying,titsias2009variational}.
-After $\bigo{M^{3}}$ work to Cholesky decompose $\bigo{\bK_{\bZ\bZ}}$, this approximate kernel affords $\bigo{N + M^{2}}$ MVMs.
-One could apply LOVE to these methods and compute a test-invariant cache in $\bigo{JNM+JM^{2}}$ time, and then compute single predictive covariances in $\bigo{JM}$ time.
-We note that, since these inducing point methods make a rank $M$ approximation to the kernel, setting $J\!=\!M$ produces exact solves with Lanczos decomposition, and recovers the $\bigo{NM^{2}}$ precomputation time and $\bigo{M^2}$ prediction time of these methods.
+This chapter has introduced the LOVE algorithm for exact GPs and KISS-GP models.
+Whereas the running times of previous methods depend on dataset size, LOVE{} + KISS-GP provides \emph{constant time} and near-exact predictive variances.
+It is worth noting that LOVE is fully compatible with other inducing point techniques as well, as the algorithm is defined by a matrix-vector multiplication routine.
+%Many inducing point methods make use of the subset of regressors (SOR) kernel approximation $\bK_{\bX\bX} \approx \bK_{\bX\bZ}\bK_{\bZ\bZ}^{-1}\bK_{\bZ\bX}$,
+%optionally with a diagonal correction \cite{snelson2006sparse}, and focus on the problem of learning the inducing point locations \cite{quinonero2005unifying,titsias2009variational}.
+%After $\bigo{M^{3}}$ work to Cholesky decompose $\bigo{\bK_{\bZ\bZ}}$, this approximate kernel affords $\bigo{N + M^{2}}$ MVMs.
+For example, one could apply LOVE to SGPR using the efficient MVM described in \cref{sec:programmability}.
+Since SGPR makes a rank $M \ll N$ approximation to the kernel, setting $J\!=\!M$ recovers the $\bigo{NM^{2}}$ precomputation time and $\bigo{M^2}$ prediction time of standard SGPR variances \cite{titsias2009variational}.
 
 \paragraph{Ensuring Lanczos solves are accurate.}
 Given a matrix $\blue \trainK$, the Lanczos decomposition $\blue \bQ \bT \bQ^\top$ is designed to approximate the solve ${\color{blue} \trainK^{-1}} \bb$, where $\bb$ is the first column of $\blue \bQ$.
 As argued in \cref{sec:lanczos}, the $\blue \bQ$ and $\blue \bT$ can usually be re-used to approximate the solves ${\color{blue} \widehat \bK_{\bX\bX}^{-1} (\bW_{\bX}^\top \bK_{\bZ\bZ})} \approx {\color{blue} \bQ \bT^{-1} \bQ^\top (\bW_{\bX}^\top \bK_{\bZ\bZ})}$.
 This property of the Lanczos decomposition is why LOVE{} can compute fast predictive variances.
 While this method usually produces accurate solves, the solves will not be accurate if some columns of $\blue (\bW^\top_{\bX} \bK_{\bZ\bZ})$ are (nearly) orthogonal to the columns of $\bQ$.
-In this scenario, \citet{saad1987lanczos} suggests that the additional Lanczos iterations with a new probe vector will correct these errors.
+Importantly, we can easily check the accuracy of the solves by measuring the residual norm:
+%
+\[
+  \Vert {\blue \trainK} \underbracket{\left( {\color{blue} \bR \bR^\top} \right)}_{\blue \approx \trainK^{-1}} \bk_{\bX \bxtest} - \bk_{\bX \bxtest} \Vert_2.
+\]
+%
+Note that this convergence check only requires an additional MVM with $\blue \trainK$.
+If the residual is not sufficiently small for some vector $\bk_{\bX \bxtest}$, we can run conjugate gradients to refine the solve ${\blue \trainK^{-1}} \bk_{\bX \bxtest}$ using ${\color{blue} \bR \bR^\top} \bk_{\bX \bxtest}$ as an initial starting vector.
 In practice, we find that these countermeasures are almost never necessary with LOVE{}---the Lanczos solves are almost always accurate.
 
 \paragraph{Numerical stability of Lanczos.}
 A practical concern for LOVE{} is round-off errors that may affect the Lanczos algorithm.
-In particular it is common in floating point arithmetic for the vectors of $\blue \bQ$ to lose orthogonality \cite{paige1970practical,simon1984lanczos,golub2012matrix}, resulting in an incorrect decomposition.
+In particular it is common for the vectors of $\blue \bQ$ to lose orthogonality \cite{paige1970practical,simon1984lanczos,golub2012matrix}, resulting in an incorrect decomposition.
 To correct for this, several methods such as full reorthogonalization and partial or selective reorthogonalization exist \cite{golub2012matrix}.
 In our implementation, we use full reorthogonalization when a loss of orthogonality is detected.
 In practice, the cost of this correction is absorbed by the parallel performance of the GPU and does not impact the final running time.
@@ -30,9 +36,7 @@ In practice, the cost of this correction is absorbed by the parallel performance
 
 \paragraph{Sampling without KISS-GP.}
 LOVE in conjunction with KISS-GP makes it possible to efficiently draw samples from a GP posterior.
-This has the potential to dramatically simplify a variety of GP applications such as Bayesian optimization and model-based reinforcement learning \citep[e.g.,][]{deisenroth2011pilco,hernandez2014predictive,wang2017max}.
-These applications require fast posterior samples, and have previously relied on parametric approximations or finite basis approaches for approximate sampling \citep[e.g.,][]{deisenroth2011pilco,wang2017max}.
-
+This has potential in many applications like Bayesian optimization and model-based reinforcement learning \citep[e.g.,][]{deisenroth2011pilco,hernandez2014predictive,wang2017max}, which typically rely on parametric approximations or finite basis approaches for approximate sampling \citep[e.g.][]{deisenroth2011pilco,wang2017max}.
 However, it is worth noting that this sampling technique cannot be applied to exact GP models,
 as the derivation of this method requires an inducing point approximation to the prior test covariance $\bK_{\bXtest\bXtest}$ (see \cref{eqn:pred_covar_ski_interp_form12}).
 In the next chapter we will address this limitation and introduce a $\bigo{N^2}$ sampling algorithm for exact Gaussian process models.
@@ -41,5 +45,5 @@ In the next chapter we will address this limitation and introduce a $\bigo{N^2}$
 These past two chapters have presented MVM-based methods for training GPs (using BBMM) and computing predictive distributions (using LOVE).
 Both of these algorithms can be readily applied to regression models with Gaussian likelihoods.
 In \cref{chapter:largeexact} we will utilize these methods to push beyond current limits of exact GP models.
-In particular, we will train and evaluate exact Gaussian processes on extremely large datasets ($N \geq 1,\!000,\!000$) without using scalable approximations.
-Before discussing those results, we will first introduce one final MVM-based method that extends BBMM/LOVE to non-conjugate GP models (e.g. classification GPs) and stochastic variational GP models.
+%In particular, we will train and evaluate exact Gaussian processes on extremely large datasets ($N \geq 1,\!000,\!000$) without using scalable approximations.
+Before discussing those results, we will first introduce one final MVM-based method for non-conjugate GP models (e.g. classification GPs).
