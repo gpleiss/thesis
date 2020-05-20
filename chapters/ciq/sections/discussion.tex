@@ -15,7 +15,7 @@ On the other hand, applying CIQ to $\bigo{M}$ vectors would incur a $\bigo{M^3}$
 in either scenarios with a small number of right hand sides or scenarios where $\bK$ is too large to apply Cholesky.
 %\paragraph{Using CIQ with structured kernel matrices.}
 We would also note that CIQ---like all Krylov methods---can take advantage of fast MVMs afforded by structured covariances.
-Though this paper primarily applies CIQ to dense matrices, we suggest that future work explores applications of the CIQ algorithm involving sparse or structured matrices.
+We suggest that future work explores applications of the CIQ algorithm involving sparse or structured matrices.
 
 
 \paragraph{Scaling beyond $M=10,\!000$ and $T=50,\!000$.}
@@ -24,7 +24,7 @@ In this chapter, we have used \emph{an order of magnitude} more inducing points 
 As $M$ continues to grow, the primary bottleneck of CIQ-SVGP becomes the quadratic memory costs of the variational parameters $\bm'$ and $\bS'$.
 While a scalable approximation of $\bK_{\bZ\bZ}$ (with fast MVMs) can reduce the computational cost of whitening, the $\bS'$ matrix in general does not afford space-saving structure.
 Efficient variational parameter repressions will be necessary to scale to even larger $M$.
-This has been the topic of some recent work \cite{wilson2016stochastic,cheng2017variational,salimbeni2018orthogonally,shi2019sparse}, though such structure can sometimes result in poor conditioning and worse optimization.
+This has been the topic of some recent work \cite{wilson2016stochastic,cheng2017variational,salimbeni2018orthogonally,shi2019sparse}.
 
 Scaling Thompson sampling beyond $T=50,\!000$ is to some extent more straightforward, as it does not require storing learnable parameters.
 %One option is to use Thompson sampling in conjunction with approximate GP methods that afford faster MVMs.

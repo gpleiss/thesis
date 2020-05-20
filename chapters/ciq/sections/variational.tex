@@ -63,7 +63,7 @@ See \cref{app:ngd} for the $\bigo{M^2}$ NGD update equations.
 We compare CIQ verses Cholesky for computing \cref{eqn:approx_pred_dist} when training SVGP models.\footnote{
   Note that Cholesky computes $\bK^{-1/2} \bb$ up to an orthogonal rotation, which is suitable for whitened SVGP.
 }
-We test these methods on 3 large-scale spatial datasets: a GIS dataset ({\bf 3droad}, $D=2$), a monthly precipitation dataset ({\bf Precipitation}, $D=3$), and a tree cover dataset ({\bf Covtype}, $D=54$).
+We test on 3 large-scale spatial datasets: a GIS dataset ({\bf 3droad}, $D=2$), a monthly precipitation dataset ({\bf Precipitation}, $D=3$), and a tree cover dataset ({\bf Covtype}, $D=54$).
 Each task has between $N=70,\!000$ and $N=500,\!000$ training data points.
 For 3droad we use a Gaussian observation model.
 The Precipitation dataset has noisier observations; therefore we apply a Student-T observation model.
