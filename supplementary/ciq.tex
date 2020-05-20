@@ -38,7 +38,7 @@ As many kernel matrices tend to be approximately low-rank and therefore ill-cond
 
 \paragraph{Improving convergence with a change of variables.}
 Rather than uniformly spacing the quadrature points, it makes more sense to place more quadrature points near $\lambda_\text{min}$ and fewer near $\lambda_\text{max}$.
-This can be accomplished by using the above midpoint quadrature rule in a \emph{transformed parameter space} that is ``stretched'' near $\lambda_\text{min}$ and contracted near $\lambda_\text{max}$.
+This can be accomplished by using the above midpoint quadrature rule in a {transformed parameter space} that is ``stretched'' near $\lambda_\text{min}$ and contracted near $\lambda_\text{max}$.
 In particular, we will use a change-of-variables that exploits the geometry of the square root function for rapid convergence.
 
 \subsection{A Specific Quadrature Formula for $f(\bK) = \bK^{-1/2}$}
@@ -66,10 +66,10 @@ Combining this square-root change-of-variables with the annulus change-of-variab
 \begin{equation}
   \begin{split}
     \sigma_q^2
-    &= \lambda_\text{min}^{-1} \Bigl( \text{sn}(i u_q \mathcal{K}'(k) \mid k) \Bigr)^2,
+    &= \lambda_\text{min} \Bigl( \text{sn}(i u_q \mathcal{K}'(k) \mid k) \Bigr)^2,
     \\
     \widetilde w_q
-    &= -\frac{ 2 }{ \pi Q \sqrt{\lambda_\text{min}} }
+    &= -\frac{ 2 \sqrt{\lambda_\text{min}} }{ \pi Q }
     \:\: \left[
     \mathcal{K}'( k )
     \:\:\: \text{cn} \left( i u_q \mathcal{K}'(k) \mid k \right)
@@ -81,7 +81,7 @@ Combining this square-root change-of-variables with the annulus change-of-variab
 %
 where we adopt the following notation:
 \begin{itemize}
-  \item $k = \sqrt{ \lambda_\text{min} / \lambda_\text{max} } = \sqrt{ \kappa(\bK^{-1}) }$;
+  \item $k = \sqrt{ \lambda_\text{min} / \lambda_\text{max} } = 1 / \sqrt{ \kappa(\bK) }$;
   \item $\mathcal{K}'(k)$ is the complete elliptic integral of the first kind with respect to the complimentary elliptic modulus $\sqrt{1 - k^2}$;
   \item $u_q = \frac{1}{Q}(q - \frac 1 2)$; and
   \item $\text{sn}(\cdot \mid k)$, $\text{cn}(\cdot \mid k )$, and $\text{dn}(\cdot \mid k)$ are the Jacobi elliptic functions with respect to elliptic modulus $k$.
