@@ -118,3 +118,10 @@ Therefore, we set the convergence criterion of CG to be $\Vert \trainK^{-1} \bc 
 For hyperparameter training, however, we find that, interestingly, less strict convergence criteria suffice.
 A looser convergence criterion of up to $\Vert \trainK^{-1} \bc - \by \Vert_2 / \Vert \by \Vert_2 = 1$ has little impact on final model performance.
 Given that predictions using our approach are highly efficient (see \cref{tab:large_exact_gp_timings}), it may be interesting to investigate alternative approximate methods for finding good hyperparameters, and then using the techniques in this chapter for exact inference and predicitons.
+
+
+\paragraph{Pre-training.}
+On large datasets, each training iteration (i.e. each call to mBCG) may take several minutes or hours.
+We can reduce the total number of training iterations by first initializing the hyperparameters to sensible defaults.
+As a simple initialization strategy, we first pre-train exact Gaussian process models on a subset of training data (e.g. $N=10,\!000$).
+After this initialization, only a few iterations (i.e. $< 10$ gradient descent steps) are necessary on the full dataset (see \cref{fig:initialization}).
