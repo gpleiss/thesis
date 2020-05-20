@@ -2,24 +2,24 @@
 \begin{tabular}{ cccccc }
   \toprule
   &&& \multicolumn{3}{c}{{\bf Training}}\\
-  \cline{4-5}
+  \cline{4-6}
   \thead{\\{\bf Dataset}} & $N$ & $D$ &
   \thead{{\bf Exact GP} \\ (BBMM)} &
   \thead{{\bf SGPR} \\ ($M\!=\!512$)} &
   \thead{{\bf SVGP} \\ ($M\!=\!1,\!024$)}
   \\
   \midrule
-	PoleTele             & $9,\!600$          & $26$  &       $\mathbf{40.8s}\pm 0.0$ &      $71.6s\pm 23.7$            &       $67.6s\pm 5.6$ \\
-	Elevators            & $10,\!623$         & $18$  &       $\mathbf{40.5s}\pm 0.0$ &      $72.4s\pm 26.6$            &       $76.1s\pm 4.0$ \\
-	Bike                 & $11,\!122$         & $17$  &       $\mathbf{40.6s}\pm 0.1$ &      $72.1s\pm 25.0$            &       $75.5s\pm 4.5$ \\
-	Kin40K               & $25,\!600$         & $8$   &       $\mathbf{41.2s}\pm 0.0$ &      $92.5s\pm 50.1$            &     $184.8s\pm 17.1$ \\
-	Protein              & $29,\!267$         & $9$   &       $\mathbf{42.3s}\pm 0.1$ &     $136.4s\pm 49.1$            &     $199.7s\pm 15.8$ \\
-	KeggDirected         & $31,\!248$         & $20$  &       $\mathbf{46.7s}\pm 4.5$ &     $171.2s\pm 31.5$            &     $219.9s\pm 17.8$ \\
-	CTslice              & $34,\!240$         & $385$ &       $\mathbf{41.7s}\pm 0.0$ &     $133.7s\pm 53.6$            &     $230.0s\pm 18.0$ \\
-	KEGGU                & $40,\!708$         & $27$  &       $\mathbf{42.3s}\pm 0.2$ &     $142.7s\pm 59.6$            &     $285.6s\pm 22.1$ \\
-	3DRoad               & $278,\!319$        & $3$   &       $3592.5s\pm 9.4$       &     $\mathbf{545.0}s\pm 60.6$   &   $2035.9s\pm 185.4$  \\
-	Song                 & $329,\!820$        & $90$  &      $\mathbf{139.3}s\pm 0.6$ &    $445.7s\pm 170.5$            &   $2373.7s\pm 167.4$ \\
-  Buzz                 & $373,\!280$        & $77$  &  $\mathbf{1827.0}s\pm 379.3$ &   $1899.1s\pm 164.6$            &   $2780.4s\pm 191.4$  \\
-	HouseElectric        & $1,\!311,\!539$    & $9$   &     $\mathbf{5563.1}s\pm 51.0$ &   -----                        &  $11982.2s\pm 455.2$ \\
+  PoleTele             & $9,\!600$          & $26$  &      $\mathbf{41.5}$ {\bf s}   $\mathbf{\pm}$ $\mathbf{1.1}$  &               $69.5$ s         $\pm$ $20.5$                     &       $68.7$ s   $\pm$ $4.1$    \\
+	Elevators            & $10,\!623$         & $18$  &      $\mathbf{41.0}$ {\bf s}   $\mathbf{\pm}$ $\mathbf{0.7}$  &               $69.7$ s         $\pm$ $22.5$                     &       $76.5$ s   $\pm$ $5.5$    \\
+	Bike                 & $11,\!122$         & $17$  &      $\mathbf{41.2}$ {\bf s}   $\mathbf{\pm}$ $\mathbf{0.9}$  &               $70.0$ s         $\pm$ $22.9$                     &       $77.1$ s   $\pm$ $5.6$    \\
+	Kin40K               & $25,\!600$         & $8$   &      $\mathbf{42.7}$ {\bf s}   $\mathbf{\pm}$ $\mathbf{2.7}$  &               $97.3$ s         $\pm$ $57.9$                     &      $195.4$ s   $\pm$ $14.0$   \\
+	Protein              & $29,\!267$         & $9$   &      $\mathbf{47.9}$ {\bf s}   $\mathbf{\pm}$ $\mathbf{10 }$  &              $136.5$ s         $\pm$ $53.8$                     &      $198.3$ s   $\pm$ $15.9$   \\
+	KeggDirected         & $31,\!248$         & $20$  &      $\mathbf{51.0}$ {\bf s}   $\mathbf{\pm}$ $\mathbf{6.3}$  &              $132.0$ s         $\pm$ $65.6$                     &      $228.2$ s   $\pm$ $22.9$   \\
+  CTslice              & $34,\!240$         & $385$ &               $3.32$ min       $\pm$ $5.0$                    &      $\mathbf{2.16}$ {\bf min} $\mathbf{\pm}$ $\mathbf{0.99}$   &       $3.86$ min $\pm$ $0.34$   \\
+  KEGGU                & $40,\!708$         & $27$  &     $\mathbf{0.790}$ {\bf min} $\mathbf{\pm}$ $\mathbf{0.14}$ &               $2.22$ min       $\pm$ $1.0$                      &       $4.78$ min $\pm$ $0.40$   \\
+  3DRoad               & $278,\!319$        & $3$   &               $15.8$ min       $\pm$ $7.4$                    &      $\mathbf{12.0}$ {\bf min} $\mathbf{\pm}$ $\mathbf{5.5}$    &       $34.0$ min $\pm$ $3.1$    \\
+  Song                 & $329,\!820$        & $90$  &      $\mathbf{4.22}$ {\bf min} $\mathbf{\pm}$ $\mathbf{3.7}$  &               $7.88$ min       $\pm$ $3.1$                      &       $39.6$ min $\pm$ $3.1$    \\
+  Buzz                 & $373,\!280$        & $77$  &               $1.19$ hr        $\pm$ $0.39$                   &      $\mathbf{0.486}$ {\bf hr} $\mathbf{\pm}$ $\mathbf{0.30}$   &      $0.772$ hr  $\pm$ $0.05$   \\
+  HouseElectric        & $1,\!311,\!539$    & $9$   &      $\mathbf{1.20}$ {\bf hr}  $\mathbf{\pm}$ $\mathbf{0.04}$ &                -----                                            &      $6.12$  hr  $\pm$ $0.08$   \\
   \bottomrule
 \end{tabular}
