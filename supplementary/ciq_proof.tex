@@ -143,18 +143,36 @@ This convergence is faster with preconditioning.
 
 %%%%
 \begin{lemma}
+  For any positive definite $\bK$ and positive $t$, we have
   \begin{align}
     \frac{
-      \sqrt{\kappa(\bK + t_q \bI)} - 1
+      \sqrt{\kappa(\bK + t \bI)} - 1
     }{
-      \sqrt{\kappa(\bK + t_q \bI)} + 1
+      \sqrt{\kappa(\bK + t \bI)} + 1
     } = \frac{\sqrt{\lambda_\text{max} + t} - \sqrt{\lambda_\text{min} + t}  }{\sqrt{\lambda_\text{max} + t} + \sqrt{\lambda_\text{min} + t}  }
     < \frac{\lambda_\text{max}}{4t}
   \end{align}
   \label{lemma:condition}
 \end{lemma}
+
 \begin{proof}
-  \gp{TODO} use the bound $\sqrt{x+1} - \sqrt{x} < \frac{1}{2 \sqrt{x}}$.
+  We can upper bound the numerator
+  \begin{align*}
+    \sqrt{\lambda_\text{max} + t} - \sqrt{\lambda_\text{min} + t}
+    &\leq
+    \sqrt{\lambda_\text{max} + t} - \sqrt{t}
+    \\
+    &=
+    \sqrt{\lambda_\text{max}} \left( \sqrt{1 + t/\lambda_\text{max}} - \sqrt{t/\lambda_\text{max}} \right)
+    \\
+    &\leq
+    \sqrt{\lambda_\text{max}} \frac{1}{2 \sqrt{t/\lambda_\text{max}}}
+    =
+    \frac{\lambda_\text{max}}{2 \sqrt{t}}.
+  \end{align*}
+  where we have applied the standard inequality $\sqrt{(\cdot)+1} - \sqrt{(\cdot)} < \frac{1}{2 \sqrt{(\cdot)}}$.
+  The denominator can be (loosely) lower-bounded as $2\sqrt{t}$.
+  Combining these two bounds completes the proof.
 \end{proof}
 %%%%
 
@@ -165,7 +183,7 @@ This convergence is faster with preconditioning.
   Let $\sigma_q^2$ and $\widetilde w_q$ be defined as in \cref{eqn:quad_points_and_locations}.
   Then
   \begin{equation*}
-    \sum_q \frac{|w_q|}{|t_q|} = \sum_q \frac{|\widetilde w_q|}{|\sigma^2_q|} < \frac{4  \log \left( 5 \sqrt{\kappa(K)} \right)  }{\pi}Q\sqrt{\lambda_\text{min}} \\
+    \sum_{q=1}^Q \frac{|w_q|}{|t_q|} = \sum_{q=1}^Q \frac{|\widetilde w_q|}{|\sigma^2_q|} < \frac{4  \log \left( 5 \sqrt{\kappa(K)} \right)  }{\pi}Q\sqrt{\lambda_\text{min}} \\
   \end{equation*}
   where $w_q = -\widetilde w_q$ and $t_q = -\sigma^2_q$ as used in \cref{eqn:contour_integral_quad_4}.
   \label{lemma:quad_ratio}
@@ -179,9 +197,6 @@ This convergence is faster with preconditioning.
     \\
     \text{dn}(u \mathcal{K}(k) | k ) \le \frac{\text{sn}(u \mathcal{K}(k) | k )^2}{\sin^2(\pi u/2)} \qquad {\rm for} \qquad 0 \le u \le 1
     \tag{From \gp{? maybe \citep{siegl2016extremal}}}
-    \\
-    \sum_q \frac{1}{ Q \sin^2 \frac{\pi(q-\tfrac{1}{2})}{2Q} }  = 2 Q
-    \tag{From \gp{?}}
   \end{align}
   %
   Then,
@@ -249,12 +264,20 @@ This convergence is faster with preconditioning.
   Plugging in the values of $k$, $u_q$ and summing over $u_q$ values gives us
   %
   \begin{align}
-    \sum_{q} \frac{|w_q|}{|t_q|}
+    \sum_{q=1}^Q \frac{|w_q|}{|t_q|}
     &<
-    \sum_{q} \frac{ 2 \sqrt{\lambda_\text{min}} \log \left( 5 \sqrt{\kappa(\bK)} \right)}
+    \sum_{q=1}^Q \frac{ 2 \sqrt{\lambda_\text{min}} \log \left( 5 \sqrt{\kappa(\bK)} \right)}
     { \pi Q \sin^2 ( \frac{\pi (q - 1/2}{2Q}) }
-    = \frac{4 \log \left( 5 \sqrt{\kappa(\bK)} \right)}{\pi} Q \sqrt{\lambda_\text{min}}.
   \end{align}
+  %
+  Through trigonometric identities we have
+  $\sum_{q=1}^Q 1 / ( Q \sin^2 \frac{\pi(q- 1/2 )}{2Q} )  = 2 Q$.
+  Therefore,
+  %
+  \begin{align*}
+    \sum_{q=1}^Q \frac{|w_q|}{|t_q|}
+    &< \frac{4 \log \left( 5 \sqrt{\kappa(\bK)} \right)}{\pi} Q \sqrt{\lambda_\text{min}}.
+  \end{align*}
 \end{proof}
 
 
@@ -263,8 +286,6 @@ This convergence is faster with preconditioning.
 
 
 
-With these lemmas we are able to prove our primary CIQ convergence result:
-%
 \newtheorem*{ciq_convergence}{Theorem~\ref{thm:ciq_convergence} (Restated)}
 \begin{ciq_convergence}
   Let $\bK$ and $\bb$ be the inputs to CIQ, producing the output $\bv_J \approx \bK^{1/2} \bb$ after $J$ iterations of msMINRES with $Q$ quadrature points.
