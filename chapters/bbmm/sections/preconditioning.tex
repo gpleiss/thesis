@@ -17,16 +17,21 @@ Despite the matrix square roots in \cref{eqn:precond_system}, preconditioned CG/
 
 \subsection{Modifying mBCG for Preconditioning}
 \label{sec:precond_requirements}
-We have to make some special adjustments to our modified batch CG algorithm in order to use preconditioning.
-While the preconditioned system simply returns $\trainK^{-1} \by$, we need to modify the random probe vectors $\bz^{(1)}$, $\ldots$, $\bz^{(T)}$ to get correct estimates of $\log \vert \trainK \vert$ and $\tr{ \trainK^{-1} ( \partial \trainK / \partial \btheta) }$.
-In particular, we will perform the solves
+We have to make some special adjustments to BBMM algorithm in order to use preconditioning.
+%While the preconditioned system simply returns $\trainK^{-1} \by$, we need to modify the random probe vectors $\bz^{(1)}$, $\ldots$, $\bz^{(T)}$ to get correct estimates of $\log \vert \trainK \vert$ and $\tr{ \trainK^{-1} ( \partial \trainK / \partial \btheta) }$.
+In particular, the input to the {preconditioned} mBCG algorithm should be the vectors
 %
 \begin{equation}
   \label{eqn:mod_cg_call_precond}
-  \trainK^{-1} \left[ \by, \:\: \bz^{(1)}, \:\: \cdots, \:\: \bz^{(T)} \right], \quad \bz^{(i)} \sim \normaldist{\bzero}{\trainP}.
+  \left[ \by, \:\: \bz^{(1)}, \:\: \cdots, \:\: \bz^{(T)} \right], \quad \bz^{(i)} \sim \normaldist{\bzero}{\trainP},
 \end{equation}
-
-The only difference between \cref{eqn:mod_cg_call_precond} and the original set of solves in \cref{eqn:mod_cg_call}
+%
+which produces the solves
+\begin{align*}
+  \trainK^{-1} \left[ \by, \:\: \bz^{(1)}, \:\: \cdots, \:\: \bz^{(T)} \right], \quad \bz^{(i)} \sim \normaldist{\bzero}{\trainP}.
+\end{align*}
+%
+The difference between \cref{eqn:mod_cg_call_precond} and the original (non-preconditioned) input (\cref{eqn:mod_cg_call})
 is that the $\bz^{(i)}$ probe vectors have covariance $\Ev{ \bz^{(i)} \bz^{(i)^\top} } = \trainP$ (rather than unit covariance).
 To understand why this is the case, recall from \cref{sec:bbmm_method} that our log determinant estimate is given by:
 %
@@ -36,9 +41,9 @@ To understand why this is the case, recall from \cref{sec:bbmm_method} that our 
 \end{align*}
 %
 where $\bT^{(1)}$, $\ldots$, $\bT^{(T)}$---the Lanczos tridiagonal matrices corresponding to $\trainK$ and probe vectors $\bz^{(i)}$, $\ldots$, $\bz^{(T)}$---are computed from byproducts of the CG iterations.
-However, if we precondition mBCG with $\trainP$, then the $\bT^{(i)}$ matrices will instead correspond to the \emph{preconditioned system}
+If we precondition mBCG with $\trainP$, then the $\bT^{(i)}$ matrices will instead correspond to the \emph{preconditioned system}
 $(\trainP^{- \frac 1 2} \trainK \trainP^{- \frac 1 2})$ and \emph{preconditioned probe vectors} $(\trainP^{- \frac 1 2} \bz^{(i)})$.
-Consequentially, the stochastic Lanczos quadrature estimate will actually return
+Consequentially, the stochastic Lanczos quadrature estimate will return
 %
 \begin{align}
 	\log \left\vert \trainP^{- \frac 1 2} \trainK \trainP^{- \frac 1 2} \right\vert
@@ -51,17 +56,18 @@ Consequentially, the stochastic Lanczos quadrature estimate will actually return
 	\label{eqn:slq_precond}
 \end{align}
 %
-\cref{eqn:slq_precond} motivates the use of $\bz^{(i)} \sim \normaldist{\bzero}{\trainP}$ as the probe vectors:
-the resulting preconditioned vectors $\trainP^{- \frac 1 2} \bz^{(i)}$ will be samples from $\normaldist{\bzero}{\bI}$ and can therefore be used for a stochastic trace estimate.
+By using $\bz^{(i)} \sim \normaldist{\bzero}{\trainP}$ as probe vectors:
+the resulting preconditioned vectors $\trainP^{- \frac 1 2} \bz^{(i)}$ will be samples from $\normaldist{\bzero}{\bI}$, which is the requirement for a stochastic trace estimate.
 
-\paragraph{Estimating $\log \vert \trainK \vert$ and $\tr{ \trainK^{-1} (\partial \trainK / \partial \btheta) }$ from preconditioned mBCG.}
+\paragraph{Estimating $\log \vert \trainK \vert$ from preconditioned mBCG.}
 To compute $\log \vert \trainK \vert$ from \cref{eqn:slq_precond}, we note that
 \[
-\log \vert \trainK \vert = \log \vert \trainP^{- \frac 1 2} \trainK \trainP^{- \frac 1 2} \vert + \log \vert \trainP \vert.
+\log \left\vert \trainK \right\vert = \log \left\vert \trainP^{- \frac 1 2} \trainK \trainP^{- \frac 1 2} \right\vert + \log \left\vert \trainP \right\vert.
 \]
-We therefore estimate the first using stochastic Lanczos quadrature (\cref{eqn:slq_precond}) and then ``correct'' this estimate with the log determinant of the preconditioner.
-Note that this will still be an unbiased estimate of $\log \vert \trainK \vert$ if we can exactly compute $\log \vert \trainP \vert$ (in an efficient manner).
+We estimate the first term using stochastic Lanczos quadrature (\cref{eqn:slq_precond}) on the preconditioned system, and then ``correct'' this estimate with the log determinant of the preconditioner.
+Note that this will still be an unbiased estimate of $\log \vert \trainK \vert$ if we can exactly compute $\log \vert \trainP \vert$.
 
+\paragraph{Estimating $\tr{ \trainK^{-1} (\partial \trainK / \partial \btheta) }$ from preconditioned mBCG.}
 To estimate $\tr{ \trainK^{-1} (\partial \trainK / \partial \btheta) }$ from the new probe vectors $\bz^{(i)} \sim \normaldist{\bzero}{\trainP}$,
 we note that we can form a stochastic trace estimate from the following:
 \begin{align}
@@ -89,7 +95,7 @@ The only differences between \cref{eqn:trace_est_precond} and the non-preconditi
 \end{enumerate*}
 
 \paragraph{Requirements of mBCG preconditioners.}
-Based on the above discussion, we observe three requirements of any preconditioner $\trainP$ that can be used with mBCG for GP training.
+Based on the above discussion, we observe three requirements of any preconditioner $\trainP$ for mBCG.
 First, in order to ensure that preconditioning operations do not dominate the running time of \cref{alg:mod_pcg}, the preconditioner should afford roughly linear-time solves and linear space.
 %\footnote{
 	%Recall from \cref{alg:std_pcg} that preconditioned conjugate gradients only requires computing $\trainP^{-1}$ and $\trainP$, not $\trainP^{- \frac 1 2}.$

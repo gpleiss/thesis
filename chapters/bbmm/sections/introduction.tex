@@ -3,7 +3,7 @@
 
 Training a Gaussian process regression model ensures that the mean function, kernel function, and likelihood are well suited to a given dataset.
 It is worth noting that GPs have few learnable parameters, especially compared to highly-parametric models like neural networks.
-Nevertheless, the mean, kernel, and likelihood parameters greatly influence on the performance of the model and therefore should be well-chosen.
+Nevertheless, the mean, kernel, and likelihood parameters greatly influence the performance of the model and therefore should be well-chosen.
 We will denote this set of learnable parameters by the vector $\btheta$.
 
 Typically, $\btheta$ is learned by optimizing the GP marginal log likelihood (\cref{eqn:log_lik}) via a gradient descent method \cite{rasmussen2006gaussian}.
