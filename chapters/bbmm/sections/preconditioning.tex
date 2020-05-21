@@ -90,11 +90,11 @@ The only differences between \cref{eqn:trace_est_precond} and the non-preconditi
 
 \paragraph{Requirements of mBCG preconditioners.}
 Based on the above discussion, we observe three requirements of any preconditioner $\trainP$ that can be used with mBCG for GP training.
-First, in order to ensure that preconditioning operations do not dominate running time in \cref{alg:mod_pcg}, the preconditioner should afford roughly linear-time solves and linear space.
+First, in order to ensure that preconditioning operations do not dominate the running time of \cref{alg:mod_pcg}, the preconditioner should afford roughly linear-time solves and linear space.
 %\footnote{
 	%Recall from \cref{alg:std_pcg} that preconditioned conjugate gradients only requires computing $\trainP^{-1}$ and $\trainP$, not $\trainP^{- \frac 1 2}.$
 %}
-Second, we should be able to efficiently compute the log determinant of the preconditioner matrix $\log \vert \trainP \vert$ to ``correct'' the log determinant estimate in \cref{eqn:slq_precond}.
+Second, we should be able to efficiently compute the log determinant of the preconditioner $\log \vert \trainP \vert$ to ``correct'' the log determinant estimate in \cref{eqn:slq_precond}.
 Finally, we should be able to efficiently sample probe vectors $\bz^{(i)}$ from the distribution $\normaldist{\bzero}{\trainP}$.
 
 
@@ -114,7 +114,7 @@ Intuitively, if $\bar\bL_{R}\bar\bL_{R}^{\top}$ is a good low-rank approximation
 
 Unlike the standard Cholesky decomposition, which computes an exact factorization in $N$ iterations,
 the partial pivoted Cholesky decomposition produces a \emph{rank-R} factorization in $R \ll N$ iterations, and therefore does not share its asymptotic concerns.
-Moreover, it meets the requirements outlined in \cref{sec:precond_requirements}:
+Moreover, it meets the requirements outlined above:
 %
 \begin{observation}[Properties of the rank-$R$ pivoted Cholesky preconditioner]
   {\ }
@@ -144,18 +144,17 @@ Moreover, it meets the requirements outlined in \cref{sec:precond_requirements}:
 \noindent
 Assuming $R \ll N$ (for example, $R \approx 5$), computing and using $\trainP$ is less expensive than a single matrix multiplication with $\trainK$.
 While the $R \approx 5$ iterations required to compute $\bar\bL_R$ are inherently sequential, we note that this is far fewer iterations than the standard Cholesky factorization.
-This large reduction in sequential computation makes this preconditioner rather amenable to GPU acceleration.
 
 Perhaps more important than its runtime are its convergence properties.
 In general, the low-rank nature of $\trainP$ is an ideal choice for many kernel matrices with rapidly decaying spectra.
-Such kernels tend to be horribly conditioned yet are well approximated by a low rank matrix, making $\trainP$ a natural choice to precondition.
-We empirically demonstrate in \cref{sec:bbmm_results} that $\trainP$ dramatically improves the convergence of mBCG for a wide variety of kernels.
-Below, we will prove some theoretical results for certain classes of kernels.
+Such kernels tend to be horribly conditioned yet are well approximated by low rank matrices.
+We empirically demonstrate in \cref{sec:bbmm_results} that $\trainP$ significantly improves the convergence of mBCG for several kernels.
+Below we prove theoretical guarantees for certain classes of kernels.
 
 
 \paragraph{Theoretical analysis.}
-Kernels with rapidly decaying eigenvalues (i.e. kernels that are well approximated by low-rank matrices) will see the largest improvements with the pivoted Cholesky preconditioner.
-Based on the work of \citet{harbrecht2012low}, one can prove the following lemma about kernel condition numbers:
+Kernels with rapidly decaying eigenvalues (i.e. kernels that are well approximated by low-rank matrices) will see the largest improvements from the pivoted Cholesky preconditioner.
+Based on the work of \citet{harbrecht2012low}, we can prove the following lemma about kernel condition numbers:
 %
 \begin{lemma}
   \label{thm:condition_number}
@@ -176,10 +175,10 @@ Based on the work of \citet{harbrecht2012low}, one can prove the following lemma
 \end{lemma}
 %
 \noindent
-(See \cref{app:proofs} for proofs.)
+(See \cref{app:proofs} for a proof.)
 It so happens that the exponentially-decaying eigenvalue assumption actually holds for certain classes of kernels.
 For example, the eigenvalues of univariate RBF kernels are guaranteed to decay \emph{super-exponentially} (see \cref{app:univariate_rbf}).
-In our experiments we observe significantly improved conditioning for other kernels as well (\cref{sec:bbmm_results}).
+In our experiments we observe improved conditioning for other kernels as well (\cref{sec:bbmm_results}).
 
 Using \cref{thm:condition_number}, we can prove the following statements about the solves/log determinant estimates from preconditioned mBCG:
 %
@@ -220,13 +219,10 @@ Using \cref{thm:condition_number}, we can prove the following statements about t
 \cref{thm:precond_mbcg_logdet} implies that the number of iterations needed to accurately estimate $\log \vert \trainP^{-1}\trainK \vert$ also decreases quickly as $R$ increases.
 Furthermore, in the limit as $R \rightarrow N$ we have that $\log \vert \trainK \vert = \log \vert \trainP \vert$.
 %This is because $\log \vert \trainP^{-1}\trainK \vert \rightarrow 0$ (since $\trainP^{-1}\trainK$ converges to $\bI$) and we have that $\log \vert \trainK \vert = \log \vert \trainP^{-1}\trainK \vert + \log \vert \trainP \vert$.
-Since our calculation of $\log \vert \trainP \vert$ is exact, the final estimate of $\log \vert \trainK \vert$ has less stochasticity as $R$ increases.
+Since our calculation of $\log \vert \trainP \vert$ is exact, the final estimate of $\log \vert \trainK \vert$ will have less stochasticity.
 
 \paragraph{Related work.}
-\citet{cutajar2016preconditioning} explore preconditioned conjugate gradients for GP training, where they use various sparse GP methods (as well as some classical methods) as preconditioners.
-However, the methods described in \citet{cutajar2016preconditioning} are not general purpose preconditioners.
-For example, methods like Jacobi preconditioning have no effect when using a stationary kernel \cite{wilson2015thoughts}, and many other preconditioners have $\bigomega{N^{2}}$ complexity, which dominates the complexity of most scalable GP methods.
-
+\citet{cutajar2016preconditioning} explore preconditioned conjugate gradients for GP training, using various sparse GP methods (as well as some classical methods) as preconditioners.
 \citet{bach2013sharp} uses the pivoted Cholesky decomposition as a low-rank approximation to kernel matrices.
 However, \citet{bach2013sharp} treats this decomposition as an approximate training method, whereas we use the decomposition primarily as a preconditioner and thus avoid any loss of accuracy from the low rank approximation.
 

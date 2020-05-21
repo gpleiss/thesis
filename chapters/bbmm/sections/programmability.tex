@@ -1,22 +1,22 @@
 \section{Programmability with BBMM}
 \label{sec:programmability}
-We have discussed how the BBMM framework is more hardware efficient than existing training engines, and avoids numerical instabilities with Lanczos.
+We have discussed how the BBMM framework is more hardware efficient than existing training methods and avoids numerical instabilities with Lanczos.
 Another key advantage of BBMM is that it can easily be adapted to complex GP models or structured GP approximations.
 
 Indeed BBMM is \emph{blackbox} by nature, only requiring a routine to perform matrix-multiplications with the kernel matrix and its derivative.
 Here we provide examples of how existing GP models and scalable approximations can be easily implemented in this framework.
-The matrix-multiplication routines for the models require at most \emph{50 lines of Python code}.
+The implementations of many specialty models require at most \emph{50 lines of Python code}.
 
 \subsection{GPyTorch's {\tt LazyTensor} construct.}
 In GPyTorch, we use the construct of a {\tt LazyTensor} object (or lazily-evaluated tensor) to represent kernel matrices $\bK_{\bX\bX}$.
-A {\tt LazyTensor} object represents a (potentially) structured matrix $\bK \in \reals^{N \times N}$ which is defined through some $\bigo{n^2}$ representation $\br$.
+A {\tt LazyTensor} represents a (potentially) structured matrix $\bK \in \reals^{N \times N}$ that is defined through some $\leq \bigo{N^2}$ representation $\br$.
 As an example, a diagonal matrix $\bK$ can be represented by its diagonal vector.
-Consequentially, for the {\tt DiagLazyTensor} class, the input $\br$ is simply a $\reals^N$ vector of diagonal entries.
+Consequentially, the representation $\br$ for the {\tt DiagLazyTensor} class is simply a $\reals^N$ vector of diagonal entries.
 
 Each {\tt LazyTensor} sub-class defines a {\tt \_matmul($\cdot$)} method (for performing $\bK \left( \bB \right)$ for some matrix $\bB$) and a {\tt \_deriv($\cdot,\cdot$)} method for computing $\partial \tr{ \bA^\top \bK \bB }/{\partial \br}$,
 where $\bA$ and $\bB$ are arbitrary matrices.
-The {\tt \_matmul($\cdot$)} method is used by mBCG, and exploits any structure of the {\tt LazyTensor} for fast matrix multiplication.
-The {\tt \_deriv($\cdot,\cdot$)} function can be used to compute an unbiased estimate \cref{eqn:log_lik_deriv}:
+The {\tt \_matmul($\cdot$)} method is used by mBCG, exploiting any structure of the {\tt LazyTensor} for fast matrix multiplication.
+The {\tt \_deriv($\cdot,\cdot$)} function can be used to compute an unbiased estimate of \cref{eqn:log_lik_deriv}:
 \begin{itemize}
   \item The $\frac{1}{T}\sum_{i=1}^{T}\left(\bz^{(i)^\top} \trainK^{-1}\right)\left(\frac{\partial \trainK}{\partial \btheta}\bz^{(i)} \right)$ term,
     which approximates the trace term in \cref{eqn:log_lik_deriv},
@@ -33,7 +33,7 @@ The {\tt \_deriv($\cdot,\cdot$)} function can be used to compute an unbiased est
     \]
     which can be computed by calling {\tt \_deriv($\trainK^{-1} \by$, $\trainK^{-1} \by$)}.
 \end{itemize}
-
+%
 While all {\tt LazyTensor} subclasses define {\tt \_matmul($\cdot$)} and {\tt \_deriv($\cdot$, $\cdot$}),
 the superclass defines additional methods necessary for GP training, such as
 %
@@ -43,13 +43,13 @@ the superclass defines additional methods necessary for GP training, such as
   \item {\tt inv\_quad\_logdet($\cdot$)} (for simultaneously computing $\by^\top \trainK^{-1} \by$ and $\log \vert \trainK \vert$).
 \end{itemize}
 %
-Each of these methods uses the outputs of mBCG algorithm using the subclass' appropriate {\tt \_matmul($\cdot$)} method.
-Moreover, each method uses the {\tt \_deriv($\cdot$,$\cdot$)} calls in conjunction with PyTorch's autograd \cite{paszke2017automatic} to compute the appropriate derivatives.
+Each of these methods runs the mBCG algorithm using the subclass' {\tt \_matmul($\cdot$)} method.
+Moreover, each method uses {\tt \_deriv($\cdot$,$\cdot$)} in conjunction with PyTorch's autograd \cite{paszke2017automatic} to compute the appropriate derivatives.
 In GPyTorch, we use the {\tt inv\_quad\_logdet($\cdot$)} method to compute \cref{eqn:log_lik}---as it can compute all log likelihood and derivative terms with a single mBCG call.
 
-For standard GP regression (with no approximations), there is no structure for the kernel matrix.
-We therefore use the aptly named {\tt NonLazyTensor} which simply represents an arbitrary matrix---i.e. $\br = \bK_{\bX\bX}$.
-In this standard case, the {\tt \_matmul($\cdot$)} and {\tt \_deriv($\cdot$, $\cdot$)} routines are as follows:
+For standard GP regression (with no approximations), there is no exploitable structure for the kernel matrix.
+We therefore use the aptly named {\tt NonLazyTensor}, which simply represents an arbitrary matrix---i.e. $\br = \bK_{\bX\bX}$.
+The {\tt \_matmul($\cdot$)} and {\tt \_deriv($\cdot$, $\cdot$)} routines are straightforward:
 %
 \begin{minted}{python3}
 class NonLazyTensor(LazyTensor):
@@ -77,8 +77,7 @@ A matrix multiply with this kernel against an $N \times T$ matrix $\bB$, $(\bX\b
 Therefore, BBMM requires $\bigo{JTND}$ time, and is exact in $\bigo{TND^2}$ time.
 This running time complexity matches existing efficient algorithms for Bayesian linear regression, \emph{with no additional derivation}.
 
-GPyTorch implements BBMM Bayesian linear regression simply as a standard GP.
-The {\tt LinearKernel} object returns a {\tt RootLazyTensor}:
+In GPyTorch's, the {\tt LinearKernel} class outputs a {\tt RootLazyTensor}:
 %
 \begin{minted}{python3}
 class RootLazyTensor(LazyTensor):
@@ -96,6 +95,9 @@ class RootLazyTensor(LazyTensor):
         return A @ B.transpose(-1, -2) @ X + \
             B @ A.transpose(-1, -2) @ X
 \end{minted}
+%
+\noindent
+Note that the {\tt RootLazyTensor}'s {\tt \_matmul($\cdot$)} function encodes the efficient MVM necessary for $\bigo{JTND}$ inference.
 
 \paragraph{Multi-task Gaussian processes} \cite{bonilla2008multi} use a kernel function that combines covariance between inputs $\bx, \bx'$ and covariance between tasks $c, c'$:
 $k^{(\text{input})} \left( \bx, \bx' \right) \: k^{(\text{task})} \left( c, c' \right)$.
@@ -142,7 +144,7 @@ class KroneckerProductLazyTensor(LazyTensor):
 \end{minted}
 %
 \noindent
-Importantly, implementing multitask GPs simply requires changing the kernel module (which changes the {\tt LazyTensor})---no additional implementation is required.
+Importantly, implementing multitask GPs in GPyTorch simply requires changing the kernel module (which changes the {\tt LazyTensor})---no additional implementation is required.
 This is demonstrated by the code example in \cref{app:multitask_gp_example}.
 
 \paragraph{Compositions of kernels} can often be handled automatically.
