@@ -2,7 +2,7 @@ Gaussian processes (GPs) exhibit a classic tension of many machine learning meth
 they possess desirable modelling capabilities yet suffer from important practical limitations.
 In many instances, GPs are able to offer well-calibrated uncertainty estimates, interpretable predictions, and the ability to encode prior knowledge.
 These properties have made them an indispensable tool for black-box optimization, time series forecasting, and high-risk applications like health care.
-Despite these desirable properties, GPs are typically not applied to datasets with more than a few thousand data points.
+Despite these properties, GPs are typically not applied to datasets with more than a few thousand data points.
 This is in part due to an inference procedure that requires matrix inverses, determinants, and other expensive operations.
 Moreover, specialty models often require significant implementation efforts.
 
@@ -21,4 +21,4 @@ Importantly, applying any of these algorithms to specialty models (e.g. multitas
 
 The MVM methods from this thesis form the building blocks of the {\tt GPyTorch} library, an open-sourced GP implementation designed for scalability and simple implementations.
 In the final chapter, we evaluate GPyTorch models on several large-scale regression datasets.
-Using the proposed MVM methods, we can apply exact Gaussian process regression models to datasets that are \emph{2 orders of magnitude larger} than what has previously been reported---up to 1 million data points.
+Using the proposed MVM methods, we can apply exact Gaussian processes to datasets that are \emph{2 orders of magnitude larger} than what has previously been reported---up to 1 million data points.
