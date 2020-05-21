@@ -2,12 +2,12 @@
 \label{chapter:discussion}
 
 
-This thesis presents a comprehensive framework for Gaussian process training, inference, and prediction.
+This thesis has presented a comprehensive framework for Gaussian process training, inference, and prediction.
 The algorithms proposed in \cref{chapter:bbmm,chapter:love,chapter:ciq} are based around a single central design decision: reduce all expensive matrix operations to parallelized matrix-vector multiplications (MVMs).
-\cref{chapter:bbmm} introduces the Black-Box Matrix~\texttimes~Matrix (BBMM) framework which computes GP training terms via a modified batched-conjugate gradients algorithm (mBCG).
-To enable fast predictions with GP models, \cref{chapter:love} introduces LanczOs Variance Estimates (LOVE), which computes an amortized cache of the predictive posterior via Lanczos iterations.
-Finally, \cref{chapter:ciq} uses Cauchy Integral Quadrature (CIQ) to ``whiten'' and ``unwhiten'' vectors with respect to a Gaussian covariance---enabling
-the MVM-based training of variational GP models and also allowing efficient posterior sampling from exact Gaussian processes.
+\cref{chapter:bbmm} introduced the Black-Box Matrix~\texttimes~Matrix (BBMM) framework which computes GP training terms via a modified batched-conjugate gradients algorithm (mBCG).
+To enable fast predictions with GP models, \cref{chapter:love} presented LanczOs Variance Estimates (LOVE), which computes an amortized cache of the predictive posterior.
+Finally, \cref{chapter:ciq} introduced Cauchy Integral Quadrature (CIQ) to ``whiten'' and ``unwhiten'' vectors with respect to a Gaussian covariance---enabling
+the MVM-based training of variational GP models and also allowing efficient posterior sampling.
 
 The MVM theme simultaneously addresses several desiderata for Gaussian processes.
 As demonstrated in \cref{chapter:bbmm}, MVM-based methods effectively utilize GPU hardware and reduce specialty implementations to $\leq 50$ lines of code.
@@ -23,9 +23,9 @@ Combined, these methods expand what is considered tractable for exact GPs, as de
 
 \section{Beyond Matrix-Vector Multiplication}
 
-The framework presented in this thesis makes large-scale GP models increasingly practical.
-Moreover, standard GP models can be an effective model class for many large datasets (as demonstrated in \cref{sec:largeexact_results}).
-However, larger datasets also allow for more powerful classes of GP models, which opens up many exciting and challenging research problems.
+The framework presented in this thesis makes GPs increasingly practical on massive datasets.
+%Moreover, standard GP models can be an effective model class for many large datasets (as demonstrated in \cref{sec:largeexact_results}).
+Large-scale problems allow for more powerful classes of GP-based models, which in turn opens up many exciting research problems.
 %These problems go beyond the scope of what is addressed by the MVM methods in this thesis.
 
 To increase the representational capacity of Gaussian processes, researchers have proposed highly-parametric kernels \cite{wilson2013gaussian,wilson2016stochastic}, using GPs as components of larger pipelines \cite{schulam2015framework,futoma2017learning}, and hierarchical GP models \cite{wilson2012gaussian,salimbeni2017doubly,jankowiak2020deep}.
@@ -34,7 +34,7 @@ Of course, the additional complexity of these approaches may pose new training a
 Advances in large-scale optimization have mostly targeted the piece-wise linear geometry of ReLU neural networks and may need to be adapted to the geometry of Gaussian processes-based models.
 This is especially true for GP models that use alternative objective functions for learning \cite{sheth2017excess,knoblauch2019generalized,jankowiak2020parametric}.
 Moreover, hierarchical GP models are more computationally intensive than simpler models.
-Deep Gaussian processes for example stack multiple GPs on top of one another, and BBMM-style methods should be adapted to handle this sequential computation.
+%Deep Gaussian processes for example stack multiple GPs on top of one another, and BBMM-style methods should be adapted to handle this sequential computation.
 Such models necessitate parametric approximations, as exact inference is intractable.
 Consequentially, increasing the fidelity of these models (e.g. stacking more layers, using more inducing points) increases the number of parameters, which may become an optimization or test-time bottleneck.
 It is worth noting that these problems are not unique to large-scale Gaussian processes---they are also issues of other large-scale machine learning models.
@@ -45,9 +45,9 @@ Addressing these challenges in the context of GPs however is a relatively new ar
 
 \section{Beyond Gaussian Processes}
 
-An key insight of this thesis is that non-linear operations on large-scale kernel matrices are surprisingly tractable when used in conjunction with GPU acceleration and efficient numerical techniques.
-While we motivate this finding through GPs, it is worth noting that the algorithms in this thesis are applicable to other classes of models.
-For example, a common relaxation to optimal transport problems is solved via the Sinkhorn algorithm \cite{cuturi2013sinkhorn}, which relys on iterative MVMs with an exponentiated distance matrix.
+A key insight of this thesis is that non-linear operations on large-scale kernel matrices are surprisingly tractable when used in conjunction with GPU acceleration and efficient numerical techniques.
+While we motivate this finding through GPs, it is worth noting that the algorithms presented here are applicable to other classes of models.
+For example, a common relaxation to optimal transport problems is solved via Sinkhorn iterations \cite{cuturi2013sinkhorn}, which rely on iterative MVMs with an exponentiated distance matrix.
 %This exponentiated distance matrix can be interpreted as a scaled RBF kernel, and therefore the preconditioning and partitioning techniques from this thesis might scale this algorithm beyond its current limits.
 Second-order optimization is another application where large-scale solves are necessary.
 GPU-accelerated MVM methods may make such methods applicable to higher dimensional problems \cite{koh2017understanding}.
