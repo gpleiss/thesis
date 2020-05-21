@@ -192,47 +192,6 @@ Its derivative is given by
 %
 We will discuss how to efficiently compute these terms in \cref{chapter:bbmm}.
 
-%We formalize this assumption by modelling $y$ with a \emph{Gaussian likelihood}:
-%%
-%\begin{equation}
-  %p(y \mid f(\bx)) = \normaldist{ y; f(\bx)}{\sigma^2_\text{obs}}.
-  %\label{eqn:likelihood}
-%\end{equation}
-%%
-%where again $\sigma^2_\text{obs}$ is a parameter that defines the observational noise variance.
-
-%In a \emph{Gaussian process model}, we assume assume a priori that the latent function $f(\cdot)$ is drawn from a Gaussian process distribution $\normaldist{\mu(\cdot)}{k(\cdot, \cdot)}$.
-
-%%%%%%%%%%%
-
-%In general, we assume that the observational noise $\epsilon$ is independent for all data points.
-%%
-%\begin{equation}
-  %p(\by \mid \bfn) = \normaldist{ \by; \bfn}{\sigma^2_\text{obs} \bI}.
-  %\label{eqn:likelihood_all}
-%\end{equation}
-
-%Note that the likelihood is conditioned on our choice of latent function $f(\cdot)$.
-%In a \emph{Gaussian process model}, we \emph{marginalizing} over all possible functions $f(\cdot)$.
-%More formally, we assume a Gaussian process prior distribution over the model's function $f(\cdot) \sim \GP{\mu(\cdot)}{k(\cdot, \cdot)}$.
-%We can then marginalize away any dependence on the function $f(\cdot)$ using the product rule of probability:
-%%
-%\begin{equation}
-  %p( \by \mid \bX, \sigma^2_\text{obs}, \mu, k ) = \int_\bfn \: p( y \mid \bfn, \sigma^2_\text{obs} ) \: p( \bfn \mid \bX, \mu, k ) \intd \bfn.
-  %\label{eqn:ml_full}
-%\end{equation}
-%%
-%where $p( y \mid \bfn, \sigma^2_\text{obs})$ is given by \cref{eqn:likelihood_all} and $p( \bfn \mid \bX, \mu, k )$ is given by \cref{eqn:prior_finite}.
-%Here we explicitly note the marginal likelihood's dependence on $\mu$, $k$, and $\sigma^2_\text{obs}$, though typically for brevity we will simply write it as $p(\by \mid \bX)$.
-%Because $p( \bfn \mid \bX)$ and $p( y \mid \bfn)$ are both multivariate Gaussians, we can actually compute the integral in \cref{eqn:ml_full} in closed-form using common Gaussian identities (see e.g. \cite{bishop2006pattern,rasmussen2006gaussian}):
-%%
-%\begin{equation}
-  %p( \by \mid \bX) = \normaldist{ \by; \bmu_\bX}{\trainK}, \quad
-  %\trainK = \bK_{\bX\bX} + \sigma^2 \bI.
-  %\label{eqn:ml_exact}
-%\end{equation}
-
-
 
 
 
