@@ -48,14 +48,14 @@ the introduction of automatic differentiation \citep[e.g.][]{paszke2017automatic
 and the development of of several high-quality software implementations~\citep[e.g.][]{jia2014caffe,abadi2016tensorflow,paszke2019pytorch}.
 These pragmatic advances make it easy for practitioners to experiment with new models and architectures, which has undoubtedly contributed to its profound and wide-spread successes \cite{goodfellow2016deep}.
 
-Gradient-boosted trees are another algorithm class with a similar powerful-yet-practical story.
+Gradient-boosted trees have a similar powerful-yet-practical story.
 Since their inception \cite{friedman2001greedy,friedman2002stochastic}, gradient boosted trees have excelled in many applications \citep[e.g.][]{richardson2007predicting,burges2010ranknet}.
 The predictive power of these models is a product of several key attributes: for example, their remarkable generalization properties \citep{freund1997decision,schapire2013boosting} and their ability to handle incomplete features \cite{friedman2001greedy}.
 Equally important, these models are simple and computational efficient, in large part due to specialty parallel algorithms \citep[e.g.][]{tyree2011parallel,ke2017lightgbm} and easy-to-use software implementations such as XGBoost \cite{chen2016xgboost}.
-These advantages have made gradient-boosted decision trees a workhorse algorithm for many practitioners in a variety of application domains.
+These advantages have made gradient-boosted decision trees a workhorse algorithm for many practitioners across application domains.
 According to a survey collected by \citet{kaggle2019kaggle}, $75\%$ of the responding data scientists regularly use gradient-boosted decision trees and the XGBoost software.
 
-Nevertheless, for many machine learning algorithms there is still a trade-off between predictive potential and its practical limitations.
+Nevertheless, for many machine learning algorithms there is still a trade-off between predictive potential and practical limitations.
 The focus of this thesis is {\bf Gaussian process models} (GPs), which perhaps best exemplify this tension.
 Within the machine learning community, GPs have been well-regarded as a powerful model class with many desirable properties---such as calibrated uncertainty estimates and interpretable model priors.
 Recent work on hierarchical modelling \citep[e.g.][]{damianou2013deep} and scalability \citep[e.g.][]{wilson2015kernel} have furthered their applicability to increasingly complex tasks.
@@ -78,7 +78,7 @@ Before addressing these issues, it is worth discussing why Gaussian processes ar
     \[
       p_\text{GP} ( y \mid \bx ) = \int_{f(\cdot)} p( y \mid \bx, f(\cdot)) \: p(f(\cdot)) \: \intd f(\cdot).
     \]
-    As a result, the predictions incorporate modelling uncertainty are are less prone to overfitting \cite{rasmussen2006gaussian}.
+    As a result, the predictions are less prone to overfitting \cite{rasmussen2006gaussian}.
 
   \item {\bf Well-calibrated uncertainty estimates.}
     The output of a Gaussian process is a predictive \emph{distribution}, which incorporates both modelling uncertainty (e.g. how many different models could fit the data) and data uncertainty (e.g. how noisy are the training data).
@@ -94,11 +94,11 @@ Before addressing these issues, it is worth discussing why Gaussian processes ar
   \item {\bf Interpretable predictions.}
     The predictions from Gaussian processes (see \cref{eqn:predictive_mean,eqn:predictive_var}) are not only expressive and powerful; they are also very intuitive.
     If we view the GP's kernel function as a similarity/distance measure between two points, then the prediction at a given point $\bx$ is simply an interpolation of nearby training points.
-    The prediction's confidence interval is small when $\bx$ is close to training dataset points, and large when $\bx$ is too far from points for accurate interpolation.
+    The prediction's confidence interval is small when $\bx$ is close to training points, and large when $\bx$ is too far away for accurate interpolation.
 \end{enumerate}
-
+%
 \noindent
-These benefits are obviously applicable to the ``small data'' regime, where priors and marginalization are critical for meaningful predictive performance \cite{rasmussen2001occam}.
+These benefits are obviously applicable in the ``small data'' regime, where priors and marginalization are critical for meaningful predictive performance \cite{rasmussen2001occam}.
 However, these properties also are beneficial for large datasets.
 Good uncertainty estimates and interpretable predictions are increasingly desirable for large-scale machine learning models.
 %GPs (with certain kernel functions) are universal approximators \cite{micchelli2006universal}, and their modelling capacity increases with the amount of available training data.
@@ -118,13 +118,13 @@ Historically, this has limited exact Gaussian process models to datasets with fe
 \subsection{Use of Modern Compute Hardware}
 It is worth noting that this $\bigo{N^3}$ computational complexity is not necessarily insurmountable given modern computational hardware.
 For example, some deep learning models require many more floating point operations (FLOPs) than large-scale GPs.
-A 264-layer DenseNet model \cite{huang2017densely}, common on many computer vision tasks, requires $2.4 \times 10^{18}$ FLOPs to train $1.2$ million images.
+A 264-layer DenseNet model \cite{huang2017densely}, common on many computer vision tasks, requires $2.4 \times 10^{18}$ FLOPs to train on $1.2$ million images.
 This is essentially a cubic computational requirement, and would be wholly impractical if it were not for specialty compute hardware like GPUs.
 Such a model would probably require months to train on standard CPUs, yet can be trained on 8 GPUs in a matter of hours \cite{howard2018training}.
 
 Given the effectiveness of GPU acceleration on large neural networks, one might expect similar performance for large-scale Gaussian processes.
 Unfortunately, many GP implementations rely on the Cholesky factorization (see \cref{sec:gp_models}), which does not benefit as readily from modern compute hardware.
-GPUs are designed for massively-parallelizable operations such as matrix-multiplication (which the primary numerical operation of neural networks).
+GPUs are designed for massively-parallelizable operations such as matrix-multiplication (which is the primary numerical operation of neural networks).
 A matrix-multiply between two $1,\!000 \times 1,\!000$ matrices is $10,\!000$ times faster on a GPU than on a CPU!\footnote{
 	As measured on a NVIDIA GTX 1070 GPU verses an 8-core Intel i7 CPU.
 }
@@ -138,28 +138,28 @@ This amounts to a terabyte of memory for $N=1,\!000,\!000$---well beyond the cap
 \subsection{Choosing Appropriate Approximations}
 To reduce the computational and memory burden, researchers have proposed numerous methods that approximate Gaussian processes with simpler models.
 Such models employ low-rank or structured approximations of the $N \times N$ matrices (see \cref{sec:approx_gps}).
-Numerous advances have made these approximate methods more powerful while retaining compelling asymptotic complexities.
+Numerous advances have made these approximate methods more powerful while retaining manageable asymptotic complexities.
 
 However, choosing a suitable approximation involves many design choices.
 All approximate methods introduce hyperparameters that control the speed/accuracy trade-off, while also making assumptions that might not be well suited to certain datasets.
-For example, variational approaches \cite{titsias2009variational}---which are a popular general-purpose approximation---tend to overestimate the observational noise, leading to worse predictive uncertainties \cite{turner2011two,bauer2016understanding}.
-Structured interpolation methods \cite{wilson2015kernel} alleviate these biases, yet they are limited to low-dimensional problems with specific kernel functions.
+For example, variational approaches \citep[e.g.][]{titsias2009variational,hensman2013gaussian}---which are a popular general-purpose approximation---tend to overestimate the observational noise, leading to worse predictive uncertainties \cite{turner2011two,bauer2016understanding}.
+Structured interpolation methods \cite{wilson2015kernel} alleviate these biases, yet tend to be limited to low-dimensional problems.
 While some theoretical guarantees can guide these design decisions \cite{burt2019rates}, choosing a good approximate model is ultimately dataset specific and can require expert knowledge.
 %Good performance often requires a large hyperparameter sweep and expert knowledge.
 
 \subsection{Implementation and Programmability}
 One compelling advantage of neural networks is their modularity.
 Creating a novel neural network architecture requires significant thought and experimentation; however, \emph{implementing} new architectures requires very little software engineering effort.
-Seemingly complex models like DenseNets \cite{huang2017densely} and Transformers \cite{vaswani2017attention} have surprisingly simple implementations using compositional layers and sub-routines.
+Seemingly complex models like DenseNets \cite{huang2017densely} and Transformers \cite{vaswani2017attention} have surprisingly simple implementations using compositional layers.
 Small modifications, such as adding an additional output dimension, often require only a single additional line of code.
 
 Gaussian processes models on the other hand require significant implementation effort.
 Often, the \emph{model} and the \emph{learning/inference procedures} are tightly coupled.
 As an example, consider a Gaussian process with multiple output dimensions \cite{bonilla2008multi}.
-While these models are seemingly similar to single-output GPs, they requires a completely different implementation.
+While this model and a standard (single-output) GP are seemingly similar, they require completely different implementations.
 The additional output dimension changes the structure of the prior covariance matrix (see \cref{sec:programmability}), modifying the equations used for efficient inference.
 In the popular \citet{gpy2014} software package, multi-output GPs and standard GPs are implemented as separate models, with multi-output GPs requiring an additional 100 lines of code.
-Compared to the one-line change required for multi-output neural networks, GPs are significantly more difficult to implement.
+Compared to the one-line change for multi-output neural networks, GPs are significantly more difficult to implement.
 
 
 
@@ -167,7 +167,7 @@ Compared to the one-line change required for multi-output neural networks, GPs a
 This thesis introduces a framework that addresses these issues without sacrificing the desirable properties of GPs.
 Our approach is centered on a \emph{single} critical design decision:
 taking inspiration from neural networks, we build GP training and inference algorithms \emph{using only matrix-multiplication} and element-wise operations.
-As we will demonstrate, this single design choice reduces the asymptotic complexity of GPs, improves their GPU utilization, expands the applicability of exact methods, and simplifies implementation of specialty models.
+As we will demonstrate, this reduces the asymptotic complexity of GPs, improves their GPU utilization, expands the applicability of exact methods, and simplifies implementation of specialty models.
 The following chapters introduce the components of our matrix-multiplication-based framework:
 
 \begin{itemize}
@@ -180,21 +180,20 @@ The following chapters introduce the components of our matrix-multiplication-bas
     %Computing GP predictive distributions requires expensive computations involving the training covariance matrix.
     We introduce an algorithm---{\bf LancZos~Variance~Estimates~(LOVE)}---that efficiently pre-computes many of the terms required for predictions.
     As with BBMM training, LOVE relies entirely on \emph{matrix-multiplication}, which is especially beneficial for models with fast kernel routines.
-    After a simple precomputation, computing a GP prediction is \emph{linear} in the amount of training data, or $\bigo{1}$ time if used in conjunction with structured kernel interpolation \cite{wilson2015kernel}.
+    After a simple precomputation, computing GP predictions is \emph{linear} in the amount of training data, or $\bigo{1}$ time if used in conjunction with structured kernel interpolation \cite{wilson2015kernel}.
 
   \item {\bf \cref{chapter:ciq}} focuses on Gaussian process models with non-Gaussian likelihood functions---i.e. GPs that are used to model heavy-tailed noise, arrival processes, or classification problems.
-    Unlike standard regression, these models necessitate the use of approximate Bayesian inference methods.
+    Unlike with GP regression, these models necessitate the use of approximate Bayesian inference methods.
     We introduce a matrix-multiplication method based on {\bf Cauchy Integral Quadrature (CIQ)} which can be used to optimize a re-parameterized variational training objective.
     On several large-scale spatial datasets, CIQ enables faster optimization and higher-fidelity approximations than existing methods.
-    We also demonstrate that CIQ can additionally be used to efficiently sample from GP posteriors.
+    We also demonstrate that CIQ can be used to efficiently sample from GP posteriors.
 
   \item This thesis culminates with with {\bf \cref{chapter:largeexact}}, which utilizes the prior chapter's methods to scale GP regression to extremely large datasets.
     Combining BBMM and LOVE with partitioned matrix-multiplication routines, we demonstrate that Gaussian processes can be trained \emph{without approximation} on datasets with \emph{over 1 million data points}.
     GPU-acceleration makes these large-scale GPs roughly as fast as approximate methods, despite their larger asymptotic complexity.
     We perform the first-ever comparison of exact GPs against scalable approximations on datasets with $10^4$---$10^6$ data points, showing dramatic performance improvements.
-
 \end{itemize}
-
+%
 \noindent
 Finally, we package together these contributions into {\bf GPyTorch},\footnote{
   \url{http://gpytorch.ai}
@@ -205,7 +204,7 @@ Moreover, the package seamlessly integrates with PyTorch \cite{paszke2019pytorch
 Throughout this thesis, we will discuss how the various algorithms (BBMM, LOVE, and CIQ) are implemented in GPyTorch, and how a practitioner can build on top of them to develop novel GP models.
 
 We begin with a brief overview of Gaussian process models, common kernel functions, and scalable GP approximations.
-Additionally, we will introduce Krylov-subspace methods---a family of numerical algorithms that compute matrix functions through matrix-vector products---which form the foundation of our matrix-multiplication-based framework.
+Additionally, we introduce Krylov-subspace methods---a family of numerical algorithms that compute matrix functions through matrix-vector products---which form the foundation of our matrix-multiplication-based GP framework.
 
 % In fact, we are not simply going to take inspiration from Neural networks, we are going to directly exploit those tools
 
