@@ -18,7 +18,7 @@
   \SetKwFunction{ellipj}{ellipj}
   \SetKwFunction{minres}{msMINRES}
   \SetKwFunction{size}{size}
-  \caption{Computing $w_q$ and $t_q$ for Cauchy Integral Quadrature}
+  \caption{Computing $w_q$ and $t_q$ for Contour Integral Quadrature.}
   \label{alg:quadrature}
     \Input{\mvmkxx{$\cdot$} -- function for matrix-vector multiplication (MVM) with matrix $\bK$}
     \NextInput{$Q$ -- number of quad. points}
@@ -30,8 +30,8 @@
     \BlankLine
     \tcp{Compute elliptic integral of the first kind.}
     \tcp{We use the relation $\mathcal{K}'(k) = \mathcal{K}(k')$, where $k' = \sqrt{1 - k^2}$ is the complementary elliptic modulus.}
-    $k^2$ $\gets$ $\lambda_\text{min} / \lambda_\text{max}$ \tcp{The elliptic modulus.}
-    $k^{\prime 2}$ $\gets$ $\sqrt{1 - k^2}$ \tcp{The complementary elliptic modulus.}
+    $k^2$ $\gets$ $\lambda_\text{min} / \lambda_\text{max}$ \tcp{The squared elliptic modulus.}
+    $k^{\prime 2}$ $\gets$ $\sqrt{1 - k^2}$ \tcp{The squared complementary elliptic modulus.}
     ${\tt K}'$ $\gets$ \ellipke{$k^{\prime 2}$} \tcp{${\tt K}' = \mathcal{K}'(k)$}
     \BlankLine
     \tcp{Compute each quadrature weight/location.}
