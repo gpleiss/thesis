@@ -14,7 +14,7 @@ The chapters of this thesis each address a different aspect of Gaussian process 
 \cref{chapter:bbmm} introduces an MVM method for training Gaussian process regression models (i.e. optimizing kernel/likelihood hyperparameters).
 This approach unifies several existing methods into a highly-parallel and stable algorithm.
 \cref{chapter:love} focuses on making predictions with Gaussian processes.
-A memory-efficient cache, which can be computed through MVMs, significantly reduces computation for predictive distributions.
+A memory-efficient cache, which can be computed through MVMs, significantly reduces the computation of predictive distributions.
 \cref{chapter:ciq} introduces a multi-purpose MVM algorithm that can be used to draw samples from GP posteriors and perform approximate Gaussian process inference.
 All three of these methods offer speedups ranging from $4\times$ to $40\times$.
 Importantly, applying any of these algorithms to specialty models (e.g. multitask GPs and scalable approximations) simply requires a matrix-vector multiplication routine that exploits covariance structure afforded by the model.

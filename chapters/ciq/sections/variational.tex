@@ -60,7 +60,7 @@ Therefore, using NGD incurs the same \emph{quadratic} asymptotic complexity as C
 See \cref{app:ngd} for the $\bigo{M^2}$ NGD update equations.
 
 \paragraph{Comparison of Cholesky vs CIQ.}
-We compare CIQ verses Cholesky for computing \cref{eqn:approx_pred_dist} when training SVGP models.\footnote{
+We compare CIQ versus Cholesky for computing \cref{eqn:approx_pred_dist} when training SVGP models.\footnote{
   Note that Cholesky computes $\bK^{-1/2} \bb$ up to an orthogonal rotation, which is suitable for whitened SVGP.
 }
 We test on 3 large-scale spatial datasets: a GIS dataset ({\bf 3droad}, $D=2$), a monthly precipitation dataset ({\bf Precipitation}, $D=3$), and a tree cover dataset ({\bf Covtype}, $D=54$).
@@ -134,7 +134,7 @@ We do not train $M > 5,\!000$ Cholesky models as such these would require $2$-$1
   \centering
   \includegraphics[width=\linewidth]{figures/variational_stats.pdf}
   \caption[Train time comparison of Cholesky-whitened vs CIQ-whitened SVGP models.]{
-    Hyperparameters verses number of inducing points ($M$) for Chol-SVGP and CIQ-SVGP (Precipitation dataset, Student-T likelihood).
+    Hyperparameters versus number of inducing points ($M$) for Chol-SVGP and CIQ-SVGP (Precipitation dataset, Student-T likelihood).
     As $M$ increases, the kernel outputscale (left) also increases.
     At the same time, the estimated observational noise (middle) decreases as does the estimated degrees of freedom (right), reflecting a heavier-tailed noise distribution.
     This suggests that, with larger $M$, SVGP models can find more signal in the data.

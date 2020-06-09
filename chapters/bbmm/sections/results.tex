@@ -88,7 +88,7 @@ This speedup is because BBMM is able to calculate all inference terms in paralle
 \paragraph{Predictive error comparison.}
 Computing predictive means requires the solve $\trainK^{-1} \by$.
 Therefore, the mBCG algorithm can be used to compute this term with preconditioning and GPU acceleration.
-In \cref{fig:bbmm_error_results} we compare the mean average error (MAE) of mBCG models verses Cholesky models.
+In \cref{fig:bbmm_error_results} we compare the mean average error (MAE) of mBCG models versus Cholesky models.
 We demonstrate results using both the RBF kernel and a Mat\'ern-5/2 kernel.
 Across all datasets, our method is at least as accurate in terms of final test MAE.
 On a few datasets (e.g. Gas, Airfoil, and Wine with Exact GPs) BBMM even improves final test error.
@@ -102,8 +102,8 @@ BBMM on the other hand avoids adding this noise, without requiring double precis
   \includegraphics[width=\textwidth]{figures/precond_solves}
   \caption[Effect of partial pivoted Cholesky preconditioning on mBCG solve errors.]{
     Effect of partial pivoted Cholesky preconditioning on solve errors.
-		{\bf Top:} mBCG residual $\Vert \trainK \bc - \by \Vert / \Vert \by \Vert$ verses number of mBCG iterations.
-		{\bf Bottom:} Test set MAE (using \cref{eqn:predictive_mean}) verses mBCG wall-clock time.
+		{\bf Top:} mBCG residual $\Vert \trainK \bc - \by \Vert / \Vert \by \Vert$ versus number of mBCG iterations.
+		{\bf Bottom:} Test set MAE (using \cref{eqn:predictive_mean}) versus mBCG wall-clock time.
 		Solves are computed using no preconditioner, rank $R=2$, $R=5$, and $R=9$ pivoted Cholesky preconditioners using deep RBF and deep Mat\'ern kernels.
 		On the 2 datasets tested (Protein and KEGG), preconditioning accelerates convergence.
   }

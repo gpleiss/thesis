@@ -126,7 +126,7 @@ Given the effectiveness of GPU acceleration on large neural networks, one might 
 Unfortunately, many GP implementations rely on the Cholesky factorization (see \cref{sec:gp_models}), which does not benefit as readily from modern compute hardware.
 GPUs are designed for massively-parallelizable operations such as matrix-multiplication (which is the primary numerical operation of neural networks).
 A matrix-multiply between two $1,\!000 \times 1,\!000$ matrices is $10,\!000$ times faster on a GPU than on a CPU!\footnote{
-	As measured on a NVIDIA GTX 1070 GPU verses an 8-core Intel i7 CPU.
+	As measured on a NVIDIA GTX 1070 GPU versus an 8-core Intel i7 CPU.
 }
 %which is why large neural networks are practical to train.
 The Cholesky algorithm on the other hand is inherently sequential and affords minimal parallelization;
