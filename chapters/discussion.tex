@@ -6,7 +6,7 @@ This thesis has presented a comprehensive framework for Gaussian process trainin
 The algorithms proposed in \cref{chapter:bbmm,chapter:love,chapter:ciq} are based around a single central design decision: reduce all expensive matrix operations to parallelized matrix-vector multiplications (MVMs).
 \cref{chapter:bbmm} introduced the Black-Box Matrix~\texttimes~Matrix (BBMM) framework which computes GP training terms via a modified batched-conjugate gradients algorithm (mBCG).
 To enable fast predictions with GP models, \cref{chapter:love} presented LanczOs Variance Estimates (LOVE), which computes an amortized cache of the predictive posterior.
-Finally, \cref{chapter:ciq} introduced Cauchy Integral Quadrature (CIQ) to ``whiten'' and ``unwhiten'' vectors with respect to a Gaussian covariance---enabling
+Finally, \cref{chapter:ciq} introduced MVM-based Contour Integral Quadrature (CIQ) to ``whiten'' and ``unwhiten'' vectors with respect to a Gaussian covariance---enabling
 the MVM-based training of variational GP models and also allowing efficient posterior sampling.
 
 The MVM theme simultaneously addresses several desiderata for Gaussian processes.
