@@ -1,29 +1,26 @@
 \section{Discussion}
 
-This chapter introduced Cauchy Integral Quadrature (CIQ)---a MVM-based method for computing $\bK^{1/2} \bb$ and $\bK^{-1/2} \bb$.
-In sampling and whitening applications, CIQ can be used as a $\bigo{N^2}$ drop-in replacement for the $\bigo{N^3}$ Cholesky decomposition.
-Its scalability and GPU utilization enable us to use more inducing points with SVGP models and larger candidate sets with BayesOpt acquisition functions.
-This increased fidelity leads to better performance.
+We have introduced msMINRES-CIQ---a MVM-based method for computing $\bK^{1/2} \bb$ and $\bK^{-1/2} \bb$.
+In sampling and whitening applications, msMINRES-CIQ can be used as a $\bigo{N^2}$ drop-in replacement for the $\bigo{N^3}$ Cholesky decomposition.
+Its scalability and GPU utilization enable us to use more inducing points with SVGP models and larger candidate sets in Bayesian optimization.
+In all applications, such increased fidelity results in better performance.
 
 
 \paragraph{Advantages and disadvantages.}
 One advantage of the Cholesky decomposition is its reusability.
 As discussed in \cref{sec:ciq_empirical}, the cubic cost of computing $\bL \bL^\top$ is amortized when drawing $\bigo{M}$ samples or whitening $\bigo{M}$ vectors.
-%While the initial cost of computing $\bL \bL^\top = \bK$ is cubic, applying $\bL$ to a vector (either for sampling and whitening) is only quadratic.
-%Therefore, its cubic complexity is well amortized if we wish to draw $\bigo{M}$ samples or whiten $\bigo{M}$ vectors.
-On the other hand, applying CIQ to $\bigo{M}$ vectors would incur a $\bigo{M^3}$ cost, eroding its computational benefits. Thus, CIQ is primarily advantageous
-in either scenarios with a small number of right hand sides or scenarios where $\bK$ is too large to apply Cholesky.
-%\paragraph{Using CIQ with structured kernel matrices.}
-We would also note that CIQ---like all Krylov methods---can take advantage of fast MVMs afforded by structured covariances.
-We suggest that future work explores applications of the CIQ algorithm involving sparse or structured matrices.
+Conversely, applying msMINRES-CIQ to $\bigo{M}$ vectors would incur a $\bigo{M^3}$ cost, eroding its computational benefits. Thus, our method is primarily advantageous
+in scenarios with a small number of right hand sides or where $\bK$ is too large to apply Cholesky.
+We also emphasize that msMINRES-CIQ---like all Krylov methods---can take advantage of fast MVMs afforded by structured covariances.
+Though this chapter focuses on applying this algorithm to dense matrices, we suggest that future work explore applications involving sparse or structured matrices.
 
 
 \paragraph{Scaling beyond $M=10,\!000$ and $T=50,\!000$.}
-Historically, it has been common to use only $M\approx1,\!000$ inducing points with SVGP models.
+It has been common to use only $M\approx1,\!000$ inducing points with SVGP models.
 In this chapter, we have used \emph{an order of magnitude} more inducing points which results in demonstrably better predictive performance.
 As $M$ continues to grow, the primary bottleneck of CIQ-SVGP becomes the quadratic memory costs of the variational parameters $\bm'$ and $\bS'$.
 While a scalable approximation of $\bK_{\bZ\bZ}$ (with fast MVMs) can reduce the computational cost of whitening, the $\bS'$ matrix in general does not afford space-saving structure.
-Efficient variational parameter repressions will be necessary to scale to even larger $M$.
+Efficient variational parameterizations will be necessary to scale to even larger $M$.
 This has been the topic of some recent work \cite{wilson2016stochastic,cheng2017variational,salimbeni2018orthogonally,shi2019sparse}.
 
 Scaling Thompson sampling beyond $T=50,\!000$ is to some extent more straightforward, as it does not require storing learnable parameters.

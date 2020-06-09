@@ -30,30 +30,30 @@ Note that \cref{eqn:sampling,eqn:whitening} both require applying the matrix squ
 In practice, $\bK^{1/2}$ can be replaced with any matrix $\bR$ such that $\bR \bR^\top = \bK$.
 All such $\bR$ matrices are equivalent to $\bK^{1/2}$ up to an orthonormal rotation \cite{golub2012matrix}.
 
-Existing methods for sampling and whitening typically rely on the Cholesky factorization: $\bK = \bL \bL^\top$, where $\bL$ is lower triangular.\footnote{
-  As stated above, $\bL$ is equivalent to $\bK^{1/2}$ up to an orthonormal rotation.
-}
-$\bL\bepsilon$, $\bepsilon \sim \normaldist{\bzero}{\bI}$ can be used to draw samples from from $\normaldist{\bzero}{\bK}$ and $\bL^{-1} \bb$ can be used to ``whiten'' the vector $\bb$.
+Existing methods for sampling and whitening
+typically rely on the Cholesky factorization: $\bK = \bL \bL^\top$, where $\bL$ is lower triangular.
+Though $\bL$ is not a square root of $\bK$, $\bL\bb$ is equivalent to $\bK^{1/2} \bb$ up to an orthonormal rotation.
+Therefore, $\bL\bepsilon$, $\bepsilon \sim \normaldist{\bzero}{\bI}$ can be used to draw samples from from $\normaldist{\bzero}{\bK}$ and $\bL^{-1} \bb$ can be used to ``whiten'' the vector $\bb$.
 However, the Cholesky factor requires $\bigo{N^3}$ computation and $\bigo{N^2}$ memory for an $N \times N$ covariance matrix $\bK$.
-Consequentially, sampling and whitening are typically accomplished with randomized algorithms \citep[e.g.][]{rahimi2008random}, low-rank/sparse approximations \citep[e.g.][]{wilson2020efficiently}, or alternative distributions \citep[e.g.][]{wang2017max}.
+To avoid this large complexity, randomized algorithms \cite{rahimi2008random,mutny2018efficient}, low-rank/sparse approximations \cite{hensman2017variational,wilson2020efficiently}, or alternative distributions \citep{wang2017max} are often used to approximate the sampling and whitening operations.
 While the previous chapter offers an efficient sampling method for KISS-GP models; this method is not generally applicable to other classes of GP models (see \cref{sec:sampling_method}).
 
 In this chapter, we make several contributions to address these issues:
 %
 \begin{itemize}
-  \item We introduce a MVM approach for computing $\bK^{-1 / 2} \bb$ that is accurate to several decimal points.
-    Our approach, {\bf Cauchy Integral Quadrature (CIQ)}, uses an insight from \citet{hale2008computing} that expresses the matrix square root as a sum of shifted matrix inverses.
+  \item We introduce a MVM approach for computing $\bK^{\pm 1 / 2} \bb$.
+    The approach uses an insight from \citet{hale2008computing} that expresses the matrix square root as a sum of shifted matrix inverses.
 
-  \item To efficiently compute these shifted inverses, we introduce a modified version of the MINRES algorithm \cite{paige1975solution} that performs \emph{multiple shifted solves} through a single iteration of MVMs.
-    This {\bf multi-shift MINRES (msMINRES)} can be preconditioned for fast convergence.
-    Achieving 4 decimal places of accuracy typically requires \emph{fewer than 100 MVMs}, which can be highly accelerated through GPUs.
+  \item To efficiently compute these shifted inverses, we leverage a modified version of the MINRES algorithm \cite{paige1975solution} that performs \emph{multiple shifted solves} through a single iteration of MVMs.
+    We demonstrate that, surprisingly, {\bf multi-shift MINRES (msMINRES)} convergence can be accelerated with a \emph{single} preconditioner despite the presence of multiple shifts.
+    %Moreover, msMINRES only requires $\bigo{N}$ storage when used in conjunction with partitioned MVMs \cite{charlier2020kernel}.
+    Achieving 4 or 5 decimal places of accuracy typically requires \emph{fewer than 100 matrix-vector multiplications}, which can be highly accelerated through GPUs.
 
-  \item We derive a scalable backward pass for $\bK^{-1/2} \bb$ that enables our approach to be used as part of learning and optimization.
+  \item We derive a scalable backward pass for $\bK^{\pm 1/2} \bb$  that enables our approach to be used as part of learning and optimization.
 
   \item We apply our $\bK^{-1/2} \bb$ and $\bK^{1/2} \bb$ routines to two applications:
     \begin{enumerate*}
-      \item variational Gaussian processes with up to $M = 10,\!000$ inducing points (where we additionally introduce a $\bigo{M^2}$ MVM-based natural gradient update); and
+      \item variational Gaussian processes with up to $M = 10^4$ inducing points (where we additionally introduce a $\bigo{M^2}$ MVM-based natural gradient update); and
       \item sampling from Gaussian process posteriors in the context of Bayesian optimization with up to $50,\!000$ candidate points.
-      %\item an image super-resultion Gibbs sampling problem in $25,\!000$ dimensions.
     \end{enumerate*}
 \end{itemize}

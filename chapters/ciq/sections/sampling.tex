@@ -1,60 +1,81 @@
 \subsection{Posterior Sampling for Bayesian Optimization}
 \label{sec:bayesopt_results}
-
-The second application of CIQ we explore is GP posterior sampling in the context of Bayesian optimization (BO) \citep[e.g.][]{snoek2012practical}.
-Many acquisition functions require drawing samples from GP posteriors \citep[e.g.][]{frazier2009knowledge,hernandez2014predictive,wang2017max}.
-One canonical example is {\bf Thompson Sampling} (TS) \cite{thompson1933likelihood, hernandez2017parallel, kandasamy2018parallelised},
-which trades off exploitation of existing minima for exploration of new potential minima.
-TS chooses $\bx_N$ as the minimizer of a sample drawn from the posterior.
-Let $\bXtest = [ \bxtest_1, \ldots, \bxtest_T ]$ be a \emph{candidate set} of possible acquisition points.
-To choose the candidate point $\widetilde \bx$, TS computes
+The second application of msMINRES-CIQ we explore is Gaussian process posterior sampling in the context of Bayesian optimization (BO) \citep[e.g.][]{snoek2012practical}.
+Many acquisition functions require drawing samples from posteriors \citep[e.g.][]{frazier2009knowledge,hernandez2014predictive,wang2017max}.
+One canonical example is {\bf Thompson Sampling} (TS) \cite{thompson1933likelihood, hernandez2017parallel, kandasamy2018parallelised}.
+TS trades off exploitation of existing minima for exploration of new potential minima.
+TS chooses the next query point $\widetilde \bx $ as the minimizer of a sample drawn from the posterior.
+Let $\bXtest = [ \bxtest_1, \ldots, \bxtest_T ]$ be a \emph{candidate set} of possible query points.
+To choose the next query point $\widetilde \bx$, TS computes
 %
 \begin{equation}
-  \widetilde \bx = \argmin_{i} \left( \bmeantest(\bXtest) + {\Covtest(\bXtest)}^{\frac 1 2} \bepsilon \right),
+  \widetilde \bx = \argmin \left( \bmeantest(\bXtest) + {\Covtest(\bXtest)}^{\frac 1 2} \bepsilon \right),
   \quad
   \bepsilon \sim \normaldist{\bzero}{\bI}.
   \label{eqn:thompson_sample}
 \end{equation}
 %
-where $\bmeantest(\bXtest)$ and $\Covtest(\bXtest)$ are the posterior mean and covariance of the GP applied at the candidate set.
-The candidate set is often chosen using a space-filling design, e.g., a Sobol sequence.
-As the search space grows exponentially with dimensionality, we need larger values of $T$ to densely cover the search space.
-However, using Cholesky to compute \cref{eqn:thompson_sample} incurs a $\bigo{T^3}$ computational cost and $\bigo{T^2}$ memory, which severely limits the size of $T$.
-In comparison, CIQ only requires $\bigo{T^2}$ computation.
-Using partitioned MVM methods presented in the next chapter, we can reduce the CIQ memory requirement to $\bigo{T}$ (see \cref{sec:largeexact_method}).
+where $\bmeantest(\bXtest)$ and $\Covtest(\bXtest)$ are the posterior mean and covariance of the Gaussian process at the candidate set.
+The candidate set is often chosen using a space-filling design, e.g.~a Sobol sequence.
+The search space grows exponentially with the dimension; therefore, we need large values of $T$ to more densely cover the search space for better optimization performance.
+Using Cholesky to compute \cref{eqn:thompson_sample} incurs a $\bigo{T^3}$ computational cost and $\bigo{T^2}$ memory, which severely limits the size of $T$.
+In comparison, msMINRES-CIQ only requires $\bigo{T^2}$ computation and $\bigo{T}$ memory.
 
 \begin{figure}[t!]
   \centering
-  \includegraphics[width=0.85\linewidth]{figures/bo_ciq.pdf}
+  \includegraphics[width=\linewidth]{figures/bo_ciq.pdf}
   \caption[
-    A comparison between CIQ and Cholesky sampling for Bayesian optimization (BO) via TS and \texttt{TuRBO}.
+    A comparison of sampling methods for Bayesian optimization (BO) via TS.
+    TS is applied to the Hartmann ($D=6$) and Lunar Lander ($D=12$).
   ]{
-    A comparison of sampling methods for BO.
-    BO is applied to the ({\bf left}) Hartmann ($D=6$), ({\bf middle}) Lunar Lander ($D=12$), and ({\bf right}) Rover ($D=60$) problems.
+    A comparison of sampling methods for Bayesian Optimization.
+    BO is applied to the ({\bf left}) Hartmann ($D=6$) and ({\bf right}) Lunar Lander ($D=12$) problems.
     Methods: Cholesky-$\langle T \rangle$ draws posterior samples with Cholesky at $T$ candidate points.
-    CIQ-$\langle T \rangle$ draws posterior samples with CIQ.
+    CIQ-$\langle T \rangle$ draws posterior samples with msMINRES-CIQ.
+    RFF-50k uses random Fourier features to draw approximate posterior samples at $50,\!000$ candidate points.
     Larger $T$ results in better optimization.
-    CIQ enables scaling to $T\geq50,\!000$.
-    Each plots shows median regret with one standard deviation in log-scale.
+    msMINRES-CIQ enables scaling to $T \geq 50,\!000$.
+    Each plot shows mean regret with standard error in log-scale based on 30 replications.
   }
   \label{fig:bayesopt}
 \end{figure}
 
-We perform BO using TS on the classical test function ({\bf Hartmann}, $D=6$) and a reinforcement controller tuning problem ({\bf Lunar Lander}, $D=12$) \cite{eriksson2019scalable}.
-In addition, we study the high-dimensional BO method \texttt{TuRBO} \cite{eriksson2019scalable} on a rover trajectory planning problem {\bf Rover}, $D=60$) \cite{wang2017batched}.
-For each problem we use exact Gaussian processes (no approximations) as the surrogate model and TS as the acquisition function.
-Our goal is to determine whether CIQ-based sampling is beneficial by allowing us to accurately scale to larger candidate set sizes.
+We perform BO using TS on the classic test function ({\bf Hartmann}, $D=6$) and a reinforcement controller tuning problem ({\bf Lunar Lander}, $D=12$) from the OpenAI gym.\footnote{\url{https://gym.openai.com/envs/LunarLander-v2}}
+We provide more details in the supplementary material.
+%The goal in the Lunar Lander problem is to tune a 12-dimensional controller to maximize the reward averaged over 50 different environments.
+For each problem we use exact Gaussian processes as the surrogate model and TS as the acquisition function.
+Our goal is to determine whether CIQ-based sampling is beneficial by enabling scaling to larger candidate set sizes.
 
 \paragraph{Baselines.}
-With sufficient quadrature points and msMINRES iterations, we can reduce the error of CIQ to machine precision (see \cref{thm:ciq_convergence}).
-Therefore, we limit the baseline methods to exact sampling methods, and do not consider stochastic approximations \cite{rahimi2008random} or methods that rely on inducing points \cite{wilson2020efficiently}.
-We measure the performance of TS as a function of the candidate set size $T$.
-We run TS with $T=1,\!000$, $T=5,\!000$, $T=20,\!000$, and $T=50,\!000$.
-We use Cholesky ({\bf TS-Cholesky}) for $T=1,\!000$ and $T=5,\!000$, and CIQ ({\bf TS-CIQ}) for $T=20,\!000$ and $T=50,\!000$.
-Note that it would be very challenging and impractical to use Cholesky with $T \geq 10,\!000$, both due to its quadratic memory and its cubic time complexity.
+%With sufficient quadrature points and msMINRES iterations, we can reduce the error of CIQ to machine precision (see \cref{thm:ciq_convergence}).
+We measure the performance of TS as a function of the candidate set size $T$ and consider $T \in \{ 1,\!000, 5,\!000, 20,\!000, 50,\!000 \}$.
+We run Cholesky ({\bf Cholesky}-$T$) for  $T \in \{ 1,\!000, 5,\!000\}$ and msMINRES-CIQ ({\bf CIQ}-$T$) for $T \ge 5,\!000$.
+Note that it would be very challenging and impractical to use Cholesky with $T \geq 10,\!000$, due to its quadratic memory and cubic time complexity.
+In addition to Cholesky and CIQ with exact Gaussian processes as the surrogate model, we also compare to random Fourier features (RFF) \cite{rahimi2008random} with $1,\!000$ random features.
 
-\paragraph{Results.}
-We plot the median regret with one standard deviation based on 30 replications in \cref{fig:bayesopt}.
-By increasing $T=1,\!000$ to $T=50,\!000$, the final regret is significantly lowered on all problems.
-We re-iterate that $T=50,\!000$ is largely impractical with Cholesky sampling methods.
-Large candidate sets have previously only been possible with approximate sampling methods.
+\paragraph{Experimental details.}
+The 6-dimensional Hartmann function is a classical test problem in global optimization\footnote{\url{https://www.sfu.ca/~ssurjano/hart6.html}}.
+There are 6 local minima and a global optimal value is $-3.32237$.
+We use a total of 100 evaluations with 10 initial points.
+The 10 initial points are generated using a Latin hypercube design and we use a batch size of 5.
+In each iteration, we draw 5 samples and select 5 new trials to evaluate in parallel.
+
+We consider the same setup and controller as in \cite{eriksson2019scalable} for the 12-dimensional Lunar Lander problem.
+The goal is to learn a controller that minimizes fuel consumption and distance to a given landing target while also preventing crashes.
+The state of the lunar lander is given by its angle and position, and their time derivatives.
+Given this state vector, the controller chooses one of the following four actions: $a \in \{\text{do nothing, booster left, booster right, booster down}\}$.
+The objective is the average final reward over a fixed constant set of $50$ randomly generated terrains, initial positions, and initial velocities.
+The optimal controller achieves an average reward of $\approx 309$ over the 50 environments.
+
+For both problems, we use a Mat\'ern-$5/2$ kernel with ARD and a constant mean function.
+The domain is scaled to \smash{$[0, 1]^d$} and we standardize the function values before fitting the Gaussian process.
+The kernel hyperparameters are optimized using L-BFGS-B and we use the following bounds: (lengthscale) $\ell \in [0.01, 2.0\,]$, (signal variance) $s^2 \in [0.05, 50.0]$, (noise variance) $\sigma^2 \in [1e-6, 1e-2]$.
+Additionally, we place a horseshoe prior on the noise variance as recommended in \cite{snoek2012practical}.
+We add $1\mathrm{e}{-4}$ to the diagonal of the kernel matrix to improve the conditioning and use a preconditioner of rank $200$ for CIQ.
+
+\paragraph{Optimization performance.}
+We plot the mean regret with standard error based on 30 replications in \cref{fig:bayesopt}.
+By increasing $T=1,\!000$ to $T=50,\!000$, the final regret achieved by CIQ is significantly lower on both problems.
+We re-iterate that $T=50,\!000$ is largely impractical with Cholesky.
+Large candidate sets have previously only been possible with approximate sampling methods like RFF.
+We note, however, that RFF with $T=50,\!000$ is outperformed by CIQ-50k on both problems.
