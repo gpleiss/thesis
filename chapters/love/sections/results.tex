@@ -140,8 +140,8 @@ We compare against three baselines: sampling from an {\bf Exact GP} using the Ch
 %The LOVE + KISS-GP{} and SGPR models use the same architecture as described in the previous section.
 For Fourier features, we use 5000 random features---the maximum number of features without exhausting available GPU memory.
 The model hyperparameters are learned on an Exact GP and then shared across all baselines.
-We use two UCI datasets (PolTele and Eleveators) datasets as well as two Bayesian optimization benchmark functions (Eggholder: 2 dimensional, and Styblinski-Tang: 10 dimensional).
-For the BayesOpt functions, we evaluate the model after 100 queries of max value entropy search \cite{wang2017max}.
+We use two UCI datasets (PolTele and Eleveators) datasets as well as two Bayesian optimization (BO) benchmark functions (Eggholder: 2 dimensional, and Styblinski-Tang: 10 dimensional).
+For the BO functions, we evaluate the model after 100 queries of max value entropy search \cite{wang2017max}.
 For Eggholder, we use a standard (non-deep) RBF kernel;  for Syblinski-Tang we use the additive kernel suggested by~\citet{kandasamy2015high}.\footnote{
   The Syblinski-Tang KISS-GP model uses the sum of 10 RBF kernels---one for each dimension---and $M=100$ inducing points.
 }
@@ -166,17 +166,17 @@ For example, max-value entropy search \cite{wang2017max} uses samples to estimat
 \begin{figure}[t!]
   \centering
   \includegraphics[width=0.65\columnwidth]{figures/love_sampling_comparison.pdf}
-  \caption[Comparison of LOVE and Random Fourier Features for BayesOpt sampling.]{
-    Comparison of LOVE and Random Fourier Features for BayesOpt sampling.
+  \caption[Comparison of LOVE and Random Fourier Features for Bayesian optimization via Max-Value Entropy Search.]{
+    Comparison of LOVE and Random Fourier Features for Bayesian optimization (BO) via Max-Value Entropy Search.
     Each line represents an approximation of maximum value distribution $p(y_\text{max} \mid \dset)$ using different sampling methods (exact sampling, Random Fourier Features, and LOVE + KISS-GP).
     Samples drawn with LOVE+KISSGP closely match samples drawn using an Exact GP.
-    (Dataset: (normalized) Eggholder function after 100 iterations of BayesOpt.)
+    (Dataset: (normalized) Eggholder function after 100 iterations of BO.)
     \label{fig:love_sampling_comparison}
   }
 \end{figure}
 %
 In \cref{fig:love_sampling_comparison}, we visualize each method's sampled distribution of $p(y_\text{max} \! \mid \! \dset)$ for the Eggholder function.
-We plot kernel density estimates of this distribution after $100$ BayesOpt iterations.\footnote{
+We plot kernel density estimates of this distribution after $100$ BO iterations.\footnote{
   Using the max-value entropy search acquisition function \citep{wang2017max}.
 }
 Since the Exact GP sampling method uses the Cholesky decomposition, its sampled max-value distribution can be considered closest to ground truth.

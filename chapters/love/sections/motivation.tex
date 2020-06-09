@@ -44,7 +44,7 @@ where again the blue terms only depend on training data.
 After pre-computing the $\blue \ba'$ vector, all subsequent means are the inner product between $\color{blue} \ba'$ and the \emph{$\bigo{1}$ sparse} $\bw_\bxtest$ vector.
 These computations are $\bigo{1}$ because of this sparsity.
 
-\subsection{Computing (Co)-Variances without Pre-computation}
+\subsection{Computing (Co)-Variances without Pre-Computation}
 
 The predictive (co)-variances are more computationally challenging, as the only term in \cref{eqn:predictive_covar_2} that does not depend on test data is $\blue \trainK^{-1}$.
 A common pre-computation is to form the Cholesky factorization $\blue \bL \bL^\top = \trainK$ ($\bigo{N^3}$ time, $\bigo{N^2}$ memory).

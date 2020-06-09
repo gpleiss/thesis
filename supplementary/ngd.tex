@@ -44,7 +44,7 @@ Recall that the ELBO is given by
 \]
 We will separately analyze the expected log likelihood and KL divergence computations.
 
-\subsection{The Expected Log Likelihood and its Gradient}
+\section{The Expected Log Likelihood and its Gradient}
 Assume we are estimating the ELBO from a single data point $\bx, y$.
 The expected log likelihood term of the ELBO is typically computed via Gauss-Hermite quadrature or Monte Carlo integration \cite{hensman2015scalable}:\footnote{
   It can also be computed analytically for Gaussian distributions \cite{hensman2013gaussian}.
@@ -130,7 +130,7 @@ The only expensive operation involving the variational parameters is ${\color{bl
 Those operations only need to be computed once, and then they can be reused across \cref{eqn:pred_mean_natural,eqn:pred_mean_deriv,eqn:pred_var_natural,eqn:pred_var_deriv_1,eqn:pred_var_deriv_2}.
 In total, the entire computation for the expected log likelihood and its derivative is $\bigo{M^2}$.
 
-\subsection{The KL Divergence and its Gradient}
+\section{The KL Divergence and its Gradient}
 We will demonstrate that the KL divergence and its gradient can be computed from $\btheta$ and $\bTheta$ in $\bigo{M^2}$ time.
 All expensive computations involving $\btheta$ and $\bTheta$ are written in {\color{blue} blue}.
 

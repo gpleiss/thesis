@@ -7,7 +7,7 @@ Indeed BBMM is \emph{blackbox} by nature, only requiring a routine to perform ma
 Here we provide examples of how existing GP models and scalable approximations can be easily implemented in this framework.
 The implementations of many specialty models require at most \emph{50 lines of Python code}.
 
-\subsection{GPyTorch's {\tt LazyTensor} construct.}
+\subsection{GPyTorch's {\tt LazyTensor} Construct}
 In GPyTorch, we use the construct of a {\tt LazyTensor} object (or lazily-evaluated tensor) to represent kernel matrices $\bK_{\bX\bX}$.
 A {\tt LazyTensor} represents a (potentially) structured matrix $\bK \in \reals^{N \times N}$ that is defined through some $\leq \bigo{N^2}$ representation $\br$.
 As an example, a diagonal matrix $\bK$ can be represented by its diagonal vector.
