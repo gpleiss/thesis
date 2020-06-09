@@ -11,7 +11,7 @@ To prove the convergence result in \cref{thm:ciq_convergence}, we first prove th
     \bigl\Vert (\bK + t_q \bI) \bc_J^{(q)} - \bb \bigr\Vert_2
     &\leq \left( \frac{
       \sqrt{\kappa(\bK + t_q \bI)} - 1
-    }{
+    }{a
       \sqrt{\kappa(\bK + t_q \bI)} + 1
     }\right)^J
     \Vert \bb \Vert_2
@@ -33,7 +33,7 @@ To prove the convergence result in \cref{thm:ciq_convergence}, we first prove th
     %\citet{paige1975solution} do not provide a detailed convergence analysis of MINRES.
     %However, proving the following result is a straightfoward analog of the famous conjugate gradients convergence analysis.
   %}
-  See \citep[e.g.][]{shewchuk1994introduction,trefethen1997numerical,saad2003iterative} for an analogous proof for the conjugate gradients method.
+  See \citep[e.g.][]{shewchuk1994introduction,trefethen1997numerical,saad2003iterative} for an analogous proof for the conjugate gradients method and~\citep[e.g.][]{greenbaum1997iterative} for a treatment of MINRES applied to both positive definite and indefinite systems.
 
 	At iteration $J$, the msMINRES algorithm produces:
   %
@@ -43,102 +43,37 @@ To prove the convergence result in \cref{thm:ciq_convergence}, we first prove th
       \bigl\Vert (\bK + t_q \bI) \bc^{(q)} - \bb \bigr\Vert_2
     \Bigr],
     \quad
-    q \in [1, Q],
+    q = 1, \ldots Q,
     \label{eqn:minres_krylov}
 	\end{align}
   %
   where without loss of generality we assume $\bc_0^{(q)} = \bzero$ for simplicity.
-  Since the Krylov subspace $\mathcal{K}^{(J)} (\bK, \bb) = \mathcal{K}^{(J)} (\bK + t_q \bI, \bb)$ contains powers of $\bK + t_q \bI$ applied to the vector $\bb$, we can rewrite
-  %
-  $\bc_j^{(q)}$
-  as a polynomial of $(\bK + t_q \bI)$ applied to $\bb$:
-  %
-  \begin{align*}
+  Using the fact that Krylov subspaces are shift invariant, we immediately have that
+  \begin{align}
     \bc^{(q)}_J
-    &= \sum_{j=0}^{J-1} \nu_j^{(q)} (\bK + t_q \bI)^j \bb, \quad \nu_j \in \reals
-    \\
-    &= P_q(\bK + t_q \bI) \bb, \quad P_q(\cdot) \in \mathcal{P}_{J-1}
-  \end{align*}
-  %
-  where $\nu_0$, $\ldots$, $\nu_J$ are some coefficients,
-  and $\mathcal{P}_{J-1}$ is the class of $(J-1)$-degree polynomials.
-  Consequentially, the residual can be written as:
-  %
-  \begin{align}
-    (\bK + t_q \bI) \bc^{(q)} - \bb
-    &= \bigl[ \left( \bK + t_q \bI \right) P_q(\bK + t_q \bI) - \bI \bigr] \bb, \quad P_q(\cdot) \in \mathcal{P}_{J-1}
-    \nonumber
-    \\
-    &= P'_q(\bK + t_q \bI) \bb, \quad P'_q(\cdot) \in \widetilde{\mathcal{P}_J}
-    \nonumber
-  \end{align}
-  %
-  where $\widetilde{\mathcal{P}_J}$ is the class of $J$-degree polynomials that additionally satisfy the condition $P'_q(0) = -1$ for some $\xi$.
-  Therefore, \cref{eqn:minres_krylov} is equivalent to an optimal polynomial problem:
-	\begin{align}
-    %\min_{\bc^{(q)} \in \mathcal{K}_J(\bK, \bb)} \Bigl[
-      %\bigl\Vert (\bK + t_q \bI) \bc^{(q)} - \bb \bigr\Vert_2
-    %\Bigr]
-    \bigl\Vert (\bK + t_q \bI) \bc_J^{(q)} - \bb \bigr\Vert_2
-    &= \min_{P'_q \in \widetilde{\mathcal{P}_J}} \Bigl[
-      \Vert P'_q(\bK) \bb \Vert_2
-    \Bigr].
-    \label{eqn:minres_poly}
-  \end{align}
-  %
-  We can upper bound \cref{eqn:minres_poly} by considering the case where $\bb$ is the ``worst'' eigenvector of $\bK$:
-  %
-  \begin{align}
-    \bigl\Vert (\bK + t_q \bI) \bc_J^{(q)} - \bb \bigr\Vert_2
-    &\leq \min_{P'_q \in \mathcal{P}^{(t_q)}_J} \Bigl[
-      \max_{\lambda \in \Lambda}
-      \left\vert P'_q(\lambda + t_q) \right\vert
-    \Bigr] \Vert \bb \Vert_2,
+    = \argmin_{\bc^{(q)} \in \mathcal{K}_J(\bK+t_q \bI, \bb)} \Bigl[
+      \bigl\Vert (\bK + t_q \bI) \bc^{(q)} - \bb \bigr\Vert_2
+    \Bigr],
     \quad
-    q \in [1, Q].
-    \label{eqn:bound}
-	\end{align}
-  %
-  where $\Lambda$ is the set of eigenvalues of $\bK$.
-  Here we exploit the fact that $\bK + t_q \bI$ and $\bK$ share the same eigenvectors and their eigenvalues are shifted by $t_q$.
-
-  We can replace the minimum in \cref{eqn:bound} with any $J^\text{th}$ degree polynomial $P'(\cdot)$ that satisfies $P'(0) = -1$.
-  In Krylov subspace proofs, it is common to construct such a $P'(\cdot)$ using a ratio of shifted Chebychev polynomials (see \citep[e.g.][Sec. 9.2]{shewchuk1994introduction} or \citep[e.g.][Thm. 38.5]{trefethen1997numerical} for a detailed derivation).
-  With this choice of polynomial
-  %
-  \begin{equation}
-    P'(\cdot)
+    q = 1, \ldots Q.
+    \label{eqn:minres_krylov}
+  \end{align}
+  Since $(\bK + t_q \bI)\succ 0$ we may invoke a result on MINRES error bounds for symmetric positive definite matrices~\citep[Chapter 3]{greenbaum1997iterative} to conclude that
+  \[
+    \bigl\Vert (\bK + t_q \bI) \bc_J^{(q)} - \bb \bigr\Vert_2
     \leq \left( \frac{
       \sqrt{\kappa(\bK + t_q \bI)} - 1
     }{
       \sqrt{\kappa(\bK + t_q \bI)} + 1
-    }\right)^J.
-    \label{eqn:chebychev}
-  \end{equation}
-  Note that as $t_q > 0$ the conditioning of $\kappa(\bK + t_q \bI)$ decreases and so trivially we have that
-  %
-  \begin{equation}
-    \frac{
-      \sqrt{\kappa(\bK + t_q \bI)} - 1
-    }{
-      \sqrt{\kappa(\bK + t_q \bI)} + 1
-    }
-    \leq
-    \frac{
-      \sqrt{\kappa(\bK)} - 1
-    }{
-      \sqrt{\kappa(\bK)} + 1
-    }.
-    \label{eqn:chebychev_upper}
-  \end{equation}
-  Plugging \cref{eqn:chebychev,eqn:chebychev_upper} into \cref{eqn:bound} as an upper bound on $P_q(\cdot)$ completes the proof.
+    }\right)^J
+    \Vert \bb \Vert_2.
+  \]
+  Observing that $\kappa(\bK + t_q \bI) \geq \kappa(\bK)$ for all $q$ since $t_q > 0$ concludes the proof.
 \end{proof}
-
-\cref{lemma:minres} is a very loose bound, as it doesn't assume anything about the spectrum of $\bK$.
-In practice, we find that smMINRES converges for many covariance matrices with $J \approx 100$, even when the conditioning is on the order of $\kappa(\bK) \approx 10^4$.
-This convergence is faster with preconditioning.
-
-
+%
+\noindent
+\cref{lemma:minres} is a very loose bound, as it doesn't assume anything about the spectrum of $\bK$ (which is standard for generic Krylov method error bounds) and upper bounds the residual error for every shift using the most ill-conditioned system.
+In practice, we find that smMINRES converges for many covariance matrices with $J \approx 100$, even when the conditioning is on the order of $\kappa(\bK) \approx 10^4$ and this convergence can be further improved with preconditioning.
 
 
 %%%%
@@ -190,89 +125,56 @@ This convergence is faster with preconditioning.
 \end{lemma}
 
 \begin{proof}
-  Using facts about elliptical integrals and functions, we have:
+  Using facts about elliptical integrals we have
   \begin{align}
-    \mathcal{K}'(k) < \log(1 + 4 / k) \leq \log( 5 / k) \qquad {\rm for} \qquad k \in [0, 1]
-    \tag{From \citep[][Thm. 2]{yang2019convexity}}
+    \mathcal{K}'(k) < \log(1 + 4 / k) \leq \log( 5 / k) &\qquad k \in (0, 1)
+    \tag{\citep[][Thm. 1.7]{qiu1998some} and \citep[][Thm. 2]{yang2019convexity}}
     \\
-    \text{dn}(u \mathcal{K}(k) | k ) \le \frac{\text{sn}(u \mathcal{K}(k) | k )^2}{\sin^2(\pi u/2)} \qquad {\rm for} \qquad 0 \le u \le 1
-    \tag{See \citep[e.g.][]{siegl2016extremal}}
+    \frac{\pi}{2} \leq \mathcal{K}(k) &\qquad k\in[0,1] \tag{\citep[e.g.][]{qiu1998some}}
   \end{align}
+  where in the first statement we have used that $\mathcal{K}'(k) = \mathcal{K}(k').$ For Jacobi elliptic functions we have that
+  \begin{align}
+    0 < \text{dn}(u \mathcal{K}(k)| k ) < 1 &\qquad u\in (0,1), \; k \in (0, 1) \tag{\citep[e.g.][]{meyer2001jacobi}}
+    \\
+    0 < \text{sn}( u \mathcal{K}(k)| k ) < 1 &\qquad u\in(0,1), \; k \in (0, 1) \tag{\citep[e.g.][]{meyer2001jacobi}}
+    \\
+    \text{sn}( \pi u /2 | 0 ) < \text{sn}( u \mathcal{K}(k)| k ) < 1 &\qquad u\in(0,1), \; k \in (0, 1) \tag{\citep[][Thm. 1]{carlson1983degenerating}}
+  \end{align}
+  where in the last inequality we have used that $\mathcal{K}(0) = \pi / 2$~\citep[e.g.][]{abramowitz1948handbook}. Coupling the final inequality above with $\text{sn}( \pi u /2 | 0 ) = \sin(\pi u / 2)$ for $u\in(0,1)$ we have that
+  \[
+  \sin( \pi u /2 ) < \text{sn}( u \mathcal{K}(k)| k ) < 1 \qquad u\in(0,1), \; k \in (0, 1).
+  \]
   %
-  Then,
+  Now, for each $q$ we have that
   \begin{align*}
-    \frac{|w_q|}{|t_q|}
+  \frac{w_q}{t_q}
     =
-    \frac{|\widetilde w_q|}{|\sigma^2_q|}
-    &= \frac{
-      \frac{ 2 \sqrt{\lambda_\text{min}} }{ \pi Q }
-      \:\: \left[
-      \mathcal{K}'( k )
-      \:\:\: \text{cn} \left( i u_q \mathcal{K}'(k) \mid k \right)
-      \:\:\: \text{dn} \left( i u_q \mathcal{K}'(k) \mid k \right)
-      \right]
-    }{
-      \left| \lambda_\text{min} \Bigl( \text{sn}(i u_q \mathcal{K}'(k) \mid k) \Bigr)^2 \right|
-    }
+    \frac{\widetilde w_q}{\sigma^2_q}
+    &= \left(\frac{- 2\sqrt{\lambda_{\min}}}{\pi Q \lambda_{\min}}\right)\frac{\mathcal{K}'( k )\text{cn} \left( i u_q \mathcal{K}'(k) \mid k \right)\text{dn} \left( i u_q \mathcal{K}'(k) \mid k \right)}{\text{sn}(i u_q \mathcal{K}'(k) \mid k)^2}
     \\
-    &= \frac{
-      \frac{ 2 \sqrt{\lambda_\text{min}} }{ \pi Q }
-      \:\: \left[
-      \mathcal{K}'( k )
-      \frac{
-        1
-      }{
-        \text{cn} \left( u_q \mathcal{K}'(k) \mid k' \right)
-      }
-      \frac{
-        \text{dn} \left( u_q \mathcal{K}'(k) \mid k' \right)
-      }{
-        \text{cn} \left( u_q \mathcal{K}'(k) \mid k' \right)
-      }
-      \right]
-    }{
-      \left| \lambda_\text{min} \Bigl( i \frac{
-        \text{sn}(u_q \mathcal{K}'(k) \mid k')
-      }{
-        \text{cn}(u_q \mathcal{K}'(k) \mid k')
-      }\Bigr)^2 \right|
-    }
-    \tag{via Jacobi imaginary transform}
-    \\
-    &\leq \frac{
-      \frac{ 2 \sqrt{\lambda_\text{min}} }{ \pi Q }
-      \:\: \left[
-        \mathcal{K}'( k ) \frac{
-          ({
-            \text{sn}(u_q \mathcal{K}'(k) \mid k')
-          })^2
-        }{
-          \sin^2 ( \pi u_q / 2)
-        }
-      \right]
-    }{
-      \lambda_\text{min} \Bigl({
-        \text{sn}(u_q \mathcal{K}'(k) \mid k')
-      }\Bigr)^2
-    }
-    \\
-    &= \frac{ 2  }{ \pi Q \sqrt{\lambda_\text{min}} \sin^2 ( \pi u_q / 2) } \mathcal{K}'(k)
-    \\
-    &< \frac{ 2 \log(5 / k) }{ \pi Q  \sqrt{\lambda_\text{min}} \sin^2 ( \pi u_q / 2) }
+    &=\left(\frac{2\mathcal{K}'( k )}{\pi Q \lambda_{\min}}\right)\frac{\text{dn} \left( u_q \mathcal{K}(k') \mid k' \right)}{\text{sn}(u_q \mathcal{K}(k') \mid k')^2}
+    \tag{via Jacobi imaginary transforms~\citep[e.g.][]{abramowitz1948handbook}}
   \end{align*}
   %
-  Plugging in the values of $k$, $u_q$ and summing over $u_q$ values gives us
+  Consequently, we may conclude that
+  \begin{align*}
+    \frac{|w_q|}{|t_q|}
+    &= \left(\frac{2\mathcal{K}'( k )}{\pi Q \lambda_{\min}}\right)\frac{\text{dn} \left( u_q \mathcal{K}(k') \mid k' \right)}{\text{sn}(u_q \mathcal{K}(k') \mid k')^2} \\
+    &\leq \frac{2\log( 5 / k)}{\pi Q \lambda_{\min}}\left(\frac{1}{\sin^2( \pi u_q /2 )} \right)
+  \end{align*}
+  where we note that all quantities on the right hand side are positive.
+  %
+  Plugging in the values of $k = 1/\sqrt{\kappa{(\bK)}}$, $u_q = (q-1/2)/Q$ and summing over $u_q$ we see that
   %
   \begin{align}
     \sum_{q=1}^Q \frac{|w_q|}{|t_q|}
     &<
     \sum_{q=1}^Q \frac{ 2 \log \left( 5 \sqrt{\kappa(\bK)} \right)}
-    { \pi Q \sqrt{\lambda_\text{min}} \sin^2 ( \frac{\pi (q - 1/2}{2Q}) }
+    { \pi Q \sqrt{\lambda_\text{min}} \sin^2 ( \frac{\pi (q - 1/2)}{2Q}) }.
   \end{align}
   %
-  Through trigonometric identities we have
-  $\sum_{q=1}^Q 1 / ( Q \sin^2 \frac{\pi(q- 1/2 )}{2Q} )  = 2 Q$.
-  Therefore,
+  Through trigonometric identities
+  $\sum_{q=1}^Q 1 / ( Q \sin^2 \frac{\pi(q- 1/2 )}{2Q} )  = 2 Q$ and, therefore,
   %
   \begin{align*}
     \sum_{q=1}^Q \frac{|w_q|}{|t_q|}
@@ -286,10 +188,12 @@ This convergence is faster with preconditioning.
 
 
 
+With these lemmas we are now able to prove Theorem~\ref{thm:ciq_convergence}:
+%
 \newtheorem*{ciq_convergence}{Theorem~\ref{thm:ciq_convergence} (Restated)}
 \begin{ciq_convergence}
-  Let $\bK$ and $\bb$ be the inputs to CIQ, producing the output $\bv_J \approx \bK^{1/2} \bb$ after $J$ iterations of msMINRES with $Q$ quadrature points.
-  The difference between $\bv_J$ and $\bK^{1/2} \bb$ is bounded by:
+  Let $\bK \succ 0$ and $\bb$ be inputs to msMINRES-CIQ, producing $\ba_J \approx \bK^{1/2} \bb$ after $J$ iterations with $Q$ quadrature points.
+  The difference between $\ba_J$ and $\bK^{1/2} \bb$ is bounded by:
   %
   \begin{align*}
     \left\Vert \ba_J - \bK^{\frac 1 2} \bb \right\Vert_2
@@ -298,9 +202,9 @@ This convergence is faster with preconditioning.
       \bigo{\exp\left( -\frac  {2 Q \pi^2}{\log \kappa(\bK) + 3} \right)}
     }^{\text{Quadrature error}}
     \\
-    &\phantom{=} +
+    &\phantom{=} \:\: +
     \overbracket{
-      \frac{ 2 Q \log \left( 5 \sqrt{\kappa(\bK)} \right)  \kappa(\bK) \sqrt{\lambda_\text{min}} } { \pi }
+      \frac{ 2 Q \log \left( 5 \sqrt{\kappa(\bK)} \right) \kappa(\bK) \sqrt{\lambda_\text{min}} }{\pi}
       \left( \frac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^{J-1}
       \left\Vert \bb \right\Vert_2.
     }^{\text{msMINRES error}}
@@ -310,7 +214,7 @@ This convergence is faster with preconditioning.
 \end{ciq_convergence}
 %
 \begin{proof}
-  First we note that the CIQ solution $\ba_J$ can be written as $\sum_{i=1} w_q \bc^{(q)}_J$, where $\bc^{(q)}_J$ is the $q^\text{th}$ shifted solve $\approx (t_q \bI + \bK)^{-1} \bb$ from msMINRES.
+  First we note that the msMINRES-CIQ solution $\ba_J$ can be written as $\sum_{i=1} w_q \bc^{(q)}_J$, where $\bc^{(q)}_J$ is the $q^\text{th}$ shifted solve $\approx (t_q \bI + \bK)^{-1} \bb$ from msMINRES.
   Applying the triangle inequality we have:
   %
   \begin{align}
@@ -329,20 +233,20 @@ This convergence is faster with preconditioning.
     \label{eqn:pre_bound}
   \end{align}
   %
-  Plugging \cref{lemma:minres} into the msMINRES bound, we have:
+  Plugging \cref{lemma:minres} into the msMINRES part of the bound bound, we have:
   \begin{align*}
-    &2 \sum_{q=1}^Q \left\vert w_q \right\vert
+    \sum_{q=1}^Q \left\vert w_q \right\vert&
     \left( \frac{ \sqrt{\kappa(\bK + t_q \bI)} - 1}{ \sqrt{\kappa(\bK + t_q \bI)} + 1} \right)^J \left\Vert \bb \right\Vert_2
     \\
     \leq \:\:
-    &2 \sum_{q=1}^Q \left\vert w_q \right\vert
+    & \sum_{q=1}^Q \left\vert w_q \right\vert
     \left( \frac{ \sqrt{\kappa(\bK + t_q \bI)} - 1}{ \sqrt{\kappa(\bK + t_q \bI)} + 1} \right)
     \left( \frac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^{J-1}
     \left\Vert \bb \right\Vert_2
-    \tag{via \eqref{eqn:chebychev_upper}}
+    \tag{via \cref{lemma:minres}}
     \\
     \leq \:\:
-    &2 \sum_{q=1}^Q \left\vert w_q \right\vert
+    & \sum_{q=1}^Q \left\vert w_q \right\vert
     \left( \frac{ \lambda_\text{max} }{ 4 t_q } \right)
     \left( \frac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^{J-1}
     \left\Vert \bb \right\Vert_2
@@ -351,40 +255,45 @@ This convergence is faster with preconditioning.
     \leq \:\:
     & \frac{ 2 Q \log \left( 5 \sqrt{\kappa(\bK)} \right) \lambda_\text{max}}{\pi \sqrt{\lambda_\text{min}}}
     \left( \frac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^{J-1}
-    \left\Vert \bb \right\Vert_2.
+    \left\Vert \bb \right\Vert_2
     \tag{via \cref{lemma:quad_ratio}}
+    \\
+    \leq \:\:
+    & \frac{ 2 Q \log \left( 5 \sqrt{\kappa(\bK)} \right) \sqrt{\lambda_{\min}}\kappa(\bK)}{\pi}
+    \left( \frac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^{J-1}
+    \left\Vert \bb \right\Vert_2.
   \end{align*}
   %
-  We would note that we can rewrite the $\lambda_\text{max} / \sqrt{\lambda_\text{min}}$ term in the final line as $\kappa(\bK) \sqrt{\lambda_\text{min}}$.
-  Plugging in this bound and \cref{lemma:hale} into \cref{eqn:pre_bound} completes the proof.
+   Plugging this bound and \cref{lemma:hale} into \cref{eqn:pre_bound} completes the proof.
 \end{proof}
 
+We can also prove this simple corollary:
+%
 \begin{corollary}
-  Let $\bK$ and $\bb$ be the inputs to \cref{alg:ciq}, producing the output $\ba_J' \approx \bK^{-1/2} \bb$ after $J$ iterations with $Q$ quadrature points.
+  Let $\bK\succ 0$ and $\bb$ be the inputs to \cref{alg:ciq}, producing the output $\ba_J' \approx \bK^{-1/2} \bb$ after $J$ iterations with $Q$ quadrature points.
   The difference between $\ba_J$ and $\bK^{1/2} \bb$ is bounded by:
   %
-  \begin{align*}
+  \begin{equation*}
     \left\Vert \ba_J' - \bK^{-\frac 1 2} \bb \right\Vert_2
-    &\leq
+    \leq
     \overbracket{
-      \bigo{\frac{1}{\lambda_\text{min}} \exp\left( -\frac  {2 Q \pi^2}{\log \kappa(\bK) + 3} \right)}
+      \bigo{ \tfrac{1}{\lambda_\text{min}} \exp\left( -\tfrac  {2 Q \pi^2}{\log \kappa(\bK) + 3} \right)}
     }^{\text{Quadrature error}}
-    \\
-    &\phantom{=} +
+    +
     \overbracket{
-      \frac{ 2 Q \log \left( 5 \sqrt{\kappa(\bK)} \right)  \kappa(\bK) } { \pi  \sqrt{\lambda_\text{min}}}
-      \left( \frac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^{J-1}
+      \tfrac{ 2 Q \log \left( 5 \sqrt{\kappa(\bK)} \right) \kappa(\bK) }{ \sqrt{\lambda_\text{min}} \pi}
+      \left( \tfrac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^{J-1}
       \left\Vert \bb \right\Vert_2.
     }^{\text{msMINRES error}}
-  \end{align*}
+  \end{equation*}
   %
-  where $\lambda_\text{max}$ is the maximum eigenvalue of $\bK$, and $\kappa(\bK)$ is the condition number of $\bK$.
+  where $\lambda_\text{max},\lambda_{\text{min}}$ are the maximal and minimal eigenvalues of $\bK$, and $\kappa(\bK)$ is the condition number of $\bK$.
   \label{thm:ciq_convergence_inverse}
 \end{corollary}
 
 \begin{proof}
-  Note that $\ba_J' = \bK^{-1} \ba_J$, where $\ba_J$ is the CIQ estimate of $\bK^{1/2} \bb$.
-  Through Cauchy-Schwarz we have:
+  Note that $\ba_J' = \bK^{-1} \ba_J$, where $\ba_J$ is the msMINRES-CIQ estimate of $\bK^{1/2} \bb$.
+  Using the sub-multiplicative property of the induced matrix 2-norm we see that
   \[
     \left\Vert \ba_J' - \bK^{-\frac 1 2} \bb \right\Vert_2
     \leq \left\Vert \bK^{-1} \right\Vert_2 \left\Vert \ba_J - \bK^{\frac 1 2} \bb \right\Vert_2

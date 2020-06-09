@@ -11,20 +11,20 @@ One advantage of the Cholesky decomposition is its reusability.
 As discussed in \cref{sec:ciq_empirical}, the cubic cost of computing $\bL \bL^\top$ is amortized when drawing $\bigo{M}$ samples or whitening $\bigo{M}$ vectors.
 Conversely, applying msMINRES-CIQ to $\bigo{M}$ vectors would incur a $\bigo{M^3}$ cost, eroding its computational benefits. Thus, our method is primarily advantageous
 in scenarios with a small number of right hand sides or where $\bK$ is too large to apply Cholesky.
-We also emphasize that msMINRES-CIQ---like all Krylov methods---can take advantage of fast MVMs afforded by structured covariances.
+We also emphasize that msMINRES-CIQ---like all Krylov methods---can take advantage of fast MVMs.
 Though this chapter focuses on applying this algorithm to dense matrices, we suggest that future work explore applications involving sparse or structured matrices.
 
 
 \paragraph{Scaling beyond $M=10,\!000$ and $T=50,\!000$.}
 It has been common to use only $M\approx1,\!000$ inducing points with SVGP models.
 In this chapter, we have used \emph{an order of magnitude} more inducing points which results in demonstrably better predictive performance.
-As $M$ continues to grow, the primary bottleneck of CIQ-SVGP becomes the quadratic memory costs of the variational parameters $\bm'$ and $\bS'$.
+As $M$ continues to grow, the primary bottleneck of msMINRES-CIQ-SVGP becomes the quadratic memory costs of the variational parameters $\bm'$ and $\bS'$.
 While a scalable approximation of $\bK_{\bZ\bZ}$ (with fast MVMs) can reduce the computational cost of whitening, the $\bS'$ matrix in general does not afford space-saving structure.
 Efficient variational parameterizations will be necessary to scale to even larger $M$.
 This has been the topic of some recent work \cite{wilson2016stochastic,cheng2017variational,salimbeni2018orthogonally,shi2019sparse}.
 
-Scaling Thompson sampling beyond $T=50,\!000$ is to some extent more straightforward, as it does not require storing learnable parameters.
+Scaling msMINRES-CIQ Thompson sampling beyond $T=50,\!000$ is to some extent more straightforward, as it does not require storing learnable parameters.
 %One option is to use Thompson sampling in conjunction with approximate GP methods that afford faster MVMs.
 %However, choosing a suitable approximate method may be difficult when modelling blackbox functions without knowing much prior structure.
 Nevertheless, scaling $T$ will naturally require more computation, which may result in the acquisition function becoming increasingly computationally demanding.
-The next section introcues a simple strategy to utilize multiple GPUs/distributed resources to alleviate this bottleneck.
+The next section introduces a simple strategy to utilize multiple GPUs/distributed resources to alleviate this bottleneck.

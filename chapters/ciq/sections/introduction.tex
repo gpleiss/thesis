@@ -32,9 +32,7 @@ All such $\bR$ matrices are equivalent to $\bK^{1/2}$ up to an orthonormal rotat
 
 Existing methods for sampling and whitening
 typically rely on the Cholesky factorization: $\bK = \bL \bL^\top$, where $\bL$ is lower triangular.
-Though $\bL$ is not a square root of $\bK$, $\bL\bb$ is equivalent to $\bK^{1/2} \bb$ up to an orthonormal rotation.
-Therefore, $\bL\bepsilon$, $\bepsilon \sim \normaldist{\bzero}{\bI}$ can be used to draw samples from from $\normaldist{\bzero}{\bK}$ and $\bL^{-1} \bb$ can be used to ``whiten'' the vector $\bb$.
-However, the Cholesky factor requires $\bigo{N^3}$ computation and $\bigo{N^2}$ memory for an $N \times N$ covariance matrix $\bK$.
+However, computing the Cholesky factor requires $\bigo{N^3}$ time and $\bigo{N^2}$ memory for an $N \times N$ covariance matrix $\bK$.
 To avoid this large complexity, randomized algorithms \cite{rahimi2008random,mutny2018efficient}, low-rank/sparse approximations \cite{hensman2017variational,wilson2020efficiently}, or alternative distributions \citep{wang2017max} are often used to approximate the sampling and whitening operations.
 While the previous chapter offers an efficient sampling method for KISS-GP models; this method is not generally applicable to other classes of GP models (see \cref{sec:sampling_method}).
 

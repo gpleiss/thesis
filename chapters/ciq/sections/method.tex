@@ -10,7 +10,7 @@ Our approach scales better than existing methods (e.g.~Cholesky) by:
   \item affording an efficient gradient computation.
 \end{enumerate*}
 
-\paragraph{Contour Integral Quadrature (CIQ).}
+\paragraph{Contour Integral Quadrature (CIQ)}
 A standard result from complex analysis is that $\bK^{-1/2}$ can be expressed through Cauchy's integral formula:
 %
 $$
@@ -36,12 +36,11 @@ For the remainder of this chapter, applying~\cref{eqn:contour_integral_quad} to 
 
 
 
-\subsection{An Efficient Matrix-Vector Multiplication Approach to CIQ with msMINRES.}
+\subsection{An Efficient Matrix-Vector Multiplication Approach to CIQ with msMINRES}
 %
 Using the quadrature method of \cref{eqn:contour_integral_quad} for whitening and sampling requires solving several shifted linear systems.
 To compute the shifted solves required by~\cref{eqn:contour_integral_quad} we leverage a variant of the
-minimum residuals algorithm (MINRES) developed by \citet{paige1975solution}. At step $j$
-MINRES approximates $\bK^{-1} \bb$ by the vector within the Krylov subspace $\mathcal{K}_j(\bK, \bb)$ that minimizes the residual.
+minimum residuals algorithm (MINRES) developed by \citet{paige1975solution} (see \cref{sec:minres}).
 
 \paragraph{msMINRES for multiple shifted solves.}
 To efficiently compute all the shifted solves, we leverage techniques~\citep[e.g.][]{datta1991arnoldi,freund1990conjugate,meerbergen2003solution} that exploit the shift-invariance property of Krylov subspaces: i.e.~$\mathcal{K}_J(\bK, \bb) = \mathcal{K}_J(t \bI +  \bK, \bb)$.
@@ -49,7 +48,6 @@ We introduce a variant to MINRES, which we refer to as {\bf multi-shift MINRES} 
 In other words, using msMINRES we can get all $(t_q \bI + \bK)^{-1} \bb$ \emph{essentially for free}, i.e. only requiring $J$ MVMs for the Krylov subspace $\mathcal{K}_J(\bK, \bb)$.
 As with standard MINRES, the msMINRES procedure for computing $(t_q \bI + \bK)^{-1}$ from $[\bb, \: \bK \bb, \: \ldots, \: \bK^{J-1} \bb]$ can be reduced to a simple vector recurrence.
 
-\paragraph{msMINRES.}
 First, recall from \cref{sec:minres} that the MINRES solution for $\bK^{-1} \bb$ can be formed through Lanczos (see \cref{eqn:minres_qr}):
 \begin{equation}
   \bK^{-1} \bb \approx \Vert \bb \Vert_2 \: \bQ_J \left( \bR^{-1}_J \bQU_J^\top \right) \be_1,
@@ -94,6 +92,7 @@ However, all shifts share the same Lanczos vectors $\bq_j$ and therefore share t
 The operations for each shift can be vectorized for efficient parallelization.
 
 To summarize: the resulting algorithm---msMINRES---gives us approximations to $(t_1 \bI + \bK)^{-1} \bb$, $\ldots$, $(t_Q \bI + \bK)^{-1}$ \emph{essentially for free} by leveraging the information we needed anyway to compute $\bK^{-1} \bb$.
+The full vector recurrence is outlined in \cref{alg:msminres}.
 Its computational properties will be highlighted below.
 
 
@@ -180,9 +179,9 @@ Thus the backward pass takes only $\bigo{J \mvm{\bK}}$ (e.g.~$\bigo{J N^2}$) tim
 
 
 \paragraph{Programmability.}
-As with BBMM and LOVE, CIQ can take full advantage of GPyTorch's {\tt LazyTensor} construct.
-The algorithm for CIQ (\cref{alg:ciq}) accesses $\bK$ through Lanczos and msMINRES---each of which only requires black-box access to an MVM routine.
-Therefore, CIQ can be implemented for specialty GP models using the efficient {\tt \_matmul} function of {\tt LazyTensor}s.
+As with BBMM and LOVE, msMINRES-CIQ can take full advantage of GPyTorch's {\tt LazyTensor} construct.
+The algorithm for msMINRES-CIQ (\cref{alg:ciq}) accesses $\bK$ through Lanczos and msMINRES---each of which only requires black-box access to an MVM routine.
+Therefore, msMINRES-CIQ can be implemented for specialty GP models using the efficient {\tt \_matmul} function of {\tt LazyTensor}s.
 Moreover, back-propagation via \cref{eqn:ciq_deriv} can be implemented using the {\tt \_deriv} function of LazyTensors.
 Recall that the {\tt \_deriv($ \bA, \bB $)} function computes $\partial \tr{ \bA^\top \bK \bB }/{\partial \br}$, where $\br$ is a representation of $\bK$.
 If we define $\bA$ and $\bB$ as
@@ -287,7 +286,7 @@ If a preconditioner $\bP$ does not readily decompose into $\bP^{1/2} \bP^{1/2}$,
 Thus our requirements for a preconditioner are:
 \begin{enumerate*}
 	\item it affords efficient solves (ideally $o(N^2)$), and
-  \item it affords efficient MVMs (also ideally $o(N^2)$) for computing $\bP^{1/2} \bb$ via CIQ.
+  \item it affords efficient MVMs (also ideally $o(N^2)$) for computing $\bP^{1/2} \bb$ via msMINRES-CIQ.
 \end{enumerate*}
 %
 Note that these requirements are met by the partial pivoted Cholesky preconditioner proposed in \cref{sec:preconditioning}.

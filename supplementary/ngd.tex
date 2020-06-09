@@ -6,11 +6,11 @@ Rather than using standard gradient descent methods on these parameters, many ha
 NGD performs the following update:
 %
 \begin{equation}
-  \begin{bmatrix} \bmm & \bS \end{bmatrix} \gets \begin{bmatrix} \bmm & \bS \end{bmatrix} - \varphi  \bFS^{-1}
-  \begin{bmatrix} \frac{\partial \text{ELBO}}{\partial \bmm} & \frac{\partial \text{ELBO}}{\partial \bS} \end{bmatrix}
+  \begin{bmatrix} \bmm' & \bS' \end{bmatrix} \gets \begin{bmatrix} \bmm' & \bS' \end{bmatrix} - \varphi  \bFS^{-1}
+  \begin{bmatrix} \frac{\partial \text{ELBO}}{\partial \bmm'} & \frac{\partial \text{ELBO}}{\partial \bS'} \end{bmatrix}
 \end{equation}
 %
-where $\varphi$ is a step size, $\begin{bmatrix} \frac{\partial \text{ELBO}}{\partial \bmm} & \frac{\partial \text{ELBO}}{\partial \bS} \end{bmatrix}$ is the ELBO gradient, and $\bFS$ is the \emph{Fisher information matrix} of the variational parameters.
+where $\varphi$ is a step size, $\begin{bmatrix} \frac{\partial \text{ELBO}}{\partial \bmm'} & \frac{\partial \text{ELBO}}{\partial \bS'} \end{bmatrix}$ is the ELBO gradient, and $\bFS$ is the \emph{Fisher information matrix} of the variational parameters.
 Conditioning the gradient with $\bFS^{-1}$ results in descent directions that are better suited towards distributional parameters \cite{hoffman2013stochastic}.
 
 For Gaussian distributions (and other exponential family distributions) the Fisher information matrix does not need to be explicitly computed.
@@ -25,10 +25,10 @@ $[\btheta, \:\: \bTheta]$ are the Gaussian's \emph{natural parameters}
 and $[\boeta, \:\: \bEta]$ are the Gaussian's \emph{expectation parameters}:
 %
 \begin{align*}
-  \btheta = \bS^{-1} \bmm, &\quad
-  \bTheta = -\frac 1 2 \bS^{-1}, \\
-  \boeta = \bmm, &\quad
-  \bEta = \bmm \bmm^\top + \bS
+  \btheta = \bS^{\prime -1} \bmm', &\quad
+  \bTheta = -\frac 1 2 \bS^{\prime -1}, \\
+  \boeta = \bmm', &\quad
+  \bEta = \bmm' \bmm^{\prime\top} + \bS'
 \end{align*}
 
 In many NGD implementations, it is common to store the variational parameters via their natural representation ($\btheta$, $\bTheta$), compute the ELBO via the standard parameters ($\bmm'$, $\bS'$), and then compute the derivative via the expectation parameters ($\boeta$, $\bEta$).
@@ -37,16 +37,16 @@ Unfortunately, converting between these three parameterizations requires $\bigo{
 
 \paragraph{A $\bigo{M^2}$ NGD update.}
 In what follows, we will demonstrate that the ELBO and its derivative can be computed from $\btheta$ and $\bTheta$ in $\bigo{M^2}$ time via careful bookkeeping.
-Consequentially, NGD updates have the same asymptotic complexity as the other computations required for SVGP.
+Consequently, NGD updates have the same asymptotic complexity as the other computations required for SVGP.
 Recall that the ELBO is given by
 \[
   \text{ELBO} = \overbracket{ \sum_{i=1}^N \Evover{q(f(\bx^{(i)}))}{  \: \log p( y^{(i)} \mid f(\bx^{(i)}) ) \: }}^{\text{expected log likelihood}} - \kl{ q(\bu) }{ p(\bu) }
 \]
 We will separately analyze the expected log likelihood and KL divergence computations.
 
-\section{The Expected Log Likelihood and its Gradient}
+\subsection{The Expected Log Likelihood and its Gradient}
 Assume we are estimating the ELBO from a single data point $\bx, y$.
-The expected log likelihood term of the ELBO is typically computed via quadrature or Monte Carlo integration \cite{hensman2015scalable}:\footnote{
+The expected log likelihood term of the ELBO is typically computed via Gauss-Hermite quadrature or Monte Carlo integration \cite{hensman2015scalable}:\footnote{
   It can also be computed analytically for Gaussian distributions \cite{hensman2013gaussian}.
   The analytic form achieves the same derivative decomposition as in \cref{eqn:ell_deriv_decomp}
   and so the following analysis will still apply.
@@ -115,7 +115,7 @@ $\avartest{\bx}$ and its derivative can be written as:
   \label{eqn:pred_var_natural},
   \\
   \frac{\partial \avartest{\bx}}{\partial \boeta}
-  &= {\color{blue} \bk_{\bZ \bx}^\top \bK_{\bZ\bZ}^{-1/2} (-2 \bTheta)^{-1}} \btheta
+  &= -2 \left( {\color{blue} \bk_{\bZ \bx}^\top \bK_{\bZ\bZ}^{-1/2} (-2 \bTheta)^{-1}} \btheta \right) \bK_{\bZ\bZ}^{-1/2} \bk_{\bZ \bx}
   \label{eqn:pred_var_deriv_1},
   \\
   \frac{\partial \avartest{\bx}}{\partial \bEta}
@@ -130,7 +130,7 @@ The only expensive operation involving the variational parameters is ${\color{bl
 Those operations only need to be computed once, and then they can be reused across \cref{eqn:pred_mean_natural,eqn:pred_mean_deriv,eqn:pred_var_natural,eqn:pred_var_deriv_1,eqn:pred_var_deriv_2}.
 In total, the entire computation for the expected log likelihood and its derivative is $\bigo{M^2}$.
 
-\section{The KL Divergence and its Gradient}
+\subsection{The KL Divergence and its Gradient}
 We will demonstrate that the KL divergence and its gradient can be computed from $\btheta$ and $\bTheta$ in $\bigo{M^2}$ time.
 All expensive computations involving $\btheta$ and $\bTheta$ are written in {\color{blue} blue}.
 
@@ -158,9 +158,9 @@ The KL derivative with respect to $\boeta$ and $\bEta$ is surprisingly simple wh
   \\
   \frac{\partial \kl{ q(\bu') }{ p(\bu') }}{ \partial \bEta }
   &= \frac 1 2 \bI - \frac 1 2 \left( \bEta - \boeta \boeta^\top \right)^{-1}
-  = \frac 1 2 \bI - \frac 1 2 (\bS')^{-1} \boeta
+  = \frac 1 2 \bI - \frac 1 2 (\bS')^{-1}
   \nonumber \\
-  &= \frac 1 2 \bI - \bTheta.
+  &= \frac 1 2 \bI + \bTheta.
   \label{eqn:kl_covar_deriv}
 \end{align}
 %

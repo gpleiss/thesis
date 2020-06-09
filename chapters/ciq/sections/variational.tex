@@ -12,11 +12,11 @@ $q \left( \bu \right)$ is a Gaussian variational distribution parameterized by m
 $\bmm$ and $\bS$ (as well as the model's kernel/likelihood hyperparameters) are chosen to maximize the variational ELBO:
 %
 \begin{align*}
-  \loglik_\text{ELBO}\bigl\{ q(\bu) = \normaldist{\bmm}{\bS} \bigr\} &= \textstyle\sum_{i=1}^N \Evover{q(f(\bx^{(i)}))}{  \: \log p( y^{(i)} \mid f(\bx^{(i)}) ) \: } - \kl{ q(\bu) }{ p(\bu) }.
+  \loglik_\text{ELBO}\bigl\{ q(\bu) \! = \! \normaldist{\bmm}{\bS} \bigr\} &= \textstyle\sum_{i=1}^N \Evover{q(f(\bx^{(i)}))}{  \: \log p( y^{(i)} \mid f(\bx^{(i)}) ) } - \kl{ q(\bu) }{ p(\bu) }.
 \end{align*}
 %
 Rather than directly learning $\bmm$ and $\bS$, it is more common to learn the \emph{whitened parameters} \cite{kuss2005assessing,matthews2017scalable}:
-$ \bmm' = \bK_{\bZ\bZ}^{- 1/ 2} \bmm$ and $\bS' = \bK_{\bZ\bZ}^{-1 / 2} \bS \bK_{\bZ\bZ}^{-1 / 2}. $
+$$ \bmm' = \bK_{\bZ\bZ}^{- 1/ 2} \bmm, \quad \bS' = \bK_{\bZ\bZ}^{-1 / 2} \bS \bK_{\bZ\bZ}^{-1 / 2}. $$
 Under these coordinates, the KL divergence term is
 $\frac{1}{2} ( \bmm^{\prime \top} \bmm' + \tr{ \bS' } - \log \vert \bS' \vert - M ),$
 %
@@ -33,27 +33,11 @@ The posterior distribution $q(f(\bx)) = \normaldist{\ameantest{\bx}}{\avartest{\
   \label{eqn:approx_pred_dist}
 \end{equation}
 
-\begin{figure}[t!]
-  \centering
-  \includegraphics[width=\linewidth]{figures/variational_nll.pdf}
-  \caption[Negative log likelihood (NLL) comparison of Cholesky-whitened vs CIQ-whitened SVGP models.]{
-    Negative log likelihood (NLL) comparison of Cholesky vs CIQ SVGP models.
-    {\bf Left:} 3DRoad dataset ($N=326155, D=2$, Gaussian likelihood).
-    {\bf Middle:} Precipitation dataset ($N=75952, D=3$, Student-T likelihood).
-    {\bf Right:} CoverType dataset ($N=435759, D=54$, Bernoulli likelihood).
-    NLL improves with more inducing points ($M$), and Cholesky and msMINRES-CIQ models have similar performance.
-    However CIQ models train faster than their Cholesky counterparts.
-  }
-  \label{fig:variational_nll}
-\end{figure}
-
 \paragraph{Time and space complexity.}
 During training, we repeatedly compute the ELBO and its derivative, which requires computing \cref{eqn:approx_pred_dist} and its derivative for a minibatch of data points.
 Optimization typically requires up to $10,\!000$ iterations of training \citep[e.g.][]{salimbeni2018natural}.
 We note that $\bK_{\bZ\bZ}^{-1 / 2} \bb$ (and its derivative) is the most expensive numerical operation during each ELBO computation.
-If we use Cholesky to compute this operation, the time complexity of SVGP training is $\bigo{M^3}$.\footnote{
-  Note that Cholesky computes $\bK^{-1/2} \bb$ up to an orthogonal rotation, which is suitable for whitened SVGP.
-}
+If we use Cholesky to compute this operation, the time complexity of SVGP training is $\bigo{M^3}$.
 On the other hand, msMINRES-CIQ-based SVGP training is only $\bigo{J M^2}$, where $J$ is the number of msMINRES iterations.
 Both methods require $\bigo{M^2}$ storage for the $\bmm'$ and $\bS'$ parameters.
 
@@ -70,17 +54,13 @@ Fortunately, we can derive a natural gradient update that only relies on matrix 
 Therefore, using NGD incurs the same \emph{quadratic} asymptotic complexity as msMINRES-CIQ.
 See \cref{app:ngd} for the $\bigo{M^2}$ NGD update equations.
 
-\paragraph{Cholesky vs msMINRES-CIQ.}
+\paragraph{Experimental Details.}
 We compare msMINRES-CIQ-SVGP against Cholesky-SVGP on 3 large-scale datasets: a GIS dataset ({\bf 3droad}, $D=2$), a monthly precipitation dataset ({\bf Precipitation}, $D=3$), and a tree cover dataset ({\bf Covtype}, $D=54$).
 Each task has between $N=70,\!000$ and $N=500,\!000$ training data points.
 For 3droad we use a Gaussian observation model.
 The Precipitation dataset has noisier observations; therefore we apply a Student-T observation model.
-Finally, we reduce the CovType dataset to a binary classification problem and apply a Bernoulli observation model.\footnote{
-  The task is predicting whether the primary tree cover at a given location is pine trees or other types of trees.
-}
+Finally, we reduce the CovType dataset to a binary classification problem and apply a Bernoulli observation model.
 We train models with $ 10^3 \le M \le 10^4$.
-
-\paragraph{Experimental Details.}
 Each dataset is randomly split into $75\%$ training, $10\%$ validation, and $15\%$ testing sets; $\bx$ and $y$ values are scaled to be zero mean and unit variance.
 All models use a constant mean and a Mat\'ern 5/2 kernel, with lengthscales initialized to $0.01$ and inducing points initialized by $K$-means clustering.
 Each model is trained for $20$ epochs with a minibatch size of $256.$\footnote{
@@ -107,13 +87,13 @@ In total, there are 10 years and $10,\!127$ latitude/longitude coordinates, for 
 \begin{figure}[t!]
   \centering
   \includegraphics[width=\linewidth]{figures/variational_nll.pdf}
-  \caption[Negative log likelihood (NLL) comparison of Cholesky-whitened vs CIQ-whitened SVGP models.]{
-    Negative log likelihood (NLL) comparison of Cholesky vs CIQ SVGP models.
+  \caption[Negative log likelihood (NLL) comparison of Cholesky vs msMINRES-CIQ SVGP models.]{
+    Negative log likelihood (NLL) comparison of Cholesky vs msMINRES-CIQ SVGP models.
     {\bf Left:} 3DRoad dataset ($N=326155, D=2$, Gaussian likelihood).
     {\bf Middle:} Precipitation dataset ($N=75952, D=3$, Student-T likelihood).
     {\bf Right:} CoverType dataset ($N=435759, D=54$, Bernoulli likelihood).
-    NLL improves with inducing points ($M$); Cholesky and CIQ models have similar performance.
-    However CIQ models train faster than their Cholesky counterparts.
+    NLL improves with more inducing points ($M$), and Cholesky and msMINRES-CIQ models have similar performance.
+    However msMINRES-CIQ models train faster than their Cholesky counterparts.
   }
   \label{fig:variational_nll}
 \end{figure}
@@ -121,8 +101,8 @@ In total, there are 10 years and $10,\!127$ latitude/longitude coordinates, for 
 \begin{figure}[t!]
   \centering
   \includegraphics[width=\linewidth]{figures/variational_error.pdf}
-  \caption[Error comparison of Cholesky-whitened vs CIQ-whitened SVGP models.]{
-    Error comparison of Cholesky-whitened vs CIQ-whitened SVGP models.
+  \caption[Error comparison of Cholesky vs msMINRES-CIQ SVGP models.]{
+    Error comparison of Cholesky vs msMINRES-CIQ SVGP models.
     {\bf Left:} 3DRoad dataset RMSE ($N=326155, D=2$, Gaussian likelihood).
     {\bf Middle:} Precipitation dataset RMSE ($N=75952, D=3$, Student-T likelihood).
     {\bf Right:} CoverType dataset $0/1$ error ($N=435759, D=54$, Bernoulli likelihood).
@@ -138,13 +118,13 @@ transformation when computed with msMINRES-CIQ versus Cholesky.
 The key difference is the training time:
 with $M=5,\!000$ inducing points, msMINRES-CIQ models are up to \emph{5.6x faster} than Cholesky models (on a Titan RTX GPU).
 Moreover, msMINRES-CIQ models with $M=8,\!000$-$10,\!000$ take roughly the same amount of time as $M=5,\!000$ Cholesky models.
-Note we do not train $M > 5,\!000$ Cholesky models as doing so would require $2$-$10$ days for training.
+Note we do not train $M > 5,\!000$ Cholesky models as doing so would require $2$-$10$ days.
 
 \begin{figure}[t!]
   \centering
   \includegraphics[width=\linewidth]{figures/variational_stats.pdf}
-  \caption[Train time comparison of Cholesky-whitened vs CIQ-whitened SVGP models.]{
-    Hyperparameters versus number of inducing points ($M$) for Chol-SVGP and CIQ-SVGP (Precipitation dataset, Student-T likelihood).
+  \caption[Hyperparameters of Cholesky and msMINRES-CIQ SVGP models.]{
+    Hyperparameters versus number of inducing points ($M$) for Chol-SVGP and msMINRES-CIQ-SVGP (Precipitation dataset, Student-T likelihood).
     As $M$ increases, the kernel outputscale (left) also increases.
     At the same time, the estimated observational noise (middle) decreases as does the estimated degrees of freedom (right), reflecting a heavier-tailed noise distribution.
     This suggests that, with larger $M$, SVGP models can find more signal in the data.

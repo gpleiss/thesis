@@ -2,10 +2,9 @@
 \label{app:quadrature}
 
 \section{Selecting Quadrature Locations and Weights}
-Here we briefly describe the quadrature formula derived by \citet{hale2008computing} for use with Cauchy's integral formula.
-We refer the reader to the original publication for more details.
+Here we briefly describe the quadrature formula derived by \citet{hale2008computing} for use with Cauchy's integral formula and refer the reader to the original publication for more details.
 
-Assume that $\bK$ is a positive semi-definite matrix, and thus has real non-negative eigenvalues.
+Assume that $\bK$ is a positive definite matrix, and thus has real positive eigenvalues.
 Our goal is to approximate Cauchy's integral formula with a quadrature estimate:
 %
 \begin{align}
@@ -18,28 +17,31 @@ Our goal is to approximate Cauchy's integral formula with a quadrature estimate:
   \label{eqn:contour_integral_quad_2}
 \end{align}
 %
-where $f(\cdot)$ is an arbitrary matrix function, and $\widetilde w_q$ and $\tau_q$ are quadrature weights and locations respectively.
-Note that \cref{eqn:contour_integral_2} holds true for any contour $\Gamma$ in the complex plane that encompasses the spectrum of $\bK$.
+where $f(\cdot)$ is analytic on and within $\Gamma$, and $\widetilde w_q$ and $\tau_q$ are quadrature weights and nodes respectively.
+Note that \cref{eqn:contour_integral_2} holds true for any closed contour $\Gamma$ in the complex plane that winds once (counterclockwise) around the spectrum of $\bK$.
 
 \paragraph{A na\"ive approach with uniformly-spaced quadrature.}
 For now, assume that $\lambda_\text{min}$ and $\lambda_\text{max}$---the minimum and maximum eigenvalues of $\bK$---are known.
 (We will later address how they can be efficiently estimated.)
-A na\"ive first approach to \cref{eqn:contour_integral_quad_2} is to uniformly place the quadrature locations in a circle that surrounds the eigenvalues:
+A na\"ive first approach to \cref{eqn:contour_integral_quad_2} is to uniformly place the quadrature locations in a circle that surrounds the eigenvalues and avoids crossing the negative real axis, where we anticipate $f$ may be singular:
 %
 \[
-  \tau_q = \lambda_\text{min} + \frac 1 2 \left( \lambda_\text{max} - \lambda_\text{min} \right) \left( 1 + e^{2 i \pi \left( q / Q \right)} \right),
+  \tau_q = \frac{\lambda_{\max}+\lambda_{\min}}{2} + \frac{\lambda_{\max}}{2}e^{2 i \pi \left( q / Q \right)},
   \quad
-  \widetilde w_q = \frac 1 Q.
+  \widetilde w_q = \frac 1 Q, \quad q=0,1,\ldots,Q-1.
 \]
+% \[
+%   \tau_q = \lambda_\text{min} + \frac 1 2 \left( \lambda_\text{max} - \lambda_\text{min} \right) \left( 1 + e^{2 i \pi \left( q / Q \right)} \right),
+%   \quad
+%   \widetilde w_q = \frac 1 Q.
+% \]
 %
-This corresponds to a standard midpoint quadrature rule.
-However, \citet{hale2008computing} demonstrate that the convergence of this quadrature rule depends linearly on the condition number $\kappa(\bK) = \lambda_\text{max} / \lambda_\text{min}$.
-As many kernel matrices tend to be approximately low-rank and therefore ill-conditioned, this simple quadrature rule would require a large $Q$ for numerical accuracy.
+This corresponds to a standard trapezoid quadrature rule. However, \citet{hale2008computing} demonstrate that the convergence of this quadrature rule depends linearly on the condition number $\kappa(\bK) = \lambda_\text{max} / \lambda_\text{min}$. In particular, this is because the integrand is only analytic in a narrow region around the chosen contour. As many kernel matrices tend to be approximately low-rank and therefore ill-conditioned, this simple quadrature rule requires large $Q$ to achieve the desired numerical accuracy.
 
-\paragraph{Improving convergence with a change of variables.}
+\paragraph{Improving convergence with conformal mappings.}
 Rather than uniformly spacing the quadrature points, it makes more sense to place more quadrature points near $\lambda_\text{min}$ and fewer near $\lambda_\text{max}$.
-This can be accomplished by using the above midpoint quadrature rule in a {transformed parameter space} that is ``stretched'' near $\lambda_\text{min}$ and contracted near $\lambda_\text{max}$.
-In particular, we will use a change-of-variables that exploits the geometry of the square root function for rapid convergence.
+This can be accomplished by using the above trapezoid quadrature rule in a {transformed parameter space} that is ``stretched'' near $\lambda_\text{min}$ and contracted near $\lambda_\text{max}$. Mathematically, this is accomplished by applying a conformal mapping that moves the singularities to the upper and lower boundaries of a periodic rectangle. We may then apply the trapezoid rule along a contour traversing the middle of the rectangle---maximizing the region in which the function we are integrating is analytic around the contour.
+%Concretely, this is accomplished using the change-of-variables introduced by~\citet{hale2008computing} that exploits the geometry of the square root function for rapid convergence.
 
 \subsection{A Specific Quadrature Formula for $f(\bK) = \bK^{-1/2}$}
 \citet{hale2008computing} suggest performing a change of variables that projects \cref{eqn:contour_integral_2} onto an annulus.
@@ -60,7 +62,7 @@ Setting $\sigma = \tau^{1/2}$, we have
 %
 where $\Gamma_\sigma$ is a contour that surrounds the spectrum of $\bK^{1/2}$.
 Since the integrand is symmetric with respect to the real axis, we only need to consider the imaginary portion of $\Gamma_\sigma$.
-Consequentially, all the $\tau_q$ quadrature locations (back in the original space) will be real-valued and negative.
+Consequently, all the $\tau_q$ quadrature locations (back in the original space) will be real-valued and negative.
 Combining this square-root change-of-variables with the annulus change-of-variables results in the following quadrature weights/locations:
 %
 \begin{equation}
@@ -82,7 +84,7 @@ Combining this square-root change-of-variables with the annulus change-of-variab
 where we adopt the following notation:
 \begin{itemize}
   \item $k = \sqrt{ \lambda_\text{min} / \lambda_\text{max} } = 1 / \sqrt{ \kappa(\bK) }$;
-  \item $\mathcal{K}'(k)$ is the complete elliptic integral of the first kind with respect to the complimentary elliptic modulus $\sqrt{1 - k^2}$;
+  \item $\mathcal{K}'(k)$ is the complete elliptic integral of the first kind with respect to the complimentary elliptic modulus $k' = \sqrt{1 - k^2}$;
   \item $u_q = \frac{1}{Q}(q - \frac 1 2)$; and
   \item $\text{sn}(\cdot \mid k)$, $\text{cn}(\cdot \mid k )$, and $\text{dn}(\cdot \mid k)$ are the Jacobi elliptic functions with respect to elliptic modulus $k$.
 \end{itemize}
@@ -95,14 +97,14 @@ Setting $t_q = -\sigma_q^2$ and $w_q = -\widetilde w_q$ gives us:
   \label{eqn:contour_integral_quad_4}
 \end{equation}
 %
-Note that the shifted matrices $(t_q \bI + \bK)$ are all positive definite.
+An immediate consequence of this is that the shifted matrices $(t_q \bI + \bK)$ are all positive definite.
 
 \paragraph{Convergence of the quadrature approximation.}
-Due to the double change-of-variables, the convergence of this quadrature in \cref{eqn:quad_points_and_locations} is extremely rapid---even for ill-conditioned matrices.
+Due to the double change-of-variables, the convergence of this quadrature rule in \cref{eqn:quad_points_and_locations} is extremely rapid---even for ill-conditioned matrices.
 \citeauthor{hale2008computing} prove the following error bound:
 %
 \begin{lemma}[\citet{hale2008computing}, Thm. 4.1]
-  Let $t_1$, $\ldots$, $t_Q > 0$ and $w_1$, $\ldots$, $w_Q > 0$ be the locations and weights of \citeauthor{hale2008computing}'s quadrature procedure (see \cref{app:quadrature}).
+  Let $t_1$, $\ldots$, $t_Q > 0$ and $w_1$, $\ldots$, $w_Q > 0$ be the locations and weights of \citeauthor{hale2008computing}'s quadrature procedure.
   The error of \cref{eqn:contour_integral_quad} is bounded by:
   \[
     \left\Vert \bK \sum_{q=1}^Q w_q \left( t_q \bI + \bK \right)^{-1} - \bK^{\frac 1 2} \right\Vert_2
@@ -112,17 +114,17 @@ Due to the double change-of-variables, the convergence of this quadrature in \cr
 \label{lemma:hale}
 \end{lemma}
 %
-\noindent
 Remarkably, the error of \cref{eqn:contour_integral_quad} is \emph{logarithmically} dependent on the conditioning of $\bK$.
-Consequentially, $Q\approx10$ quadrature points is even sufficient for ill-conditioned matrices (e.g. $\kappa(\bK) \approx 10^4$).
+Consequently, $Q\approx8$ quadrature points is even sufficient for ill-conditioned matrices (e.g. $\kappa(\bK) \approx 10^4$).
 
 \subsection{Estimating the Minimum and Maximum Eigenvalues}
-The equations for the quadrature weights/locations requires on knowing the extreme eigenvalues $\lambda_\text{max}$ and $\lambda_\text{min}$.
-Using the Lanczos algorithm (\cref{sec:lanczos}), we can obtain accurate estimates of these extreme eigenvalues through $\approx 10$ matrix-vector multiplies with $\bK$.
-Recall that the Lanczos algorithm forms the relation $\bQ^\top_J \bK \bQ_J = \bT_J$, where $\bQ_J$ is orthonormal and $\bT_J$ is tridiagonal.
+The equations for the quadrature weights/locations depend on the extreme eigenvalues $\lambda_\text{max}$ and $\lambda_\text{min}$ of $\bK$.
+Using the Lanczos algorithm \cite{lanczos1950iteration}, we can obtain accurate estimates of these extreme eigenvalues using relatively few matrix-vector multiplies with $\bK$.
 To estimate $\lambda_\text{min}$ and $\lambda_\text{max}$ from Lanczos, we perform an eigendecomposition of $\bT_J$.
-If $J$ is small (i.e. $J \approx 10$) then this eigendecomposition will require minimal computational resources.
-A well-known convergence result of the Lanczos algorithm is that the extreme eigenvalues of $\bT_J$ tend to converge rapidly to $\lambda_\text{min}$ and $\lambda_\text{max}$ of $\bK$ \citep[e.g.][]{saad2003iterative,golub2012matrix}.
+If $J$ is small (i.e. $J \approx 10$) then this eigendecomposition requires minimal computational resources. In fact, as $\bT_J$ is tridiagonal invoking standard routines allows computation of all the eigenvalues in $\bigo{J^2}$ time.
+A well-known convergence result of the Lanczos algorithm is that the extreme eigenvalues of $\bT_J$ tend to converge rapidly to $\lambda_\text{min}$ and $\lambda_\text{max}$ \citep[e.g.][]{saad2003iterative,golub2012matrix}.
+%Lastly, we require that the resulting contour encircle the spectrum of $\bK.$
+Since the Lanczos algorithm always produces underestimates of the largest eigenavlue and overestimates of the smallest it is reasonable to use slightly larger and smaller values in the construction of the quadrature scheme---as we see in Lemma~\ref{lemma:hale}, the necessary number of quadrature nodes is insensitive to small overestimates of the condition number.
 
 
 \subsection{The Complete Quadrature Algorithm}
