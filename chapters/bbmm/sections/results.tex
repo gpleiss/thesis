@@ -25,7 +25,8 @@ We test Exact GPs on five datasets from the UCI dataset repository \cite{asuncio
 We test SGPR on larger datasets ($N$ up to 50000).
 For KISS-GP we test five large UCI datasets ($N$ up to 515000).
 
-\paragraph{Experiment details.} All methods use the Adam optimizer \cite{kingma2014adam} with identical hyperparameters.
+\paragraph{Experiment details.}
+All methods use the Adam optimizer \cite{kingma2014adam} with identical hyperparameters.
 In BBMM experiments we use rank $R\!=\!5$ pivoted Cholesky preconditioners unless otherwise stated.
 We use a maximum of $J\!=\!20$ iterations of CG for each solve, and
 we use $T\!=\!10$ probe vectors filled with Gaussian random variables to estimate the log determinant and trace terms.

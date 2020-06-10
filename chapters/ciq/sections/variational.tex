@@ -54,7 +54,7 @@ Fortunately, we can derive a natural gradient update that only relies on matrix 
 Therefore, using NGD incurs the same \emph{quadratic} asymptotic complexity as msMINRES-CIQ.
 See \cref{app:ngd} for the $\bigo{M^2}$ NGD update equations.
 
-\paragraph{Experimental Details.}
+\paragraph{Experimental details.}
 We compare msMINRES-CIQ-SVGP against Cholesky-SVGP on 3 large-scale datasets: a GIS dataset ({\bf 3droad}, $D=2$), a monthly precipitation dataset ({\bf Precipitation}, $D=3$), and a tree cover dataset ({\bf Covtype}, $D=54$).
 Each task has between $N=70,\!000$ and $N=500,\!000$ training data points.
 For 3droad we use a Gaussian observation model.

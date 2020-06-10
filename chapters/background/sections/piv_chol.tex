@@ -24,7 +24,7 @@ The Cholesky decomposition is defined by a recursive algorithm:
 where $\bL^{(11)}$ is the Cholesky factor of $\bK^{(11)}$ and $\bL^{(22)}$ is the Cholesky factor of the Schur compliment $\bS_2 = \left( \bK^{(22)} - \bK^{(12)^\top} \bL^{(11)^{-\top}} \bL^{(11)^{-1}} \bK^{(12)} \right)$.
 The base case is for $1 \times 1$ matrices: $\text{Chol}(K) = \sqrt{K}$.
 
-\paragraph{Runtime and Space.}
+\paragraph{Runtime and space.}
 The Cholesky algorithm is inherently sequential, requiring $N$ steps to decompose an $N \times N$ matrix.
 Each step $i \in [1, N]$ computes the Schur compliment of a $(N-i) \times (N-i)$ matrix, which takes $\bigo{i^2}$ time (see \citep[][Sec. 4.2]{golub2012matrix} for a complete derivation).
 Thus in total the factorization takes $\bigo{M^3}$ time.
@@ -125,7 +125,7 @@ For matrices with rapidly decaying spectra, the partial pivoted Cholesky factor 
 \end{theorem}
 
 
-\paragraph{Runtime and Space.}
+\paragraph{Runtime and space.}
 The pivoted Cholesky algorithm adds two additional steps to each Cholesky iteration:
 %
 \begin{enumerate*}

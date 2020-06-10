@@ -84,13 +84,6 @@ In contrast, distributing the Cholesky decomposition requires $\bigo{N^2}$ commu
 
 \subsection{Practical Considerations}
 
-%\paragraph{Predictions with large-scale GPs.}
-%At test time, we must compute the predictive mean and variance given in \cref{eqn:predictive_mean} and \cref{eqn:predictive_var}.
-%As described in \cref{sec:motivation_means}, predictive means require the inner product between $\bk_{\bX \bxtest}$ and the cached vector $\blue \ba = \trainK^{-1} \by$.
-%Similarly, the LOVE method of \cref{chapter:love} generates a cachable low-rank approximation ${\color{blue} \bR^\top \bR} \approx {\color{blue} \trainK^{-1}}$ for predictive variances.
-%After these caches have been computed, predictive distributions can be computed through $\bigo{N}$ vector inner products---an especially fast operation on GPUs.
-%In practice, we observe that both the predictive mean and variance can be computed in less than a second on a single GPU regardless of dataset size.
-
 
 \paragraph{Preconditioning.}
 As in \cref{chapter:bbmm}, we use the partial pivoted Cholesky preconditioner for training and computing predictive means.
