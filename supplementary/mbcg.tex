@@ -173,10 +173,10 @@ Since \cref{eqn:pcp_condition} holds, we can simply plug \cref{thm:condition_num
 \section{Applying Theorems~\ref{thm:precond_mbcg_solves} and \ref{thm:precond_mbcg_logdet} to Univariate RBF Kernels}
 \label{app:univariate_rbf}
 
-Our convergence theory depends on the assumption in \cref{thm:condition_number} that the eigenvalues of $\bK_{\bX\bX}$ decay exponentially.
+Our convergence theory depends on the assumption that the eigenvalues of $\bK_{\bX\bX}$ decay exponentially.
 A natural question is when this assumption holds in practice.
 %There has been an enormous amount of work understanding the spectra of kernel functions (e.g., \cite{wathen2015spectral}).
-It so happens that one can prove a concrete bound on the eigenvalue distribution of univariate RBF kernels:
+It happens that one can prove a concrete bound on the eigenvalue distribution of univariate RBF kernels:
 %
 \begin{lemma}[Lemma 3 of \citet{gardner2018gpytorch}]
 \label{thm:eigenvalue_bound}
@@ -194,7 +194,7 @@ where $I_{k+1}$ denotes the modified Bessel function of the first kind with para
 \end{lemma}
 %
 \noindent
-In other words, the eigenvalues of an RBF kernel matrix $\bK_{\bX\bX}$ decay \emph{super-exponentially}, meeting the requirements of \cref{eqn:pcp_condition} in \cref{thm:condition_number}.
+In other words, the eigenvalues of univariate RBF kernels decay \emph{super-exponentially}, meeting the requirements of \cref{eqn:pcp_condition} in \cref{thm:condition_number}.
 Therefore, the bounds given by \cref{thm:precond_mbcg_solves,thm:precond_mbcg_logdet} apply.
 
 A proof of \cref{thm:eigenvalue_bound} was included in a version of \cref{chapter:bbmm} that was published at NeurIPS 2018 \citep{gardner2018gpytorch}.

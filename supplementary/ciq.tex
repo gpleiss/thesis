@@ -2,7 +2,8 @@
 \label{app:quadrature}
 
 \section{Selecting Quadrature Locations and Weights}
-Here we briefly describe the quadrature formula derived by \citet{hale2008computing} for use with Cauchy's integral formula and refer the reader to the original publication for more details.
+Here we briefly describe the quadrature formula derived by \citet{hale2008computing} for use with Cauchy's integral formula.
+We refer the reader to the original publication for more details.
 
 Assume that $\bK$ is a positive definite matrix, and thus has real positive eigenvalues.
 Our goal is to approximate Cauchy's integral formula with a quadrature estimate:
@@ -46,7 +47,7 @@ This can be accomplished by using the above trapezoid quadrature rule in a {tran
 \subsection{A Specific Quadrature Formula for $f(\bK) = \bK^{-1/2}$}
 \citet{hale2008computing} suggest performing a change of variables that projects \cref{eqn:contour_integral_2} onto an annulus.
 Uniformly spaced quadrature points inside the annulus will cluster near $\lambda_\text{min}$ when projected back into the complex plane.
-This change of variables has a simple analytic formula involving Jacobi elliptic functions (see \citep[][Sec. 2]{hale2008computing} for details.)
+This change of variables has a simple analytic formula involving Jacobi elliptic functions (see \citep[][Sec. 2]{hale2008computing} for details).
 In the special case of $f(\bK) = \bK^{-1/2}$, we can utilize an additional change of variables for an even more efficient quadrature formulation \citep[][Sec. 4]{hale2008computing}.
 Setting $\sigma = \tau^{1/2}$, we have
 %
@@ -114,13 +115,14 @@ Due to the double change-of-variables, the convergence of this quadrature rule i
 \label{lemma:hale}
 \end{lemma}
 %
+\noindent
 Remarkably, the error of \cref{eqn:contour_integral_quad} is \emph{logarithmically} dependent on the conditioning of $\bK$.
 Consequently, $Q\approx8$ quadrature points is even sufficient for ill-conditioned matrices (e.g. $\kappa(\bK) \approx 10^4$).
 
 \subsection{Estimating the Minimum and Maximum Eigenvalues}
 The equations for the quadrature weights/locations depend on the extreme eigenvalues $\lambda_\text{max}$ and $\lambda_\text{min}$ of $\bK$.
 Using the Lanczos algorithm \cite{lanczos1950iteration}, we can obtain accurate estimates of these extreme eigenvalues using relatively few matrix-vector multiplies with $\bK$.
-To estimate $\lambda_\text{min}$ and $\lambda_\text{max}$ from Lanczos, we perform an eigendecomposition of $\bT_J$.
+To estimate $\lambda_\text{min}$ and $\lambda_\text{max}$ from Lanczos, we perform an eigendecomposition of $\bT_J$ (the tridiagonal Lanczos matrix after $J$ iterations---see \cref{sec:lanczos}).
 If $J$ is small (i.e. $J \approx 10$) then this eigendecomposition requires minimal computational resources. In fact, as $\bT_J$ is tridiagonal invoking standard routines allows computation of all the eigenvalues in $\bigo{J^2}$ time.
 A well-known convergence result of the Lanczos algorithm is that the extreme eigenvalues of $\bT_J$ tend to converge rapidly to $\lambda_\text{min}$ and $\lambda_\text{max}$ \citep[e.g.][]{saad2003iterative,golub2012matrix}.
 %Lastly, we require that the resulting contour encircle the spectrum of $\bK.$

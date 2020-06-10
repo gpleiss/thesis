@@ -73,7 +73,8 @@ To prove the convergence result in \cref{thm:ciq_convergence}, we first prove th
 %
 \noindent
 \cref{lemma:minres} is a very loose bound, as it doesn't assume anything about the spectrum of $\bK$ (which is standard for generic Krylov method error bounds) and upper bounds the residual error for every shift using the most ill-conditioned system.
-In practice, we find that smMINRES converges for many covariance matrices with $J \approx 100$, even when the conditioning is on the order of $\kappa(\bK) \approx 10^4$ and this convergence can be further improved with preconditioning.
+In practice, we find that msMINRES converges for many covariance matrices with $J \approx 100$, even when the conditioning is on the order of $\kappa(\bK) \approx 10^4$.
+This convergence can be further improved with preconditioning.
 
 
 %%%%
@@ -85,13 +86,13 @@ In practice, we find that smMINRES converges for many covariance matrices with $
     }{
       \sqrt{\kappa(\bK + t \bI)} + 1
     } = \frac{\sqrt{\lambda_\text{max} + t} - \sqrt{\lambda_\text{min} + t}  }{\sqrt{\lambda_\text{max} + t} + \sqrt{\lambda_\text{min} + t}  }
-    < \frac{\lambda_\text{max}}{4t}
+    < \frac{\lambda_\text{max}}{4t}.
   \end{align}
   \label{lemma:condition}
 \end{lemma}
 
 \begin{proof}
-  We can upper bound the numerator
+  We can upper bound the numerator:
   \begin{align*}
     \sqrt{\lambda_\text{max} + t} - \sqrt{\lambda_\text{min} + t}
     &\leq
@@ -103,7 +104,7 @@ In practice, we find that smMINRES converges for many covariance matrices with $
     &\leq
     \sqrt{\lambda_\text{max}} \frac{1}{2 \sqrt{t/\lambda_\text{max}}}
     =
-    \frac{\lambda_\text{max}}{2 \sqrt{t}}.
+    \frac{\lambda_\text{max}}{2 \sqrt{t}},
   \end{align*}
   where we have applied the standard inequality $\sqrt{(\cdot)+1} - \sqrt{(\cdot)} < \frac{1}{2 \sqrt{(\cdot)}}$.
   The denominator can be (loosely) lower-bounded as $2\sqrt{t}$.
@@ -173,7 +174,7 @@ In practice, we find that smMINRES converges for many covariance matrices with $
     { \pi Q \sqrt{\lambda_\text{min}} \sin^2 ( \frac{\pi (q - 1/2)}{2Q}) }.
   \end{align}
   %
-  Through trigonometric identities
+  Through trigonometric identities:
   $\sum_{q=1}^Q 1 / ( Q \sin^2 \frac{\pi(q- 1/2 )}{2Q} )  = 2 Q$ and, therefore,
   %
   \begin{align*}
@@ -271,21 +272,22 @@ We can also prove this simple corollary:
 %
 \begin{corollary}
   Let $\bK\succ 0$ and $\bb$ be the inputs to \cref{alg:ciq}, producing the output $\ba_J' \approx \bK^{-1/2} \bb$ after $J$ iterations with $Q$ quadrature points.
-  The difference between $\ba_J$ and $\bK^{1/2} \bb$ is bounded by:
+  The difference between $\ba_J'$ and $\bK^{-1/2} \bb$ is bounded by:
   %
-  \begin{equation*}
+  \begin{align*}
     \left\Vert \ba_J' - \bK^{-\frac 1 2} \bb \right\Vert_2
-    \leq
+    &\leq
     \overbracket{
-      \bigo{ \tfrac{1}{\lambda_\text{min}} \exp\left( -\tfrac  {2 Q \pi^2}{\log \kappa(\bK) + 3} \right)}
+      \bigo{ \frac{1}{\lambda_\text{min}} \exp\left( -\frac  {2 Q \pi^2}{\log \kappa(\bK) + 3} \right)}
     }^{\text{Quadrature error}}
-    +
+    \\
+    &\phantom{=} \:\: +
     \overbracket{
-      \tfrac{ 2 Q \log \left( 5 \sqrt{\kappa(\bK)} \right) \kappa(\bK) }{ \sqrt{\lambda_\text{min}} \pi}
-      \left( \tfrac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^{J-1}
+      \frac{ 2 Q \log \left( 5 \sqrt{\kappa(\bK)} \right) \kappa(\bK) }{ \sqrt{\lambda_\text{min}} \pi}
+      \left( \frac{ \sqrt{\kappa(\bK)} - 1}{ \sqrt{\kappa(\bK)} + 1} \right)^{J-1}
       \left\Vert \bb \right\Vert_2.
     }^{\text{msMINRES error}}
-  \end{equation*}
+  \end{align*}
   %
   where $\lambda_\text{max},\lambda_{\text{min}}$ are the maximal and minimal eigenvalues of $\bK$, and $\kappa(\bK)$ is the condition number of $\bK$.
   \label{thm:ciq_convergence_inverse}
