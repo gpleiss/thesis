@@ -6,7 +6,7 @@ Here, we demonstrate how the amount of data affects exact GP performance, and ho
   \centering
   \includegraphics[width=0.7\linewidth]{figures/subsampling.pdf}
   \caption[Effect of subsampling on exact GP performance.]{
-    Effect of subsampling on exact GP performance, as measured by test set RMSE (lower is better).
+    Effect of subsampling on exact GP performance, as measured by test set RMSE.
     Subsampled exact GPs outperform approximate GPs, even when only quarter of the training set is used.
     Exact GP error continues to decrease as data is added.
   }
@@ -24,8 +24,8 @@ Strikingly, in all three cases, \textit{an exact GP with less than a quarter of 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=0.7\linewidth]{figures/inducing_points.pdf}
-  \caption[Error of approximate GP methods as a function of the number of inducing points.]{
-    Error of SVGP and SGPR methods as a function of the number of inducing points ($M$).
+  \caption[Error of approximate GP methods as a function of inducing points.]{
+    Error of SVGP and SGPR methods as a function of inducing points ($M$).
     Both methods scale cubically with $M$.
     We are unable to run SGPR with more than $1,\!024$ inducing points on a single GPU.
     Exact GPs have lower error than both methods.

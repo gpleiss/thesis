@@ -54,9 +54,9 @@ Randomized SVD on the other hand incurs an order of magnitude more error (\cref{
 	\centering
 	\includegraphics[width=0.85\textwidth]{figures/empirical_covariance_prior.pdf}
   \caption[
-    Empirical covariance error for various sampling methods (Cholesky, msMINRES-CIQ, and Random Fourier Features).
+    Empirical covariance error of various sampling methods (Cholesky, msMINRES-CIQ, and Random Fourier Features).
   ]{
-    Empirical covariance error (relative norm) for various sampling methods (Cholesky, msMINRES-CIQ, and $1,\!000$ Random Fourier Features \cite{rahimi2008random}).
+    Empirical covariance error (relative norm) of various sampling methods (Cholesky, msMINRES-CIQ, and $1,\!000$ Random Fourier Features \cite{rahimi2008random}).
     Empirical covariances are measured from $1,\!000$ samples.
     RBF matrices are constructed from data in the Protein and Kin40k datasets \cite{asuncion2007uci}.
   }
@@ -76,9 +76,9 @@ This additional error is due to the randomness in the RFF approximation.
   \quad
 	\includegraphics[width=0.4\textwidth]{figures/precond_result_rbf.pdf}
   \caption[
-    Effect of preconditioning on msMINRES-CIQ convergence.
+    Effect of preconditioning msMINRES-CIQ.
   ]{
-    Effect of preconditioning on msMINRES-CIQ convergence (random Mat\'ern and RBF kernels with a pivoted Cholesky preconditioner \citep{gardner2018gpytorch}).
+    Effect of preconditioning msMINRES-CIQ (random Mat\'ern and RBF kernels with a pivoted Cholesky preconditioner).
     Larger preconditioners reduce the number of msMINRES iterations required to reach $10^{-6}$ error.
   }
   \label{fig:precond_result}

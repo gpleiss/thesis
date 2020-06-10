@@ -98,8 +98,8 @@ The biggest improvements are obtained on the largest datasets since LOVE{}, unli
   \centering
   \includegraphics[width=0.65\columnwidth]{figures/lanczos_accuracy.pdf}
   \vspace{-2ex}
-  \caption[LOVE variance error versus number of Lanczos iterations.]{
-    LOVE variance error versus number of Lanczos iterations
+  \caption[LOVE variance error as a function of Lanczos iterations.]{
+    LOVE variance error as a function of Lanczos iterations
     (KISS-GP model, $M=10,\!000$. Protein, Kin40k, PoleTele, and Elevators UCI datasets).
     \label{fig:lanczos_accuracy}
   }
@@ -120,7 +120,7 @@ After roughly $50$ iterations, the error levels off, though this may be an artif
 
 \begin{table}[t!]
   \caption[Accuracy and computation time of drawing samples from the posterior distribution.]{
-    Accuracy and computation time of drawing samples from the predictive distribution.
+    Accuracy and computation time of drawing samples from the posterior distribution.
     \label{tab:sampling_results}
   }
   \vspace{0.5ex}
@@ -166,9 +166,9 @@ For example, max-value entropy search \cite{wang2017max} uses samples to estimat
 \begin{figure}[t!]
   \centering
   \includegraphics[width=0.65\columnwidth]{figures/love_sampling_comparison.pdf}
-  \caption[Comparison of LOVE and Random Fourier Features for Bayesian optimization via Max-Value Entropy Search.]{
-    Comparison of LOVE and Random Fourier Features for Bayesian optimization (BO) via Max-Value Entropy Search.
-    Each line represents an approximation of maximum value distribution $p(y_\text{max} \mid \dset)$ using different sampling methods (exact sampling, Random Fourier Features, and LOVE + KISS-GP).
+  \caption[Comparison of LOVE versus Random Fourier Features for Bayesian optimization via Max-Value Entropy Search.]{
+    Comparison of LOVE versus Random Fourier Features for Bayesian optimization (BO) via Max-Value Entropy Search.
+    Each line represents an approximation of the maximum value distribution $p(y_\text{max} \mid \dset)$ using different sampling methods (exact sampling, Random Fourier Features, and LOVE + KISS-GP).
     Samples drawn with LOVE+KISSGP closely match samples drawn using an Exact GP.
     (Dataset: (normalized) Eggholder function after 100 iterations of BO.)
     \label{fig:love_sampling_comparison}

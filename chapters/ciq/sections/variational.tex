@@ -87,8 +87,8 @@ In total, there are 10 years and $10,\!127$ latitude/longitude coordinates, for 
 \begin{figure}[t!]
   \centering
   \includegraphics[width=\linewidth]{figures/variational_nll.pdf}
-  \caption[Negative log likelihood (NLL) comparison of Cholesky versus msMINRES-CIQ SVGP models.]{
-    Negative log likelihood (NLL) comparison of Cholesky versus msMINRES-CIQ SVGP models.
+  \caption[Negative log likelihood (NLL) of Cholesky versus msMINRES-CIQ SVGP models.]{
+    Negative log likelihood (NLL) of Cholesky versus msMINRES-CIQ SVGP models.
     {\bf Left:} 3DRoad dataset ($N=326155, D=2$, Gaussian likelihood).
     {\bf Middle:} Precipitation dataset ($N=75952, D=3$, Student-T likelihood).
     {\bf Right:} CoverType dataset ($N=435759, D=54$, Bernoulli likelihood).
@@ -101,8 +101,8 @@ In total, there are 10 years and $10,\!127$ latitude/longitude coordinates, for 
 \begin{figure}[t!]
   \centering
   \includegraphics[width=\linewidth]{figures/variational_error.pdf}
-  \caption[Error comparison of Cholesky versus msMINRES-CIQ SVGP models.]{
-    Error comparison of Cholesky versus msMINRES-CIQ SVGP models.
+  \caption[Error of Cholesky versus msMINRES-CIQ SVGP models.]{
+    Error of Cholesky versus msMINRES-CIQ SVGP models.
     {\bf Left:} 3DRoad dataset RMSE ($N=326155, D=2$, Gaussian likelihood).
     {\bf Middle:} Precipitation dataset RMSE ($N=75952, D=3$, Student-T likelihood).
     {\bf Right:} CoverType dataset $0/1$ error ($N=435759, D=54$, Bernoulli likelihood).
@@ -124,7 +124,7 @@ Note we do not train $M > 5,\!000$ Cholesky models as doing so would require $2$
   \centering
   \includegraphics[width=\linewidth]{figures/variational_stats.pdf}
   \caption[Hyperparameters of Cholesky and CIQ SVGP models.]{
-    Hyperparameters versus number of inducing points ($M$) for Chol-SVGP and msMINRES-CIQ-SVGP (Precipitation dataset, Student-T likelihood).
+    Hyperparameters as a function of inducing points ($M$) for Chol-SVGP and msMINRES-CIQ-SVGP (Precipitation dataset, Student-T likelihood).
     As $M$ increases, the kernel outputscale (left) also increases.
     At the same time, the estimated observational noise (middle) decreases as does the estimated degrees of freedom (right), reflecting a heavier-tailed noise distribution.
     This suggests that, with larger $M$, SVGP models can find more signal in the data.
