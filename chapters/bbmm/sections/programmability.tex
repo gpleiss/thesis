@@ -24,7 +24,8 @@ The {\tt \_deriv($\cdot,\cdot$)} function can be used to compute an unbiased est
     \[
       \frac{1}{T} \:\: \frac{ \partial \tr{ (\bZ^\top \trainK^{-1}) \trainK (\bZ) }}{ \partial \br } \:\: \frac{ \partial \br }{\partial \btheta},
     \]
-    which can be computed by calling {\tt \_deriv($\trainK^{-1} \bZ$, $\bZ$)}.
+    where $\bZ = [\bz^{(1)}, \:\: \ldots, \:\: \bz^{(T)}]$.
+    This can be computed by calling {\tt \_deriv($\trainK^{-1} \bZ$, $\bZ$)}.
 
   \item The $(\by^\top \trainK^{-1}) \frac{\partial \trainK}{\partial \btheta} (\trainK^{-1} \by)$ term in \cref{eqn:log_lik_deriv}
     can be rewritten as
@@ -92,8 +93,8 @@ class RootLazyTensor(LazyTensor):
     def _deriv(self, A, B):
         # d(tr(A^T K B)) / d(X) = A B^T X + B A^T X
         # if A and B are (N X T), this is O(T N D)
-        return A @ B.transpose(-1, -2) @ X + \
-            B @ A.transpose(-1, -2) @ X
+        return A @ B.transpose(-1, -2) @ self.X + \
+            B @ A.transpose(-1, -2) @ self.X
 \end{minted}
 %
 \noindent

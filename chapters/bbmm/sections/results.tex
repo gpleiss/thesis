@@ -5,7 +5,7 @@
 We evaluate the BBMM framework, demonstrating:
 \begin{enumerate}
 	\item the BBMM inference engine provides a substantial speed benefit over Cholesky based inference and standard MVM-based CG inference, especially for GPU computing;
-	\item BBMM achieves comparable or better test error than to Cholesky inference; and
+	\item BBMM achieves comparable or better test error than Cholesky inference; and
 	\item preconditioning provides a substantial improvement in the efficiency of our approach.
 \end{enumerate}
 
@@ -21,9 +21,9 @@ Since KISS-GP is not intended for Cholesky inference, we compare BBMM to the inf
 This procedure differers from BBMM in that it computes $\trainK^{-1} \by$ without a preconditioner and computes $\log \vert \trainK \vert$ and its derivative with the Lanczos algorithm.
 
 \paragraph{Datasets.}
-We test Exact GPs on five datasets from the UCI dataset repository \cite{asuncion2007uci} that have up to $N=3,\!500 $training examples.
-We test SGPR on larger datasets ($N$ up to 50000).
-For KISS-GP we test five large UCI datasets ($N$ up to 515000).
+We test Exact GPs on five datasets from the UCI dataset repository \cite{asuncion2007uci} that have up to $N=3,\!500$ training examples.
+We test SGPR on larger datasets ($N$ up to $50,\!000$).
+For KISS-GP we test five large UCI datasets ($N$ up to $515,\!000$).
 
 \paragraph{Experiment details.}
 All methods use the Adam optimizer \cite{kingma2014adam} with identical hyperparameters.
@@ -33,7 +33,7 @@ we use $T\!=\!10$ probe vectors filled with Gaussian random variables to estimat
 SGPR models use $M\!=\!300$ inducing points.
 KISS-GP models use $M\!=\!10,\!000$ inducing points and the deep kernels described in \cite{wilson2016deep}.
 %BBMM training is implemented in our GPyTorch package.
-All speed experiments are run on an Intel Xeon E5-2650 CPU and an NVIDIA Titan XP GPU.
+All speed experiments are run on an Intel Xeon E5-2650 CPU and a NVIDIA Titan XP GPU.
 
 \begin{figure}[t]
   \centering
@@ -71,8 +71,7 @@ All speed experiments are run on an Intel Xeon E5-2650 CPU and an NVIDIA Titan X
 
 \paragraph{Speed comparison.}
 \cref{fig:timing_results} shows the speedup obtained by GPU-accelerated BBMM over CPU-based training methods (Cholesky for Exact/SGPR, \citet{dong2017scalable} for KISS-GP).
-As would be expected, GPU-accelerated BBMM is faster than CPU-based inference.
-On Exact and KISS-GP, BBMM is up to \emph{32 times faster} than CPU inference, and up to 10 times faster on SGPR.
+BBMM is up to \emph{32 times faster} than Exact/KISS-GP CPU training, and up to 10 times faster than SGPR CPU training.
 The largest speedups occur on the biggest datasets, since smaller datasets experience larger GPU overhead.
 Notably, BBMM achieves a much larger speedup than GPU accelerated Cholesky methods (Exact, SGPR), which only achieve a roughly $4\times$ speedup.
 This result underscores the fact that Cholesky methods are not as well suited for GPU acceleration.
@@ -88,8 +87,8 @@ This speedup is because BBMM is able to calculate all inference terms in paralle
 
 \paragraph{Predictive error comparison.}
 Computing predictive means requires the solve $\trainK^{-1} \by$.
-Therefore, the mBCG algorithm can be used to compute this term with preconditioning and GPU acceleration.
-In \cref{fig:bbmm_error_results} we compare the mean average error (MAE) of mBCG models versus Cholesky models.
+Therefore, the PCG algorithm can be used to compute this term with preconditioning and GPU acceleration.
+In \cref{fig:bbmm_error_results} we compare the mean average error (MAE) of BBMM models versus Cholesky models.
 We demonstrate results using both the RBF kernel and a Mat\'ern-5/2 kernel.
 Across all datasets, our method is at least as accurate in terms of final test MAE.
 On a few datasets (e.g. Gas, Airfoil, and Wine with Exact GPs) BBMM even improves final test error.
@@ -102,7 +101,7 @@ BBMM on the other hand avoids adding this noise, without requiring double precis
   \centering
   \includegraphics[width=\textwidth]{figures/precond_solves}
   \caption[Effect of partial pivoted Cholesky preconditioning on mBCG solve errors.]{
-    Effect of partial pivoted Cholesky preconditioning on solve errors.
+    Effect of partial pivoted Cholesky preconditioning.
 		{\bf Top:} mBCG residual $\Vert \trainK \bc - \by \Vert / \Vert \by \Vert$ as a function of mBCG iterations.
     {\bf Bottom:} Test set mean average error (MAE) as a function of mBCG wall-clock time.
 		Solves are computed using no preconditioner, rank $R=2$, $R=5$, and $R=9$ pivoted Cholesky preconditioners using deep RBF and deep Mat\'ern kernels.
@@ -121,7 +120,7 @@ As expected based on our theoretical intuitions, increasing the rank of the prec
 
 In \cref{fig:precond_results} (bottom), we confirm that these more accurate solves indeed result in faster training.
 We plot the test MAE of preconditioned/non-preconditioned mBCG as a function of wall-time.\footnote{
-  Wallclock time is varied by changing the number of CG iterations used to compute the predictive mean.
+  Wall-clock time is varied by changing the number of CG iterations.
 }
 We observe that a rank-5 preconditioner is indeed sufficient---the solves converge up to 5 times faster than without preconditioning.
 Consequentially, we recommend always using the partial pivoted Cholesky preconditioner with BBMM.

@@ -1,5 +1,4 @@
 %!TEX root=main.tex
-%\newpage
 \section{Gaussian Process Training Through Matrix Multiplication}
 
 \label{sec:bbmm_method}
@@ -37,7 +36,6 @@ Furthermore, its recursive nature makes the Cholesky algorithm less amenable to 
 \citet{nguyen2019exact} aim to alleviate these costs through distributed computing, yet their approach requires quadratic communication costs and quadratic memory.
 
 \paragraph{MVM-based training methods.}
-%Recently, there is a growing line of research that computes these operations with iterative routines based on matrix-vector multiplications (MVMs).
 As described in \cref{sec:mvms},
 $\trainK^{-1}\by$ can also be computed using \emph{conjugate gradients} (CG) \cite{cunningham2008fast,cutajar2016preconditioning},
 and the other two quantities can be computed using the Lanczos tridiagonalization algorithm \cite{ubaru2017fast,dong2017scalable} or entropic estimates \cite{fitzsimons2016improved}.
@@ -46,19 +44,20 @@ Additionally, these methods are able to exploit algebraic structure in the data 
 We aim to expand on these existing methods.
 In particular, our goals are to
 \begin{enumerate}
-  \item introduce a unified MVM algorithm that simultaneously computes all terms and thus improve parallelization/GPU utilization; and
+  \item introduce a unified MVM algorithm that simultaneously computes all terms to improve parallelization/GPU utilization; and
   \item avoid using Lanczos tridiagonalization for the second two terms, as it suffers from numerical instabilities \cite{golub2012matrix}.
 \end{enumerate}
 
 \subsection{Modified Batched Conjugate Gradients (mBCG)}
 \label{sec:mbcg}
 
-For this purpose, we introduce a \emph{modified Batched Conjugate Gradients Algorithm} (mBCG) algorithm.
-Standard conjugate gradients takes as input a vector $\by$ and a routine for computing a matrix vector product $\trainK\by$, and, after $J$ iterations, outputs an approximate solve $\bc_{J} \approx \trainK^{-1}\by$ (with equality when $J = N$).
-We modify conjugate gradients to 1. perform linear solves with multiple right hand sides simultaneously, and 2. return tridiagonal matrices corresponding to partial Lanczos tridiagonalizations of $\trainK$.
-%\footnote{
-  %mBCG differes from Block CG algorithms \cite{o1980block} in that mBCG returns Lanczos tridiagonalization terms.
-%}
+For this purpose, we introduce a \emph{modified Batched Conjugate Gradients} (mBCG) algorithm.
+Standard conjugate gradients takes as input a vector $\by$ and, after $J$ iterations, outputs an approximate solve $\bc_{J} \approx \trainK^{-1}\by$ (with equality when $J = N$).
+We modify conjugate gradients to
+\begin{enumerate*}
+  \item perform linear solves with multiple right hand sides simultaneously; and
+  \item return tridiagonal matrices corresponding to partial Lanczos tridiagonalizations of $\trainK$.
+\end{enumerate*}
 Specifically, mBCG takes as input a matrix $\left[ \by, \:\: \bz^{(1)}, \:\: \cdots, \:\: \bz^{(T)} \right]$, and outputs:
 \begin{equation}
   \label{eqn:mod_cg_call}
@@ -89,10 +88,9 @@ $\trainK^{-1} \by$, $\tr{ \trainK^{-1} \frac{\partial \trainK}{\partial \btheta}
       \label{eqn:trace_deriv_estimate}
     \end{align}
     %
-    is an unbiased estimator of the derivative. This computation motivates the $\bz^{(1)}, \ldots, \bz^{(T)}$ terms in \cref{eqn:mod_cg_call}:
-    mBCG returns the solves $\trainK^{-1}[\bz^{(1)}, \:\: \ldots, \:\: \bz^{(T)}]$.
-    A single matrix multiply with the derivative $\frac{\partial \trainK}{\partial \btheta}[\bz^{(1)}, \:\: \ldots, \:\: \bz^{(T)}]$ yields the remaining terms on the RHS.
-    The full trace can then be estimated by elementwise multiplying these terms together and summing, as in \cref{eqn:trace_deriv_estimate}.
+    is an unbiased estimator of the derivative.
+    This computation motivates the $\bz^{(1)}, \ldots, \bz^{(T)}$ terms in \cref{eqn:mod_cg_call}.
+    A single matrix multiply with the derivative $\frac{\partial \trainK}{\partial \btheta}[\bz^{(1)}, \:\: \ldots, \:\: \bz^{(T)}]$ yields the remaining terms.
 
   \item $\log \vert \trainK \vert$
     can be estimated using the stochastic Lanczos quadrature routine of \citet{ubaru2017fast}, as described in \cref{sec:lanczos}.
@@ -210,7 +208,7 @@ Each iteration requires one matrix multiplication with $\trainK$ and element-wis
 Therefore, $J$ iterations of mBCG requires $\bigo{NT}$ space and $\bigo{J \: \mmm{\trainK}}$ time,
 where $\mmm{\trainK}$ is the time to multiply $\trainK$ by a $N \times (T + 1)$ matrix.
 This takes $\bigo{N^2 T}$ time with a standard matrix.
-It is worth noting that this is a lower asymptotic complexity that standard Cholesky-based training, which is $\bigo{N^3}$.
+It is worth noting that this is a lower asymptotic complexity than standard Cholesky-based training, which is $\bigo{N^3}$.
 Therefore, \emph{BBMM offers a computational speedup for exact GPs}.
 As we will show in \cref{sec:programmability}, this time complexity can be further reduced with structured data or sparse GP approximations.
 
@@ -224,7 +222,9 @@ The $\tr{\trainK^{-1}\frac{\partial \trainK}{\partial \btheta}}$ estimate is the
 This only requires an additional $\mmm{\frac{\partial \trainK}{\partial \btheta}} + \bigo{NT}$ time and $\bigo{NT}$ space.\footnote{
 	We assume that $\mmm{\frac{\partial \trainK}{\partial \btheta}} \approx \mmm{\trainK}$, which is true for exact GPs and GP approximations.
 }
-Computing $\log \vert \trainK \vert$ dominates the post-mBCG running time; however, it negligible assuming $J \ll N$ iterations of mBCG.
+Computing $\log \vert \trainK \vert$ dominates the post-mBCG running time; however, it is negligible assuming $J \ll N$ iterations of mBCG.
 %mBCG gives us $J \times J$ tridiagonal matrices  ${\bT}^{(1)}, \ldots, {\bT}^{(T)}$.
 To compute the log determinant estimate, we must compute $\be^{(1)^\top} \log \bT^{(i)} \be^{(1)}$ for each $i$, which requires eigendecomposing the $\bT^{(i)}$ matrices.
-This costs $\bigo{T J^3}$ time, which again is significantly less than the running time complexity of mBCG.
+This costs $\bigo{T J^2}$ time,\footnote{
+  By exploiting tridiagonal structure.
+} which again is significantly less than the running time of mBCG.

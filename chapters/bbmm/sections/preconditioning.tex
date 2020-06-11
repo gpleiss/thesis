@@ -8,7 +8,7 @@ We accomplish this goal using \emph{preconditioning} \citep[e.g.][]{demmel1997ap
   \left( \trainP^{- \frac 1 2} \trainK \trainP^{- \frac 1 2}\right) \bC = \trainP^{- \frac 1 2} \left[ \by, \:\:, \bz^{(1)}, \:\:, \ldots, \:\: \bz^{(T)} \right].
   \label{eqn:precond_system}
 \end{equation}
-instead of $\trainK^{-1} \left[  \by, \:\:, \bz^{(1)}, \:\:, \ldots, \:\: \bz^{(T)} \right].$.
+instead of $\trainK^{-1} \left[  \by, \:\:, \bz^{(1)}, \:\:, \ldots, \:\: \bz^{(T)} \right].$
 Both systems are guaranteed to have the same solution, but the preconditioned system's convergence depends on the conditioning of $\trainP^{- \frac 1 2} \trainK \trainP^{- \frac 1 2}$ rather than that of $\trainK$.
 Despite the matrix square roots in \cref{eqn:precond_system}, preconditioned CG/mBCG only need access to $\trainP$ and its inverse $\trainP^{-1}$ (see \cref{alg:std_pcg}).
 
@@ -30,7 +30,7 @@ which produces the solves
 \end{align*}
 %
 The difference between \cref{eqn:mod_cg_call_precond} and the original (non-preconditioned) input (\cref{eqn:mod_cg_call})
-is that the $\bz^{(i)}$ probe vectors have covariance $\Ev{ \bz^{(i)} \bz^{(i)^\top} } = \trainP$ (rather than unit covariance).
+is that the $\bz^{(i)}$ probe vectors have covariance $\Ev{ \bz^{(i)} \bz^{(i)^\top} } = \trainP$ (rather than unit variance).
 To understand why this is the case, recall from \cref{sec:bbmm_method} that our log determinant estimate is given by:
 %
 \begin{align*}
@@ -38,8 +38,7 @@ To understand why this is the case, recall from \cref{sec:bbmm_method} that our 
 	&\approx \Evover{\bz^{(i)} \sim \normaldist{0}{\bI} }{\bz^{(i)^\top} \bQ^{(i)} \left( \log \bT^{(i)} \right) \bQ^{(i)^\top} \bz^{(i)}},
 \end{align*}
 %
-where $\bT^{(1)}$, $\ldots$, $\bT^{(T)}$---the Lanczos tridiagonal matrices corresponding to $\trainK$ and probe vectors $\bz^{(i)}$, $\ldots$, $\bz^{(T)}$---are computed from byproducts of the CG iterations.
-If we precondition mBCG with $\trainP$, then the $\bT^{(i)}$ matrices will instead correspond to the \emph{preconditioned system}
+If we precondition mBCG with $\trainP$, then the $\bT^{(i)}$ matrices will correspond to the \emph{preconditioned system}
 $(\trainP^{- \frac 1 2} \trainK \trainP^{- \frac 1 2})$ and \emph{preconditioned probe vectors} $(\trainP^{- \frac 1 2} \bz^{(i)})$.
 Consequentially, the stochastic Lanczos quadrature estimate will return
 %
@@ -89,7 +88,7 @@ we note that we can form a stochastic trace estimate from the following:
 The only differences between \cref{eqn:trace_est_precond} and the non-preconditioned trace estimate in \cref{eqn:trace_deriv_estimate} are
 \begin{enumerate*}
 	\item we use $\bz^{(i)} \sim \normaldist{\bzero}{\trainP}$ as probe vectors, and
-	\item the derivative term $\partial \trainK / \partial \btheta$ is applied to the preconditioned vectors $\trainP^{-1} \bz^{(i)}$.
+	\item the derivative term $\partial \trainK / \partial \btheta$ is applied to the vectors $\trainP^{-1} \bz^{(i)}$.
 \end{enumerate*}
 
 \paragraph{Requirements of mBCG preconditioners.}
@@ -153,11 +152,11 @@ Perhaps more important than its runtime are its convergence properties.
 In general, the low-rank nature of $\trainP$ is an ideal choice for many kernel matrices with rapidly decaying spectra.
 Such kernels tend to be horribly conditioned yet are well approximated by low rank matrices.
 We empirically demonstrate in \cref{sec:bbmm_results} that $\trainP$ significantly improves the convergence of mBCG for several kernels.
-Below we prove theoretical guarantees for certain classes of kernels.
+Below we discuss theoretical guarantees for certain classes of kernels.
 
 
 \paragraph{Theoretical analysis.}
-Kernels with rapidly decaying eigenvalues (i.e. kernels that are well approximated by low-rank matrices) will see the largest improvements from the pivoted Cholesky preconditioner.
+Kernels with rapidly decaying eigenvalues (i.e. kernels that are well approximated by low-rank matrices) will see the largest improvements from the partial pivoted Cholesky preconditioner.
 Based on the work of \citet{harbrecht2012low}, we can prove the following lemma about kernel condition numbers:
 %
 \begin{lemma}
@@ -219,7 +218,7 @@ Using \cref{thm:condition_number}, we can prove the following statements about t
 %
 \noindent
 (See \cref{app:proofs} for proofs.)
-\cref{thm:precond_mbcg_solves} implies that the mBCG solves---used to compute both $\trainK^{-1} \by$ and $\tr{ \trainK^{-1} (\partial \trainK / \partial \btheta)}$---will converge \emph{exponentially} quicker as the rank of the pivoted Cholesky decomposition increases.
+\cref{thm:precond_mbcg_solves} implies that the mBCG solves---used to compute both $\trainK^{-1} \by$ and $\tr{ \trainK^{-1} (\partial \trainK / \partial \btheta)}$---will converge \emph{exponentially} quicker as the rank of the partial pivoted Cholesky decomposition increases.
 \cref{thm:precond_mbcg_logdet} implies that the number of iterations needed to accurately estimate $\log \vert \trainP^{-1}\trainK \vert$ also decreases quickly as $R$ increases.
 Furthermore, in the limit as $R \rightarrow N$ we have that $\log \vert \trainK \vert = \log \vert \trainP \vert$.
 %This is because $\log \vert \trainP^{-1}\trainK \vert \rightarrow 0$ (since $\trainP^{-1}\trainK$ converges to $\bI$) and we have that $\log \vert \trainK \vert = \log \vert \trainP^{-1}\trainK \vert + \log \vert \trainP \vert$.
