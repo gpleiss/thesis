@@ -209,15 +209,6 @@ These approximations improve with the number of mBCG iterations.
 Each iteration requires one matrix multiplication with $\trainK$ and element-wise operations on $N \times T$ matrices.
 Therefore, $J$ iterations of mBCG requires $\bigo{NT}$ space and $\bigo{J \: \mmm{\trainK}}$ time,
 where $\mmm{\trainK}$ is the time to multiply $\trainK$ by a $N \times (T + 1)$ matrix.
-%\footnote{
-	%There are $J$ matrix multiplications with $\trainK$, resulting in the $\bigo{J \mmm{\trainK}}$ runtime.
-	%For the remainder of the algorithm, all matrices involved ($\bC_{j},\bV_j,\bR_j,\bZ_j,\bP_j$) are $N \times T$ matrices.
-	%All of the lines involving only these matrices perform operations that require $\bigo{NT}$ time.
-	%For example, elementwise multiplying $\bZ_{j} \circ \bZ_{j}$ accesses each element in $\bZ_{j}$ once, and and then multiplying it by the vector of ones similarly accesses every element in the matrix once.
-	%Multiplying $\bV_{j}$ by the diagonal matrix with $\ba_{j}$ on the diagonal takes $\bigo{NT}$ time, because we multiply every element $\bV_{j}^{(ik)}$ by $\ba_{j}^{(i)}$.
-	%Therefore, all other lines in the algorithm are dominated by the matrix multiply with $\trainK$, and the total running time is also $\bigo{J \mmm{\trainK}}$.
-	%Furthermore, because these intermediate matrices are $N \times T$, the space requirement is also $\bigo{NT}$.
-%}
 This takes $\bigo{N^2 T}$ time with a standard matrix.
 It is worth noting that this is a lower asymptotic complexity that standard Cholesky-based training, which is $\bigo{N^3}$.
 Therefore, \emph{BBMM offers a computational speedup for exact GPs}.

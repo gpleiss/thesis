@@ -1,38 +1,11 @@
 \chapter{Introduction}
 \label{chapter:introduction}
 
-%Machine learning hype <- success in many different areas.
-%Success in many different areas <- advances in algorithms.
-%Advances of algorithms <- both in terms of raw potential and in terms of the practical.
-%The best algorithms are ones that offer both potential and practicality.
-%No one algorithm is perfect <- we need a quiver of different possible algorithms.
-
-%Don't talk about advances.
-%Find a lead in to discuss algorithms.
-
-%At this point in machine learning we have several sets of algorithms.
-
-%Questions we need to answer:
-%- Why is it important to have multiple algorithms?
-%- What kind of algorithms are we looking for?
-
-%Of course, no one algorithm is good at every possible task.
-%For example, on many computer vision tasks it is commonly assumed there will be some sort of convolutional layers.
-%On many Kaggle competitions, a majority of winning submissions utilize random forests.
-%Therefore, it is arguably good to have a variety of possible algorithms.
-
-
-
-%Neural networks.
-
 The past decade has witnessed a wide-scale adoption of machine learning methods across numerous application domains.
-%Here we will highlight two broad categories of methodological innovation that have contributed to this surge.
 This surge is due to the confluence of several factors, of which we will highlight two.
 First, researchers have demonstrated the unparalleled {\bf predictive capabilities} of several machine learning algorithms.
-%Models can achieve superhuman performance on complex tasks like object recognition \cite{he2016deep}, machine translation \cite{vaswani2017attention}, and strategy game-playing \cite{silver2017mastering}.
 At the same time, the community has developed algorithms that are increasingly {\bf practical and easy-to-use}.
 Many models can be trained rapidly on consumer-level computer hardware \cite{howard2018training}, and high-quality software frameworks enable practitioners to rapidly develop new models.
-%While many other factors have contributed to the machine learning surge, we will limit our focus to these two categories.
 While machine learning's predictive successes have opened up new possibilities, its new-found ease-of-use has accelerated innovation and adoption.
 
 Arguably, the machine learning algorithms which have had the broadest impact are the ones that seamlessly offer \emph{both} predictive power and practicality.
@@ -60,13 +33,9 @@ The focus of this thesis is {\bf Gaussian process models} (GPs), which perhaps b
 Within the machine learning community, GPs have been well-regarded as a powerful model class with many desirable properties---such as calibrated uncertainty estimates and interpretable model priors.
 Recent work on hierarchical modelling \citep[e.g.][]{damianou2013deep} and scalability \citep[e.g.][]{wilson2015kernel} have furthered their applicability to increasingly complex tasks.
 However, Gaussian processes have historically been relegated to small datasets, and the tools most commonly used for inference do not effectively utilize modern compute hardware.
-%Scalable approximations can remedy these concerns to some extent, yet such approximations can sometimes bias the model's predictions \cite{turner2011two,bauer2016understanding}.
-%Finally, new
 Using GPs requires significant implementation effort, as simple modifications like an additional output dimension might require different learning/inference procedures.
 These practical considerations hinder the adoption of GPs, while also limiting researchers' abilities to rapidly-prototype and make new developments.
 This thesis aims to address these limitations so that Gaussian processes can be powerful-\emph{and}-practical models.
-
-% Even as Moore's law runs out, specialty hardware
 
 \section{The Predictive Power of Gaussian Processes Models}
 
@@ -89,7 +58,6 @@ Before addressing these issues, it is worth discussing why Gaussian processes ar
     Crucially, GP priors directly encode functional properties---such as smoothness, periodicity, or monotonicity---rather than beliefs about certain parameters.
     These functional properties are determined by the choice of \emph{kernel function} (see \cref{sec:common_kernels}).
     With the appropriate choice of prior, it is possible to generalize on datasets with as few as 10 observations \citep[e.g.][]{rasmussen2006gaussian,gardner2017discovering}.
-    %Several recent works have simplified the task of constructing appropriate kernels, either through composition \citep{duvenaud2013structure} or through differentiable learning \citep{wilson2013gaussian}.
 
   \item {\bf Interpretable predictions.}
     The predictions from Gaussian processes (see \cref{eqn:predictive_mean,eqn:predictive_var}) are not only expressive and powerful; they are also intuitive.
@@ -101,9 +69,7 @@ Before addressing these issues, it is worth discussing why Gaussian processes ar
 These benefits are obviously applicable in the ``small data'' regime, where priors and marginalization are critical for meaningful predictive performance \cite{rasmussen2001occam}.
 However, these properties also are beneficial for large datasets.
 Good uncertainty estimates and interpretable predictions are increasingly desirable for large-scale machine learning models.
-%GPs (with certain kernel functions) are universal approximators \cite{micchelli2006universal}, and their modelling capacity increases with the amount of available training data.
 In addition, large datasets make it possible to use powerful families of covariance functions \citep{wilson2013gaussian,wilson2016deep,benton2019function} or hierarchical (``deep'') GP models \cite{damianou2013deep,salimbeni2017doubly,jankowiak2020deep}.
-%This makes GPs especially powerful on big-data tasks like large-scale extrapolation \citep[e.g.][]{jankowiak2020parametric} and high-dimensional optimization \citep[e.g.][]{eriksson2019scalable}.
 
 
 \section{Practical Concerns with Gaussian Processes Models}
@@ -127,7 +93,6 @@ GPUs are designed for massively-parallelizable operations such as matrix-multipl
 A matrix-multiply between two $1,\!000 \times 1,\!000$ matrices is $10,\!000$ times faster on a GPU than on a CPU!\footnote{
 	As measured on a NVIDIA GTX 1070 GPU versus an 8-core Intel i7 CPU.
 }
-%which is why large neural networks are practical to train.
 The Cholesky algorithm on the other hand is inherently sequential and affords minimal parallelization;
 factorizing a $1,\!000 \times 1,\!000$ matrix is only $10$ times faster on GPU than on CPU.
 This is why we cannot expect neural-network-level speedups for Cholesky-based GPs.
@@ -144,7 +109,6 @@ All approximate methods introduce hyperparameters that control the speed/accurac
 For example, variational approaches \citep[e.g.][]{titsias2009variational,hensman2013gaussian}---which are a popular general-purpose approximation---tend to overestimate the observational noise, leading to worse predictive uncertainties \cite{turner2011two,bauer2016understanding}.
 Structured interpolation methods \cite{wilson2015kernel} alleviate these biases, yet tend to be limited to low-dimensional problems.
 While some theoretical guarantees can guide these design decisions \cite{burt2019rates}, choosing a good approximate model is ultimately dataset specific and can require expert knowledge.
-%Good performance often requires a large hyperparameter sweep and expert knowledge.
 
 \subsection{Implementation and Programmability}
 One compelling advantage of neural networks is their modularity.
@@ -176,7 +140,6 @@ The following chapters introduce the components of our matrix-multiplication-bas
     Additionally, we show that implementing specialty GP models with BBMM only requires writing an efficient kernel matrix-multiplication routine.
 
   \item {\bf \cref{chapter:love}} focuses on making predictions with Gaussian processes.
-    %Computing GP predictive distributions requires expensive computations involving the training covariance matrix.
     We introduce an algorithm---{\bf LancZos~Variance~Estimates~(LOVE)}---that efficiently pre-computes many of the terms required for predictions.
     As with BBMM training, LOVE relies entirely on \emph{matrix-multiplication}, which is especially beneficial for models with fast kernel routines.
     After a simple precomputation, computing GP predictions is \emph{linear} in the amount of training data, or $\bigo{1}$ time if used in conjunction with the structured kernel interpolation method \cite{wilson2015kernel}.
