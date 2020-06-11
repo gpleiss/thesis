@@ -45,7 +45,7 @@ have led to massive performance improvements on increasingly complex datasets.
 Moreover, these innovations have been complemented by
 the effective use of specialty compute hardware (such as GPUs and TPUs),
 the introduction of automatic differentiation \citep[e.g.][]{paszke2017automatic},
-and the development of of several high-quality software implementations~\citep[e.g.][]{jia2014caffe,abadi2016tensorflow,paszke2019pytorch}.
+and the development of several high-quality software implementations~\citep[e.g.][]{jia2014caffe,abadi2016tensorflow,paszke2019pytorch}.
 These pragmatic advances make it easy for practitioners to experiment with new models and architectures, which has undoubtedly contributed to its profound and wide-spread successes \cite{goodfellow2016deep}.
 
 Gradient-boosted trees have a similar powerful-yet-practical story.
@@ -87,12 +87,12 @@ Before addressing these issues, it is worth discussing why Gaussian processes ar
   \item {\bf A flexible language for encoding prior knowledge.}
     A Gaussian process' generalization capabilities are almost entirely determined by its modelling priors.
     Crucially, GP priors directly encode functional properties---such as smoothness, periodicity, or monotonicity---rather than beliefs about certain parameters.
-    These functional properties are determined by the choice of \emph{kernel function}, which can be easily composed (see \cref{sec:common_kernels}).
+    These functional properties are determined by the choice of \emph{kernel function} (see \cref{sec:common_kernels}).
     With the appropriate choice of prior, it is possible to generalize on datasets with as few as 10 observations \citep[e.g.][]{rasmussen2006gaussian,gardner2017discovering}.
     %Several recent works have simplified the task of constructing appropriate kernels, either through composition \citep{duvenaud2013structure} or through differentiable learning \citep{wilson2013gaussian}.
 
   \item {\bf Interpretable predictions.}
-    The predictions from Gaussian processes (see \cref{eqn:predictive_mean,eqn:predictive_var}) are not only expressive and powerful; they are also very intuitive.
+    The predictions from Gaussian processes (see \cref{eqn:predictive_mean,eqn:predictive_var}) are not only expressive and powerful; they are also intuitive.
     If we view the GP's kernel function as a similarity/distance measure between two points, then the prediction at a given point $\bx$ is simply an interpolation of nearby training points.
     The prediction's confidence interval is small when $\bx$ is close to training points, and large when $\bx$ is too far away for accurate interpolation.
 \end{enumerate}
@@ -102,7 +102,7 @@ These benefits are obviously applicable in the ``small data'' regime, where prio
 However, these properties also are beneficial for large datasets.
 Good uncertainty estimates and interpretable predictions are increasingly desirable for large-scale machine learning models.
 %GPs (with certain kernel functions) are universal approximators \cite{micchelli2006universal}, and their modelling capacity increases with the amount of available training data.
-In addition, large datasets make it possible to use powerful families of covariance functions \citep{wilson2013gaussian,wilson2016deep,benton2019function} or hierarchical (``deep'') GP models \cite{wilson2016deep,salimbeni2017doubly,jankowiak2020deep}.
+In addition, large datasets make it possible to use powerful families of covariance functions \citep{wilson2013gaussian,wilson2016deep,benton2019function} or hierarchical (``deep'') GP models \cite{damianou2013deep,salimbeni2017doubly,jankowiak2020deep}.
 %This makes GPs especially powerful on big-data tasks like large-scale extrapolation \citep[e.g.][]{jankowiak2020parametric} and high-dimensional optimization \citep[e.g.][]{eriksson2019scalable}.
 
 
@@ -119,7 +119,6 @@ Historically, this has limited exact Gaussian process models to datasets with fe
 It is worth noting that this $\bigo{N^3}$ computational complexity is not necessarily insurmountable given modern computational hardware.
 For example, some deep learning models require many more floating point operations (FLOPs) than large-scale GPs.
 A 264-layer DenseNet model \cite{huang2017densely}, common on many computer vision tasks, requires $2.4 \times 10^{18}$ FLOPs to train on $1.2$ million images.
-This is essentially a cubic computational requirement, and would be wholly impractical if it were not for specialty compute hardware like GPUs.
 Such a model would probably require months to train on standard CPUs, yet can be trained on 8 GPUs in a matter of hours \cite{howard2018training}.
 
 Given the effectiveness of GPU acceleration on large neural networks, one might expect similar performance for large-scale Gaussian processes.
@@ -153,7 +152,7 @@ Creating a novel neural network architecture requires significant thought and ex
 Seemingly complex models like DenseNets \cite{huang2017densely} and Transformers \cite{vaswani2017attention} have surprisingly simple implementations using compositional layers.
 Small modifications, such as adding an additional output dimension, often require only a single additional line of code.
 
-Gaussian processes models on the other hand require significant implementation effort.
+Gaussian processes on the other hand require significant implementation effort.
 Often, the \emph{model} and the \emph{learning/inference procedures} are tightly coupled.
 As an example, consider a Gaussian process with multiple output dimensions \cite{bonilla2008multi}.
 While this model and a standard (single-output) GP are seemingly similar, they require completely different implementations.
@@ -172,7 +171,7 @@ The following chapters introduce the components of our matrix-multiplication-bas
 
 \begin{itemize}
   \item In {\bf \cref{chapter:bbmm}}, we introduce the {\bf BlackBox~Matrix~$\times$~Matrix~(BBMM)} approach for training Gaussian process regression models.
-    BBMM uses a modified version of preconditioned conjugate gradients (mPCG) that reduces GP training to a series of \emph{matrix-multiplications}.
+    BBMM uses a modified version of preconditioned conjugate gradients (mBCG) that reduces GP training to a series of \emph{matrix-multiplications}.
     We demonstrate that this approach effectively uses GPU acceleration and is up to $30\times$ faster than existing training methods.
     Additionally, we show that implementing specialty GP models with BBMM only requires writing an efficient kernel matrix-multiplication routine.
 
@@ -180,18 +179,18 @@ The following chapters introduce the components of our matrix-multiplication-bas
     %Computing GP predictive distributions requires expensive computations involving the training covariance matrix.
     We introduce an algorithm---{\bf LancZos~Variance~Estimates~(LOVE)}---that efficiently pre-computes many of the terms required for predictions.
     As with BBMM training, LOVE relies entirely on \emph{matrix-multiplication}, which is especially beneficial for models with fast kernel routines.
-    After a simple precomputation, computing GP predictions is \emph{linear} in the amount of training data, or $\bigo{1}$ time if used in conjunction with structured kernel interpolation \cite{wilson2015kernel}.
+    After a simple precomputation, computing GP predictions is \emph{linear} in the amount of training data, or $\bigo{1}$ time if used in conjunction with the structured kernel interpolation method \cite{wilson2015kernel}.
 
   \item {\bf \cref{chapter:ciq}} focuses on Gaussian process models with non-Gaussian likelihood functions---i.e. GPs that are used to model heavy-tailed noise, arrival processes, or classification problems.
     Unlike with GP regression, these models necessitate the use of approximate Bayesian inference methods.
     We introduce a matrix-multiplication method based on {\bf Contour Integral Quadrature (CIQ)} which can be used to optimize a re-parameterized variational training objective.
-    On several large-scale spatial datasets, CIQ enables faster optimization and higher-fidelity approximations than existing methods.
-    We also demonstrate that CIQ can be used to efficiently sample from GP posteriors.
+    On several large-scale spatial datasets, this approach enables faster optimization and higher-fidelity approximations than existing methods.
+    We also demonstrate that this CIQ method can be used to efficiently sample from GP posteriors.
 
-  \item This thesis culminates with with {\bf \cref{chapter:largeexact}}, which utilizes the prior chapter's methods to scale GP regression to extremely large datasets.
+  \item This thesis culminates with {\bf \cref{chapter:largeexact}}, which utilizes the prior chapter's methods to scale GP regression to extremely large datasets.
     Combining BBMM and LOVE with partitioned matrix-multiplication routines, we demonstrate that Gaussian processes can be trained \emph{without approximation} on datasets with \emph{over 1 million data points}.
     GPU-acceleration makes these large-scale GPs roughly as fast as approximate methods, despite their larger asymptotic complexity.
-    We perform the first-ever comparison of exact GPs against scalable approximations on datasets with $10^4$---$10^6$ data points, showing dramatic performance improvements.
+    We perform the first-ever comparison of exact GPs against scalable approximations on datasets with $10^6$ data points, showing dramatic performance improvements.
 \end{itemize}
 %
 \noindent
@@ -200,8 +199,8 @@ Finally, we package together these contributions into {\bf GPyTorch},\footnote{
 }
 an open-source implementation of BBMM, LOVE, and CIQ.
 GPyTorch can be used to build small-scale or large-scale GPs with flexible neural-network-like building blocks.
-Moreover, the package seamlessly integrates with PyTorch \cite{paszke2019pytorch}, Pyro \cite{bingham2019pyro}, and BoTorch \cite{balandat2019botorch} to combine GPs with neural networks, probablistic models, and blackbox optimizers.
+Moreover, the package seamlessly integrates with the PyTorch \cite{paszke2019pytorch}, Pyro \cite{bingham2019pyro}, and BoTorch \cite{balandat2019botorch} packages to combine GPs with neural networks, probablistic models, and blackbox optimizers.
 Throughout this thesis, we will discuss how the various algorithms (BBMM, LOVE, and CIQ) are implemented in GPyTorch, and how a practitioner can build on top of them to develop novel GP models.
 
-We begin with a brief overview of Gaussian process models, common kernel functions, and scalable GP approximations.
-Additionally, we introduce Krylov-subspace methods---a family of numerical algorithms that compute matrix functions through matrix-vector products---which form the foundation of our matrix-multiplication-based GP framework.
+We begin with a brief overview of Gaussian processes, common kernel functions, and scalable GP approximations.
+Additionally, we introduce Krylov-subspace methods---a family of numerical algorithms that compute matrix functions through matrix-vector products---which form the foundation of our GP framework.
