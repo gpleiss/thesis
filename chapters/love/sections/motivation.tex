@@ -14,9 +14,9 @@
 \end{align}
 %
 The terms in {\color{blue} blue} only depend on the training data.
-If make a single prediction with a GP model, then both of these terms only require a single call to conjugate gradients (${\color{blue} \trainK^{-1}} \bk^\top_{\bX\bxtest}$).
+If we are making a single prediction with a GP model, then both of these terms only require a single call to conjugate gradients (${\color{blue} \trainK^{-1}} \bk^\top_{\bX\bxtest}$).
 However, if we are making predictions on thousands of test points, these repeated CG calls may become prohibitively expensive, even when using the mBCG algorithm to parallelize the solves.
-Since the expensive computations in \cref{eqn:predictive_mean_2,eqn:predictive_covar_2} primarily involve the training data terms, our goal is to \emph{pre-compute and cache} the most computationally intensive parts of these equations.
+Our goal is to \emph{pre-compute and cache} the most computationally intensive parts of these equations.
 After this pre-computation, subsequent predictions ideally should be computationally cheap---i.e. $\bigo{N}$ or less.
 
 \subsection{Computing Predictive Means}
@@ -35,14 +35,14 @@ Recall that KISS-GP approximates the training and test covariances as:
   {\color{blue} \tilde{\bK}_{\bX \bX}} = {\color{blue} \bW^\top_{\bX} \bK_{\bZ \bZ} \bW_{\bX}},
 \end{align*}
 %
-where $\bK_{\bZ\bZ} \in \reals^{M \times M}$ is the Toeplitz inducing kernel matrix, $\bW_\bX \in \reals^{M \times N}$ is the sparse interpolation for training points $X$, and $\bw_{\bxtest} \in \reals{M}$ is the sparse interpolation for $\bxtest$.
+where ${\blue \bK_{\bZ\bZ}} \in \reals^{M \times M}$ is the Toeplitz inducing kernel matrix, ${\blue \bW_\bX} \in \reals^{M \times N}$ is the sparse interpolation for training points $\bX$, and $\bw_{\bxtest} \in \reals^{M}$ is the sparse interpolation for $\bxtest$.
 Plugging these approximations into \cref{eqn:predictive_mean_2} gives us
 \[
   \meantest{\bxtest} = \bw_{\bxtest}^\top {\blue{\underbracket{\bK_{\bZ\bZ} \bW_{\bX}(\bW_{\bX}^{\top}\bK_{\bZ\bZ}\bW_{\bX} + \sigma_\text{obs}^{2} \bI)^{-1} \by}_{\ba'}}}.
 \]
 where again the blue terms only depend on training data.
 After pre-computing the $\blue \ba'$ vector, all subsequent means are the inner product between $\color{blue} \ba'$ and the \emph{$\bigo{1}$ sparse} $\bw_\bxtest$ vector.
-These computations are $\bigo{1}$ because of this sparsity.
+These computations are $\bigo{1}$.
 
 \subsection{Computing (Co)-Variances without Pre-Computation}
 
@@ -65,7 +65,7 @@ For example, if we replace $\bk_{\bX \bxtest}$ and $\blue \trainK$ with their co
 %
 $\blue \bC$, the braced portion of \cref{eqn:pred_covar_approx}, does not depend on the test points $\bxtest_{i}$, $\bxtest_{j}$ and therefore can be pre-computed during training.
 The primary cost of this pre-computation is the $M$ solves with $\blue (\bW_\bX^\top {\bK}_{\bZ\bZ} \bW_\bX + \sigma_\text{obs}^2 \bI)$: one for each column vector in $\blue \bW^{\top}_{\bX} \bK_{\bZ\bZ}$, each of which takes $\bigo{N + M\log M}$ time with CG (see \cref{sec:kissgp} or \citet{wilson2015kernel}).
-The total time for this pre-computation is therefore $\bigo{MN + M^2 \log M}$.
+The total time for this pre-computation is therefore $\bigo{MN + M^2 \log M}$ (the time for $M$ solves).
 After pre-computation, \cref{eqn:pred_covar_approx} becomes
 %
 \begin{align}
