@@ -5,7 +5,7 @@
 
 We propose to overcome these limitations through an altered pre-computation step.
 In particular, we can approximate $\blue \trainK$ in \cref{eqn:predictive_covar_2} as a low rank matrix.
-Letting $\blue \bR$ be a $J \times N$ matrices such that $\blue \bR^\top \blue{\bR'} \approx \blue \trainK^{-1}$, we rewrite \cref{eqn:predictive_covar_2} as:
+Letting $\blue \bR$ be a $J \times N$ matrix such that $\blue \bR^\top \blue{\bR} \approx \blue \trainK^{-1}$, we rewrite \cref{eqn:predictive_covar_2} as:
 %
 \begin{align}
   \covtest{\bxtest}{\bxtestprime}
@@ -50,7 +50,7 @@ We refer to this fast covariance approximation algorithm as {\bf LanczOs Varianc
 It is summarized in \cref{alg:love} and \cref{tab:running_times}.
 
 $J$, the size of the low-rank approximation, depends on the conditioning of $\blue \trainK$ and not its size.
-Empirically find that $J\leq100$ is sufficient for most matrices for $N \leq 20,\!000$, and therefore $J$ can be considered to be constant.
+Empirically, we find that $J\leq100$ is sufficient for most matrices with $N \leq 20,\!000$; therefore $J$ can be considered to be constant.
 
 
 
@@ -127,7 +127,6 @@ Taking $J$ to be a constant (as $J \approx 100$ suffices for most kernel matrice
 Moreover, this additional work to compute $\color{blue} \widetilde \bR$ from $\blue \bR$ takes negligible time.
 The complexity of computing $\color{blue} \bR$ is $\bigo{J(N + M \log M)}$, as Lanczos requires $J$ MVMs with $\color{blue} \trainK$ and KISS-GP affords $\bigo{N + M \log M}$ MVMs.
 Forming $\color{blue} \widetilde \bR$ requires multiplying the $J \! \times \! N$ $\color{blue} \bR$ matrix by $\color{blue} \bK_{\bZ\bZ}$ and $\color{blue} \bW_\bX$, which also takes $\bigo{J(N + M \log M)}$ time.
-Therefore, the modified KISS-GP + LOVE precomputation is \emph{near-linear time}.
 It is summarized in \cref{alg:love_kissgp} and \cref{tab:running_times}.
 
 In addition to these fast predictive (co)-variances, LOVE + KISS-GP offers two additional speedups that are specific to KISS-GP models.
@@ -139,12 +138,12 @@ In addition to these fast predictive (co)-variances, LOVE + KISS-GP offers two a
 \label{sec:sampling_method}
 
 When used in conjunction with KISS-GP, LOVE{} can also be used to compute samples from the posterior covariance matrix.
-This is a vary common operation: in Bayesian optimization, several popular acquisition functions---such as predictive entropy search \cite{hernandez2014predictive}, max-value entropy search \cite{wang2017max}, and knowledge gradient \cite{frazier2009knowledge}---require posterior sampling.
+This is a very common operation: in Bayesian optimization, several popular acquisition functions---such as predictive entropy search \cite{hernandez2014predictive}, max-value entropy search \cite{wang2017max}, and knowledge gradient \cite{frazier2009knowledge}---require posterior sampling.
 
 Let $\bXtest = [ \bxtest_1, \ldots, \bxtest_T ]$ be a test set of $T$ points.
-To draw samples from $p( \ytest_1, \ldots, \ytest_T  \! \mid \! \dset)$---the posterior function evaluated on $\bxtest_1, \ldots, \bxtest_t$,
+To draw samples from $p( f(\bxtest_1), \ldots, f(\bxtest_T)  \! \mid \! \dset)$---the posterior function evaluated on $\bxtest_1, \ldots, \bxtest_T$,
 the cross-covariance terms (i.e. $\covtest{\bxtest_i}{\bxtest_j}$) are necessary in addition to the variance terms ($\vartest{\bxtest_i}$).
-We sample $\bepsilon \sim p( \bfn(\bxtest_1), \ldots, \bfn(\bxtest_T) \! \mid \! \dset)$ through the reparameterization trick \cite{kingma2014auto,rezende2014stochastic}:
+We sample $\bepsilon \sim p( f(\bxtest_1), \ldots, f(\bxtest_T) \! \mid \! \dset)$ through the reparameterization trick \cite{kingma2014auto,rezende2014stochastic}:
 %
 \[
   \bmeantest = \begin{bmatrix} \meantest{\bxtest_1} \\ \vdots \\ \meantest{\bxtest_1} \end{bmatrix},
@@ -160,10 +159,9 @@ We sample $\bepsilon \sim p( \bfn(\bxtest_1), \ldots, \bfn(\bxtest_T) \! \mid \!
   \label{eqn:sample}
 \end{equation}
 %
-where $\bepsilon' \sim \normaldist{\bzero}{\bI}$ and $\bS \in \reals^{T \times T}$ is some matrix such that $\bS \bS^\top = \Covtest$.
-Typically $\bS \bS^\top$ is taken to be the Cholesky decomposition of the predictive covariance matrix.
+where $\bepsilon' \sim \normaldist{\bzero}{\bI}$ and $\bS$ is some matrix such that $\bS \bS^\top = \Covtest$.
+Typically $\bS \bS^\top$ is taken to be the Cholesky decomposition of the posterior covariance matrix.
 Computing this decomposition incurs a $\bigo{T^3}$ cost on top of the $\bigo{T^2}$ covariance evaluations.
-This may be costly, even with constant-time covariance computations.
 
 \paragraph{A fast KISS-GP sampling matrix.}
 We use LOVE{} and KISS-GP to rewrite \cref{eqn:pred_covar_ski_fast} as
@@ -198,7 +196,7 @@ We apply the Lanczos algorithm on this term during pre-computation to obtain a r
 \end{align}
 %
 where again ${\blue \bQ'} \in \reals^{M \times J}$ is orthonormal and ${\blue \bT'} \in \reals^{J \times J}$ is tridiagonal.
-This Lanczos decomposition $\blue \bQ' \bT' \bQ^{\prime\top}$ requires $J$ matrix vector multiplies with $\blue{ \bK_{\bZ\bZ} - \widetilde \bR^{\top} \widetilde \bR }$, each of which requires $\bigo{M \log M}$ time.
+This Lanczos decomposition $\blue \bQ' \bT' \bQ^{\prime\top}$ requires $J$ matrix-vector multiplies with $\blue{ \bK_{\bZ\bZ} - \widetilde \bR^{\top} \widetilde \bR }$, each of which requires $\bigo{M \log M}$ time.
 Substituting \cref{eqn:lancapprox} into \cref{eqn:pred_covar_ski_interp_form12}, we get:
 %
 \begin{align}
@@ -213,9 +211,9 @@ Substituting \cref{eqn:lancapprox} into \cref{eqn:pred_covar_ski_interp_form12},
 where ${\color{blue} \bL_{\bT'} }$ is the Cholesky factor of $\blue \bT'$ (a $\bigo{J}$ operation due to the tridiagonal structure).
 Setting $\blue{ \bS = \bQ' \bL_{\bT} }$, we see that $\Covtest = (\bW_{\bXtest}^\top {\blue \bS}) (\bW_{\bXtest}^\top {\blue \bS})^{\top}$.
 Moreover, ${\blue \bS} \in \reals^{M \times J}$ can be pre-computed and cached since it does not depend on test data.
-In total, this pre-computation takes $\bigo{J M \log M + M J^2}$ time in addition to what is required for fast variances.
+In total, pre-computing $\blue \bS$ takes $\bigo{J M \log M + M J^2}$ time in addition to what is required for fast variances.
 A matrix-vector multiplication with $(\bW_\bX^\top {\blue \bS})$ takes $\bigo{TJ}$ time due to the $\bigo{T}$ sparsity of $\bW_\bX$.
-Therefore, drawing $S$ samples (corresponding to $S$ different values of $\bepsilon'$) takes $\bigo{SJ(T + M)}$ time after precomputation (see \cref{tab:running_times_sampling})---a \emph{linear} dependence on $T$.
+Therefore, drawing $S$ samples (corresponding to $S$ different values of $\bepsilon'$) takes $\bigo{SJ(T + M)}$ time (see \cref{tab:running_times_sampling})---a \emph{linear} dependence on $T$.
 
 
 

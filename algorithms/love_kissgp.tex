@@ -22,7 +22,7 @@
   \label{alg:love_kissgp}
     \Input{$\bw_{\bxtest}$, $\bw_{\bxtestprime}$ -- interpolation vectors for $\bxtest$, $\bxtestprime$}
     \NextInput{$k(\bxtest, \bxtestprime)$ -- prior covariance between $\bxtest$, $\bxtestprime$}
-    \NextInput{$\bb = \frac{1}{M} \bW_\bX^\top {\color{blue} \bK_{\bZ\bZ} \mathbf{1}}$ -- average col. of $\bW_\bX^\top {\color{blue} \bK_{\bZ\bZ}}$}
+    \NextInput{$\bb = \frac{1}{M} {\color{blue} \bW_\bX^\top \bK_{\bZ\bZ} \mathbf{1}}$ -- average col. of $\color{blue} \bW_\bX^\top \bK_{\bZ\bZ}$}
     \NextInput{{\color{blue} \mvmkxx{}} -- func. that performs MVMs with $\color{blue} \trainK$}
     %\NextInput{{\color{blue} \mvmkxx{}} -- func. that performs MVMs with $\color{blue} (\bW^\top_{\bX} \bK_{\bZ\bZ} \bW_\bX + \sigma_\text{obs}^2 \bI) \approx \trainK$}
     \NextInput{{\color{blue} \mvmkux{}} -- func. that performs MVMs with $\color{blue} \bK_{\bZ\bX}$}
