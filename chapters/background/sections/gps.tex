@@ -11,7 +11,7 @@ However, for clarity in this section we will explicitly distinguish when ``Gauss
 \subsection{Gaussian Process Distributions}
 \label{sec:gp_dist}
 A {\bf Gaussian process distribution} $f(\cdot) \sim \mathcal{GP}$ extends the multivariate-Gaussian distribution from finite-dimensional vectors to (infinite-dimensional) functions.
-It is defined by a \emph{mean function} $\mu(\cdot)$ and a {\bf covariance function} or {\bf kernel function} $k(\cdot, \cdot)$.\footnote{
+It is defined by a {\bf mean function} $\mu(\cdot)$ and a {\bf covariance function} or {\bf kernel function} $k(\cdot, \cdot)$.\footnote{
   Throughout this thesis we will use the two terms interchangeably.
 }
 %It can only be realized by applying $f$ to some finite set of points.
@@ -158,13 +158,13 @@ If there are multiple test points $\bxtest$, $\bxtestprime$ of interest, the pre
 The mean is given by \cref{eqn:predictive_mean} and the covariance between the two points is given as
 \[ \covtest{\bxtest}{\bxtestprime} = k(\bxtest, \bxtestprime) - \bk_{\bX\bxtest}^\top ( \bK_{\bX\bX} + \sigma_\text{obs}^2 \bI )^{-1} \bk_{\bX\bxtestprime}. \]
 In fact, any (finite) set of test points will be jointly Gaussian with the above covariance.
-Recalling our definition from \cref{sec:gp_dist}, this implies that the predictive distribution is a (predictive-posterior) Gaussian process distribution.
+Recalling our definition from \cref{sec:gp_dist}, this implies that the predictive distribution is a Gaussian process distribution.
 
 \subsection{Training Gaussian Process Models}
 \label{sec:gp_training}
 
-Gaussian process regression models are inherently non-parametric, which leaves us few terms that need to be learned.
-However, we wish to pick the best mean function, kernel function, and observational noise to best fit our training data $\dset_\text{train} = (\bX, \by)$.
+Gaussian process regression models are non-parametric, which leaves us few terms that need to be learned.
+However, we wish to pick the mean function, kernel function, and observational noise that best fit our training data $\dset_\text{train} = (\bX, \by)$.
 Let $\btheta$ be the set of learnable {\bf hyperparameters} of these functions.
 For example, $\btheta$ might include the lengthscale $\ell$ and outputscale $o^2$ of the kernel function (see \cref{sec:common_kernels}) as well as the observational noise parameter $\sigma_\text{obs}$ of the likelihood.
 In more complex Gaussian process models, $\btheta$ may also include inducing point locations \cite{titsias2009variational} or neural network parameters for deep kernel learning \cite{wilson2016deep}.
@@ -200,10 +200,10 @@ We will discuss how to efficiently compute these terms in \cref{chapter:bbmm}.
 \subsection{Common Covariance Functions}
 \label{sec:common_kernels}
 
-Of the three objects that define a Gaussian process---the prior mean function, the prior covariance function, and the observed noise parameter---the covariance function arguably has the largest impact on the predictive distribution.
+Of the three objects that define a Gaussian process regression model---the prior mean function, the prior covariance function, and the observed noise parameter---the covariance function arguably has the largest impact on the predictive distribution.
 While the parameters of any particular kernel function can most often be learned through gradient descent, the practitioner must first choose the class of covariance functions to optimize over.
-Choosing the right covariance function class will largely determine how the Gaussian process generalizes to unseen data points.
-This is especially crucial in the small-data regime: if the covariance function properly encodes prior information about the function's properties, then the model can generalize well even when there are few training points.
+Choosing the right covariance function class will largely determine how the Gaussian process regression model generalizes to unseen data points.
+This is especially crucial in the small-data regime: if the covariance function properly encodes prior information, then the model can generalize well even when there are few training points.
 
 In the running example of predicting a child's weight, there are several known functional properties that we can encode a priori.
 For example, a child's weight will (in many cases) be roughly monotonic with respect to time.
@@ -264,10 +264,10 @@ and multiplication: $k(\bx, \bx') = k_1(\bx, \bx') k_2(\bx, \bx')$.
 The sub-kernels $k_1$ and $k_2$ can operate on any subset of the dimensions of $\bx$.
 In our running example, we may wish to model our data with the kernel
 %
-\[ k(\bx, \bx') = k_\text{Lin}( \bx_\text{time}, \bx_\text{time}' ) + k_\text{RBF}( \bx_\text{household}, \bx_\text{household}' ) \]
+\[ k(\bx, \bx') = k_\text{Lin}( \bx_\text{time}, \bx_\text{time}' ) k_\text{RBF}( \bx_\text{time}, \bx_\text{time}' ) + k_\text{RBF}( \bx_\text{household}, \bx_\text{household}' ) \]
 %
 where $\bx_\text{time}$ and $\bx_\text{household}$ are the time and household features of $\bx$ respectively.
-This would encode our first prior assumption (a child's weight increases near-monotonically with time)
+This would encode our first prior assumption (a child's weight increases near-monotonically with time, but is not strictly linear)
 and our second prior assumption (children from a similar household environments should have similar development).
 
 
@@ -328,8 +328,8 @@ Here we highlight some notable variants, though it is by no means an exhaustive 
 
 
 \paragraph{Inducing Points.}
-A common mechanism for scalable models is to introduce a set of pseudo-inputs, or {\bf inducing points}, which function as a sufficient statistic for the predictive distribution.
-The kernel function for \emph{real}-inputs $\bx$, $\bx'$ is approximated by interpolating against the kernel matrix for the \emph{pseudo}-inputs $\bZ = [\bz^{(1)}, \ldots, \bz^{(M)}]$.
+A common mechanism for scalable models is to introduce a set of pseudo-inputs, or {\bf inducing points}.
+The kernel function for (non-inducing) inputs $\bx$, $\bx'$ is approximated by interpolating against the kernel matrix for the pseudo-inputs $\bZ = [\bz^{(1)}, \ldots, \bz^{(M)}]$.
 %
 \begin{align}
   k(\bx, \bx') \approx \widetilde k(\bx, \bx') &= \:\:
@@ -366,7 +366,7 @@ In the next section we will discuss Kernel Interpolation for Scalable Structured
 		where the approximate training kernel matrix has a diagonal correction term $\bLambda$.
     \[ \widetilde \bK_{\bX\bX} \approx \bK_{\bX\bZ} \bK_{\bZ\bZ}^{-1} \bK_{\bZ\bX} + \bLambda, \quad
        \Lambda^{(i,i)} = k(\bx^{(i)}, \bx^{(i)}) - \bk_{\bZ\bx^{(i)}}^\top \bK_{\bZ\bZ}^{-1} \bk_{\bZ\bx^{(i)}}. \]
-    The diagonal correction term is motivated through a connection to approximate inference.
+    The diagonal correction term is motivated through a connection to approximate Bayesian inference.
 
 	\item {\bf Sparse Gaussian Process Regression (SGPR) } \cite{titsias2009variational} uses the same kernel approximation as SoR.
 		However, when learning the inducing point locations and other parameters, SGPR augments the marginal log likelihood of \cref{eqn:log_lik} with a diagonal correction term:
@@ -383,8 +383,8 @@ We will discuss how to exploit this low-rank kernel matrix structure for faster 
 Kernel Interpolation for Scalable Structured Gaussian Processes (KISS-GP) \cite{wilson2015kernel} utilizes inducing points in a fundamentally different way than SoR, FITC, or SGPR.
 While the above methods tend to use $M \ll N$ inducing points, \citet{wilson2015kernel} demonstrate that it is possible to set $M \gg N$ by making the following restrictions:
 \begin{enumerate}
-  \item the interpolation terms in \cref{eqn:inducing_interpolation} are approximated by a \emph{sparse interpolation vector} $\bw_\bx \approx \bK^{-1}_{\bZ\bZ} \bk_{\bZ\bx};$
-  \item the inducing points $\bZ = [\bz^{(1)}, \ldots, \bz^{(M)}]$ must lie on a \emph{regularly-spaced grid};
+  \item the interpolation terms in \cref{eqn:inducing_interpolation} are approximated by \emph{sparse interpolation vectors} $\bw_\bx \approx \bK^{-1}_{\bZ\bZ} \bk_{\bZ\bx};$
+  \item the inducing points $\bZ = [\bz^{(1)}, \ldots, \bz^{(M)}]$ must lie on a \emph{regularly-spaced grid}; and
   \item the kernel function is \emph{stationary} (e.g. RBF, Mat\'ern, etc.).
 \end{enumerate}
 %
@@ -408,8 +408,8 @@ The $\bw_\bx$ vectors approximate the training kernel matrix $\bK_{\bX\bX} \appr
 %
 Here, $\bW_{\bX} = [\bw_{\bx^{(1)}}, \ldots, \bw_{\bx^{(N)}}]$ contains the interpolation vectors for all $\bx^{(i)}$.
 Performing a matrix-vector multiplication with $\widetilde \bK_{\bX\bX}$ (i.e. $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bb$ for any vector $\bb$) takes \emph{near-linear} time.
-To see why, a MVM with the matrix $\bW_\bX$ require $\bigo{N}$ time due to the $\bigo{N}$ sparsity of $\bW_\bX$.
-Moreover, restrictions 2 and 3 (stationary kernel/grided inducing points) endow the inducing kernel matrix $\bK_{\bZ\bZ}$ with Toeplitz structure (or Kronecker/Toeplitz structure if the inputs $\bx^{(i)}$ are multi-dimensional), which can be exploited for $\bigo{M}$ storage and $\bigo{M + M \log M}$ MVMs \citep[see][for details]{wilson2015thoughts}.
+To see why, a MVM with the matrix $\bW_\bX$ requires $\bigo{N}$ time due to the $\bigo{N}$ sparsity of $\bW_\bX$.
+Moreover, restrictions 2 and 3 (stationary kernel/grided inducing points) endow the inducing kernel matrix $\bK_{\bZ\bZ}$ with Toeplitz structure, which can be exploited for $\bigo{M}$ storage and $\bigo{M \log M}$ MVMs \citep[see][for details]{wilson2015thoughts}.
 Thus, if we perform $( \bW_\bX^\top \bK_{\bZ\bZ} \bW_{\bX}) \bb$ from right-to-left, the entire multiplication takes $\bigo{N + M \log M}$ time.
 As we will demonstrate in the next section, exploiting these fasts MVMs results in a near-linear training time complexity for KISS-GP.
 
@@ -435,7 +435,7 @@ Here we will briefly examine the case where exact inference is intractable, whic
 %
 \begin{enumerate}
   \item using a non-Gaussian observation model (e.g. a Bernioulli likelihood for GP classification, a Student-T likelihood for heavy-tailed regression); or
-  \item using a dataset is too large (or cumbersome) to fit into memory.
+  \item using a dataset that is too large (or cumbersome) to fit into memory.
 \end{enumerate}
 %
 These settings necessitate \emph{approximate Bayesian inference methods} to estimate the predictive distribution.
@@ -447,13 +447,13 @@ Scalable GP approximations like KISS-GP perform exact GP inference but approxima
   In this thesis we consider it under the lens of ``scalable exact GPs.''
   We reserve the ``approximate inference'' label for models that can handle non-conjugate observation models.
 }
-Approximate inference GPs on the other hand approximate the intractable predictive distribution with a simple (often Gaussian) functional form.
+Approximate inference GPs on the other hand approximate the intractable predictive distribution with a simple (often Gaussian) distribution.
 
 There are several approaches to approximate non-conjugate GP predictive distributions \citep{minka2001family,rasmussen2006gaussian,hensman2015mcmc,li2015stochastic}.
 Here we introduce a family of methods that rely on stochastic variational approximations.
 
 \paragraph{Stochastic variational Gaussian processes (SVGP)}
-\cite{hensman2013gaussian,hensman2015scalable,matthews2016sparse} are a popular class of models that approximate GP posteriors via variational inference.
+\cite{hensman2013gaussian,hensman2015scalable,matthews2016sparse} are a popular class of models that approximate GP posteriors via stochastic variational inference.
 This method has several compelling properties:
 \begin{enumerate*}
   \item it uses $M \ll N$ inducing points to easily trade off speed for predictive fidelity; and
@@ -478,7 +478,7 @@ Marginalizing out $\bu$ gives us the approximate Gaussian predictive distributio
 %
 \begin{align}
   q \left( f(\bx) \right) &= \Evover{q(\bu)}{ q( f(\bx), \bu) }
-  = \Evover{q(\bu)}{ \: p\left( f(\bx) \mid \bu \right) \: }
+  \triangleq \Evover{q(\bu)}{ \: p\left( f(\bx) \mid \bu \right) \: }
   \nonumber \\
   &= \normaldist{ \bxtest; \ameantest{ \bx }} { \avartest{ \bx }}
   %\label{eqn:approx_pred}
@@ -509,8 +509,8 @@ The KL divergence term is given by
 \]
 
 \cref{eqn:elbo} is typically optimized using gradient descent or natural gradient descent methods \cite{hensman2012fast,salimbeni2018natural}.
-Note that, because the ELBO factorizes as a sum over data points, we can instead approximate the sum over a minibatch of data.
-This ability to use stochastic optimization is a primary advantage of SVGP, as it does not require large datasets to be stored in memory.
+Note that, because the ELBO factorizes as a sum over data points, we can approximate the sum over a minibatch of data.
+This ability to use stochastic optimization is an advantage of SVGP, as it does not require large datasets to be stored in memory.
 
 To form predictions at test time, we simply use \cref{eqn:approx_pred_mean} and \cref{eqn:approx_pred_covar} to compute $q(f(\bxtest))$ for a test point $\bxtest$.
 The predictive distribution $q(\by \mid \bxtest) = \Evover{q(f(\bxtest))}{ p(\ytest \mid f(\bxtest)) }$ can again be approximated via sampling or quadrature.
