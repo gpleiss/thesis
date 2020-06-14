@@ -1,9 +1,8 @@
 %!TEX root=../main.tex
 \section{Introduction}
-Applying a Gaussian process model to previously unseen test data returns a \emph{predictive distribution} rather than a point prediction.
-This has several advantages.
-In particular, the uncertainties expressed by the predictive distribution are non-parametric and naturally depend on the training dataset.
-As a result, Gaussian process predictions tend to be well-calibrated---even for data points that lie far away from previously-seen training data \cite{rasmussen2001occam,wilson2014thesis}.
+Applying a Gaussian process model to previously-unseen test data returns a \emph{predictive distribution} rather than a point prediction.
+Gaussian process predictive distribution are non-parametric and naturally adapt to the amount of training data.
+As a result, these predictions tend to be well-calibrated---even for data points that lie far away from previously-seen training data \cite{rasmussen2006gaussian,wilson2014thesis}.
 This property is crucial for applications where incorrect predictions could have catastrophic consequences, such as in medicine \cite{schulam2017if} or large-scale robotics \cite{deisenroth2015gaussian}.
 
 This non-parametric formulation unfortunately comes with a computational downside.
@@ -19,19 +18,18 @@ The predictive variance $\vartest{\bxtest}$ requires computing $\trainK^{-1} \bk
 %Consequentially the most expensive computations of \cref{eqn:predictive_var} cannot be easily pre-computed and cached.
 %Additionally, drawing samples from the predictive distributions---a necessary operation in many applications---is similarly expensive.
 %Existing fast approximations for these operations \cite{papandreou2011efficient,wilson2015thoughts,wang2017max} typically incur a significant amount of error.
-Matching the reduced complexity of predictive mean inference without sacrificing accuracy has remained an open problem.
+Matching the complexity of predictive mean inference without sacrificing accuracy has remained an open problem.
 The majority of this chapter is therefore dedicated to reducing the computational requirements of predictive variances.
 
-In this chapter, we provide a matrix-vector multiplication (MVM) solution based on the tridiagonalization algorithm of \citet{lanczos1950iteration}.
-Our method takes inspiration from BBMM and uses a matrix-vector multiplication (MVM) algorithm for scalability, programmability, and GPU acceleration.
+We provide a matrix-vector multiplication (MVM) solution based on the tridiagonalization algorithm of \citet{lanczos1950iteration}.
 We express the predictive covariance between $\bxtest$ and $\bxtestprime$ as
-$\bk_{\bX\bxtest}^\top \blue{\bC} \: \bk_{\bX\bxtest}$,
+$\bk_{\bX\bxtest}^\top {\blue{\bC}} \: \bk_{\bX\bxtest}$,
 where $\blue \bC \approx \trainK^{-1}$ is low-rank $N \times N$ approximation.
 Using the Lanczos algorithm, we can efficiently form this low-rank decomposition using $J \ll N$ matrix-vector multiplications with $\trainK$.
 After this one-time upfront computation, all variances can be computed in \emph{linear time} -- $\bigo{JN}$ -- per (co)-variance entry.
 When used in conjunction with KISS-GP, this complexity can be further reduced to \emph{constant time}, and posterior samples can be drawn in \emph{linear time}.
 
-We refer to this method as LanczOs Variance Estimates, or LOVE{} gor short.
-LOVE{} has the lowest asymptotic complexity for computing predictive (co)variances with GPs.
-We empirically validate LOVE{}, used in conjunction with KISS-GP, on seven datasets and find that it consistently provides substantial speedups over existing methods \emph{without sacrificing accuracy}.
+We refer to this method as LanczOs Variance Estimates, or LOVE{} for short.
+LOVE{} has the lowest asymptotic complexity for computing predictive (co)-variances with GPs.
+We empirically validate LOVE{} on seven datasets and find that it consistently provides substantial speedups over existing methods \emph{without sacrificing accuracy}.
 Variances and samples are accurate to within four decimals, and can be computed \emph{up to 18,000 times faster.}
