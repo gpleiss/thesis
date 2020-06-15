@@ -24,7 +24,7 @@ The majority of this chapter is therefore dedicated to reducing the computationa
 We provide a matrix-vector multiplication (MVM) solution based on the tridiagonalization algorithm of \citet{lanczos1950iteration}.
 We express the predictive covariance between $\bxtest$ and $\bxtestprime$ as
 $\bk_{\bX\bxtest}^\top {\blue{\bC}} \: \bk_{\bX\bxtest}$,
-where $\blue \bC \approx \trainK^{-1}$ is low-rank $N \times N$ approximation.
+where $\blue \bC \approx \trainK^{-1}$ is a low-rank $N \times N$ approximation.
 Using the Lanczos algorithm, we can efficiently form this low-rank decomposition using $J \ll N$ matrix-vector multiplications with $\trainK$.
 After this one-time upfront computation, all variances can be computed in \emph{linear time} -- $\bigo{JN}$ -- per (co)-variance entry.
 When used in conjunction with KISS-GP, this complexity can be further reduced to \emph{constant time}, and posterior samples can be drawn in \emph{linear time}.
