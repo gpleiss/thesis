@@ -31,10 +31,10 @@ In practice, $\bK^{1/2}$ can be replaced with any matrix $\bR$ such that $\bR \b
 All such $\bR$ matrices are equivalent to $\bK^{1/2}$ up to an orthonormal rotation \cite{golub2012matrix}.
 
 Existing methods for sampling and whitening
-typically rely on the Cholesky factorization: $\bK = \bL \bL^\top$, where $\bL$ is lower triangular.
+typically rely on the Cholesky factorization: $\bK = \bL \bL^\top$.
 However, computing the Cholesky factor requires $\bigo{N^3}$ time and $\bigo{N^2}$ memory for an $N \times N$ covariance matrix $\bK$.
 To avoid this large complexity, randomized algorithms \cite{rahimi2008random,mutny2018efficient}, low-rank/sparse approximations \cite{hensman2017variational,wilson2020efficiently}, or alternative distributions \citep{wang2017max} are often used to approximate the sampling and whitening operations.
-While the previous chapter offers an efficient sampling method for KISS-GP models; this method is not generally applicable to other classes of GP models (see \cref{sec:sampling_method}).
+The previous chapter offers an efficient sampling method for KISS-GP models; however, this method is not generally applicable to other classes of GP models (see \cref{sec:sampling_method}).
 
 In this chapter, we make several contributions to address these issues:
 %

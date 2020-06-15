@@ -20,7 +20,7 @@ The figure displays results for matrices with spectra that decay as $\lambda_t =
 as well as for one-dimensional RBF and Mat\'ern kernel matrices (formed with random data), which have near-exponentially decaying spectra.
 Consequently, the $1 / \sqrt{t}$ matrices are relatively well-conditioned, while the RBF/Mat\'ern kernels are relatively ill-conditioned.
 Nevertheless, in all cases msMINRES-CIQ achieves $10^{-4}$ relative error with only $Q=8$ quadrature points, regardless of the size of the matrix.
-Randomized SVD on the other hand incurs an order of magnitude more error (\cref{fig:randomized_svd_supp}); a rank of $R=1,\!024$ is unable to reduce the relative error to a single decimal point.
+Approximation algorithms like randomized SVD on the other hand incur an order of magnitude more error (\cref{fig:randomized_svd_supp}); a rank of $R=1,\!024$ is unable to reduce the relative error to a single decimal point.
 
 \begin{figure}[t!]
 	\centering
@@ -103,7 +103,7 @@ With rank-100/rank-400 preconditioners, iterations are cut by a factor of two/fo
 \end{figure}
 
 \paragraph{Speedup over Cholesky.}
-We compare the wall-clock speedup of msMINRES-CIQ over Cholesky in \cref{fig:precond_result} (middle/right) on RBF/Mat\'ern kernels.\footnote{
+We compare the wall-clock speedup of msMINRES-CIQ over Cholesky in \cref{fig:timing} on RBF/Mat\'ern kernels.\footnote{
   $Q=8$.
   msMINRES is stopped after a residual of $10^{-4}$.
   Kernels are formed using data from the Kin40k dataset \citep{asuncion2007uci}.

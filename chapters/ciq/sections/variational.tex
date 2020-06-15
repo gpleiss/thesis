@@ -2,7 +2,7 @@
 \label{sec:variational_results}
 
 As a first application, we demonstrate that the msMINRES-CIQ whitening procedure $\bK^{-1/2} \bb$ can increase the fidelity of {\bf stochastic variational Gaussian processes (SVGP)} \cite{hensman2013gaussian,hensman2015scalable,matthews2017scalable}.
-These models are used for non-conjugate likelihoods (e.g.~binary classification) or for large datasets that do not fit into memory.
+Recall from \cref{sec:variational} that these models are used for non-conjugate likelihoods (e.g.~binary classification) or for large datasets that do not fit into memory.
 SVGP forms an approximate posterior
 $
   p(f(\bx) \mid \bX, \by) \approx q(f(\bx)) = \Evover{q(\bu)}{ p\left( f(\bx) \mid \bu \right)},
@@ -74,8 +74,8 @@ For CIQ we use $Q = 15$ quadrature points.
 msMINRES terminates when the $\bc_j$ vectors achieve a relative norm of $0.001$ or after $J=200$ iterations.
 Results are averaged over three trials.
 
-The 3DRoad and CovType datasets are available from the UCI repository \citep{asuncion2007uci}.
-For 3Droad, we only use the first two features---corresponding to latitude and longitude.
+The 3dRoad and CovType datasets are available from the UCI repository \citep{asuncion2007uci}.
+For 3droad, we only use the first two features---corresponding to latitude and longitude.
 For CovType, we reduce the 7-way classification problem to a binary problem ($\mathtt{Cover\_Type} \in \{ 2, 3\}$ versus $\mathtt{Cover\_Type} \in \{ 0, 1, 4, 5, 6 \}$).
 The Precipitation dataset is available from the IRI/LDEO Climate Data Library.\footnote{
   \url{http://iridl.ldeo.columbia.edu/maproom/Global/Precipitation/WASP_Indices.html}
@@ -147,5 +147,5 @@ In \cref{fig:variational_stats} we plot the learned hyperparameters of the Preci
 \end{enumerate*}
 %
 As $M$ increases, we find that the observational noise parameter decreases by a factor of $4$---down from $0.19$ to $0.05$---while the $\nu$ parameter also decreases.
-Models with larger $M$ values can more closely approximate the true posterior \cite{hensman2013gaussian}; therefore, we expect that the larger-$M$ likelihoods more closely correspond to the true parameters.
+Models with larger $M$ values can more closely approximate the true posterior \cite{hensman2013gaussian}; therefore, we expect that the larger-$M$ likelihoods more closely correspond to the ``true'' parameters.
 This confirms findings from \citet{bauer2016understanding}, who argue that variational approximations with small $M$ tend to overestimate the amount of noise in datasets.

@@ -19,7 +19,7 @@
     MVM-based Contour Integral Quadrature (CIQ).
   ]{Computing $\bK^{-\frac 1 2} \bb$ with MVM-based Contour Integral Quadrature (CIQ).}
   \label{alg:ciq}
-    \Input{\mvmkxx{$\cdot$} -- function for matrix-vector multiplication (MVM) with matrix $\bK$}
+    \Input{\mvmkxx{$\cdot$} -- function for a matrix-vector multiplication (MVM) with matrix $\bK$}
     \NextInput{$\bb$ -- right hand side}
     \NextInput{$J$ -- number of \minres iterations}
     \NextInput{$Q$ -- number of quad. points}
@@ -34,5 +34,5 @@
     \tcp{Shifted MINRES computes all solves simultaneously.}
     \BlankLine
     \Return{$\sum_{q=1}^Q w_q \left( t_q \bI + \bK \right)^{-1} \bb$}
-    \tcp{CIQ estimate of $\tfrac{1}{2\pi i} \int \tau^{-1 / 2} (\tau \bI - \bK)^{-1} \bb \intd t = \bK^{-1 / 2} \bb$}
+    \tcp{CIQ estimate of $\tfrac{1}{2\pi i} \int \tau^{-1 / 2} (\tau \bI - \bK)^{-1} \bb \intd \tau = \bK^{-1 / 2} \bb$}
 \end{algorithm2e}

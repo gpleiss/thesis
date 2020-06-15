@@ -40,17 +40,17 @@ In comparison, msMINRES-CIQ only requires $\bigo{T^2}$ computation and $\bigo{T}
 \end{figure}
 
 \paragraph{Experimental details.}
-The 6-dimensional {\bf Hartmann} function is a classical test problem in global optimization\footnote{\url{https://www.sfu.ca/~ssurjano/hart6.html}}.
+The 6-dimensional {\bf Hartmann} function is a classical test problem in global optimization.\footnote{\url{https://www.sfu.ca/~ssurjano/hart6.html}}
 There are 6 local minima and a global minimum with value $-3.32237$.
 We use a total of 100 evaluations with 10 initial points.
 The 10 initial points are generated using a Latin hypercube design and we use a batch size of 5.
 In each iteration, we draw 5 samples and select 5 new trials to evaluate in parallel.
 
-We consider the same setup and controller as in \cite{eriksson2019scalable} for the 12-dimensional {\bf Lunar Lander} problem\footnote{
+We consider the same setup and controller as in \cite{eriksson2019scalable} for the 12-dimensional {\bf Lunar Lander} problem.\footnote{
  From the Open-AI gym: \url{https://gym.openai.com/envs/LunarLander-v2}
-}.
+}
 The goal is to learn a controller that minimizes fuel consumption and distance to a given landing target while also preventing crashes.
-The state of the lunar lander is given by its angle and position, and their time derivatives.
+The state of the lunar lander is given by its angle, position, and time derivatives.
 Given this state vector, the controller chooses one of the following four actions: $a \in \{\text{do nothing, booster left, booster right, booster down}\}$.
 The objective is the average final reward over a fixed constant set of $50$ randomly generated terrains, initial positions, and initial velocities.
 The optimal controller achieves an average reward of $\approx 309$ over the 50 environments.
@@ -64,9 +64,9 @@ We add $1\mathrm{e}{-4}$ to the diagonal of the kernel matrix to improve the con
 
 \paragraph{Baselines.}
 We measure the performance of TS as a function of the candidate set size $T$ and consider $T \in \{ 1,\!000, 5,\!000, 20,\!000, 50,\!000 \}$.
-We run Cholesky ({\bf Cholesky}-$T$) for  $T \in \{ 1,\!000, 5,\!000\}$ and msMINRES-CIQ ({\bf CIQ}-$T$) for $T \ge 5,\!000$.
+We run Cholesky ({\bf Cholesky}-$T$) for  $T \in \{ 1,\!000, 5,\!000\}$ and msMINRES-CIQ ({\bf CIQ}-$T$).
 Note that it would be very challenging and impractical to use Cholesky with $T \geq 10,\!000$, due to its quadratic memory and cubic time complexity.
-In addition to Cholesky and CIQ with exact Gaussian processes as the surrogate model, we also compare to random Fourier features (RFF) \cite{rahimi2008random} with $1,\!000$ random features.
+In addition to Cholesky and CIQ, we also compare to random Fourier features (RFF) \cite{rahimi2008random} with $1,\!000$ random features.
 
 \paragraph{Optimization performance.}
 We plot the mean regret with standard error based on 30 replications in \cref{fig:bayesopt}.

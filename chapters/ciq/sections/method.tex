@@ -1,7 +1,7 @@
 \section{Contour Integral Quadrature (CIQ) via Matrix-Vector Multiplication}
 \label{sec:ciq_method}
 
-In this section we develop a MVM method to compute $\bK^{-1/2} \bb$ and $\bK^{1/2} \bb$ for sampling and whitening.
+In this section we develop a MVM method to compute $\bK^{\pm 1/2} \bb$ for sampling and whitening.
 %Our approach uses to a \emph{rational approximation} of $\bK^{-1/2}$ in conjunction with \emph{matrix-vector multiplication}-based solvers.
 Our approach scales better than existing methods (e.g.~Cholesky) by:
 \begin{enumerate*}
@@ -43,8 +43,8 @@ To compute the shifted solves required by~\cref{eqn:contour_integral_quad} we le
 minimum residuals algorithm (MINRES) developed by \citet{paige1975solution} (see \cref{sec:minres}).
 
 \paragraph{msMINRES for multiple shifted solves.}
-To efficiently compute all the shifted solves, we leverage techniques~\citep[e.g.][]{datta1991arnoldi,freund1990conjugate,meerbergen2003solution} that exploit the shift-invariance property of Krylov subspaces: i.e.~$\mathcal{K}_J(\bK, \bb) = \mathcal{K}_J(t \bI +  \bK, \bb)$.
-We introduce a variant to MINRES, which we refer to as {\bf multi-shift MINRES} or {\bf msMINRES}, that re-uses the same Krylov subspace vectors $[\bb, \: \bK \bb, \: \ldots, \: \bK^{J-1} \bb]$ for all shifted solves $(t \bI + \bK)^{-1} \bb$.
+To efficiently compute \emph{all} the shifted solves, we leverage techniques~\citep[e.g.][]{datta1991arnoldi,freund1990conjugate,meerbergen2003solution} that exploit the shift-invariance property of Krylov subspaces: i.e.~$\mathcal{K}_J(\bK, \bb) = \mathcal{K}_J(t \bI +  \bK, \bb)$.
+We introduce a variant of MINRES, which we refer to as {\bf multi-shift MINRES} or {\bf msMINRES}, that re-uses the same Krylov subspace vectors $[\bb, \: \bK \bb, \: \ldots, \: \bK^{J-1} \bb]$ for all shifted solves $(t \bI + \bK)^{-1} \bb$.
 In other words, using msMINRES we can get all $(t_q \bI + \bK)^{-1} \bb$ \emph{essentially for free}, i.e. only requiring $J$ MVMs for the Krylov subspace $\mathcal{K}_J(\bK, \bb)$.
 As with standard MINRES, the msMINRES procedure for computing $(t_q \bI + \bK)^{-1}$ from $[\bb, \: \bK \bb, \: \ldots, \: \bK^{J-1} \bb]$ can be reduced to a simple vector recurrence.
 
@@ -59,7 +59,7 @@ where $\bQ_J$, $\bT_J$, and $\br_J$ are the outputs from $J$ steps of the Lanczo
 \[
   \bK \bQ_J = \bQ_J \bT_J + \br_J \be_J^\top.
 \]
-To adapt MINRES to multiple shifts (i.e. msMINRES), we exploit a well-established fact about the shift invariance of Krylov subspaces (see \citep[e.g.][]{datta1991arnoldi,freund1990conjugate,jegerlehner1996krylov,saad2003iterative}).
+To adapt MINRES to multiple shifts (i.e. msMINRES), we exploit a well-established fact about the shift invariance of Krylov subspaces:
 %
 \begin{observation}
   Let $\bK \bQ_J = \bQ_J \bT_J + \br_J \be_J^\top$ be the Lanczos factorization for $\bK$ given the initial vector $\bb$.
