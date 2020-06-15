@@ -3,7 +3,7 @@
 \label{sec:largeexact_method}
 
 The BBMM and LOVE methods presented in \cref{chapter:bbmm,chapter:love} effectively utilize GPU acceleration and reduce the time complexity of GPs to $\bigo{N^2}$.
-As we will demonstrate, these advantages make it possible to scale exact GPs to very large datasets---up to two orders of magnitude than what is possible with Cholesky-based training/inference \cite{nguyen2019exact}.
+As we will demonstrate, these advantages make it possible to scale exact GPs to very large datasets---up to two orders of magnitude larger than what is possible with Cholesky-based training/inference \cite{nguyen2019exact}.
 
 In this section, we make slight modifications to the BBMM and LOVE algorithms for large-scale GPs.
 Firstly, we reduce the MVM memory requirements to $\bigo{N}$ using partitioned and distributed kernel matrices.
@@ -15,14 +15,14 @@ Secondly, we offer practical guidelines to speed up BBMM convergence for large d
 \subsection{Reducing Memory Requiremnts to $\mathcal{O}(N)$}
 
 The primary input to the modified batched conjugate gradients (mBCG) algorithm of \cref{sec:bbmm_method} is {\tt mvm\_$\trainK$}, a black-box function that performs MVMs using the kernel matrix $\trainK$.
-Each iteration of mBCG updates four (batches) of vectors: $\bc$ (the current solution), $\br$ (the current error), $\bd$ (the ``search'' direction for the next solution), and $\bz$ (a preconditioned error term).
+Each iteration of mBCG updates four (batches) of vectors: $\bc$ (the current solution), $\br$ (the current error), $\bd$ (the ``search'' direction for the next solution), and $\bz$ (a preconditioned error term)---see \cref{alg:std_pcg,alg:mod_pcg} for details.
 Storing these vectors requires exactly $4N$ space.
 In addtion, the mBCG algorithm stores the tridiagonal matrices for stochastic Lanczos quadrature, which requires $\bigo{J}$ memory for $J$ iterations of mBCG.
 Therefore, the quadratic space cost associated with MVM-based exact GPs comes from storing the matrix $\trainK$.
 
 Typically, {\tt mvm\_$\trainK$} is implemented by first computing the full $N \times N$ kernel matrix $\trainK$.
 Although forming $\trainK$ requires $\bigo{N^2}$ memory, the \emph{output} of the MVM $\trainK \bb$ requires only $\bigo{N}$ memory.
-By using a \emph{map-reduce style algorithm} for this computation, we can reduce the memory requirement of {\tt mvm\_$\trainK$} to \emph{linear in $N$}.
+By using a \emph{map-reduce style algorithm} for this computation, we can reduce the memory requirement of {\tt mvm\_$\trainK$}.
 
 \paragraph{Partitioned kernel MVMs.}
 We first partition the data matrix $\bX \in \reals^{N \times D}$ into $P$ partitions, each of which contains roughly $N/P$ data points:
@@ -65,10 +65,10 @@ This MVM only allocates new memory to temporarily store the $(N / P) \times N$ k
 The other memory requirements (i.e. storing $\bX$ and $\bb$) are linear in $N$.
 
 This algorithm allows us to reduce memory usage in exchange for additional yet easily parallelizable computations.
-If $P=1$ then we have the na\"ive $\bigo{N^2}$ memory MVM procedure. As $P \to N$, PCG will only require $\bigo{N}$ memory.
+If $P=1$ then we have the na\"ive $\bigo{N^2}$ memory MVM procedure. As $P \to N$, mBCG will only require $\bigo{N}$ memory.
 
-After developing our own custom partitioned-MVM approach, we were made aware of the KeOps software package \cite{charlier2020kernel} which uses low-level GPU code to speed up partitioned MVMs.
-With this library, partitioned MVMs can even be faster than standard MVMs.
+(After developing our own custom partitioned-MVM approach, we were made aware of the KeOps software package \cite{charlier2020kernel} which uses low-level GPU code to speed up partitioned MVMs.
+With this library, partitioned MVMs can even be faster than standard MVMs.)
 
 
 \paragraph{Distributed parallel MVMs.}
@@ -100,9 +100,9 @@ If this tolerance is sufficiently tight, solve are exact up to machine precision
 Thus, it is analogous to using gradient descent for convex optimization problems (which is in fact what is happening).
 
 At test time, we find that (nearly) exact solves $\widehat \bK_{\bX \! \bX}^{-1} \by$  are critical for good predictive means.
-Therefore, we set the convergence criterion of CG to be $\Vert \trainK^{-1} \bc - \by \Vert_2 / \Vert \by \Vert_2 \leq 0.001$, where $\bc$ is the solution from mBCG.
+Therefore, we set the convergence criterion of CG to be $\Vert \trainK \bc - \by \Vert_2 / \Vert \by \Vert_2 \leq 0.001$, where $\bc$ is the solution from mBCG.
 For hyperparameter optimization, we find that less strict tolerances are surprisingly sufficient.
-A looser convergence criterion of up to $\Vert \trainK^{-1} \bc - \by \Vert_2 / \Vert \by \Vert_2 = 1$ has little impact on final model performance.
+A looser convergence criterion of up to $\Vert \trainK \bc - \by \Vert_2 / \Vert \by \Vert_2 = 1$ has little impact on final model performance.
 
 
 \paragraph{Pre-training.}

@@ -9,12 +9,12 @@ On the other hand, BBMM and LOVE
 \begin{enumerate*}
   \item effectively utilize GPU acceleration via matrix multiplication (\cref{sec:bbmm_results});
   \item achieve exponential convergence using a partial pivoted Cholesky preconditioner (\cref{sec:preconditioning});
-  \item require relatively few iterations to convergence (\cref{sec:bbmm_results,sec:love_results}); and
+  \item require relatively few iterations to achieve convergence (\cref{sec:bbmm_results,sec:love_results}); and
   \item more accurately solve linear systems than Cholesky-based approaches (\cref{sec:bbmm_results}).
 \end{enumerate*}
 
 While the past chapters address the computational efficiency of BBMM and LOVE, we must still address the memory bottleneck.
-Exact GPs, unlike their scalable counterparts, make use of dense $N \times N$ training kernel matrices which naively require quadratic memory.
+Exact GPs, unlike their scalable counterparts, make use of dense $N \times N$ training kernel matrices which na\"ively require quadratic memory.
 To overcome this limitation, we partition and distribute kernel MVMs across GPUs in a Map-Reduce style fashion.
 This reduces the memory requirement for GPs down to $\mathcal{O}(N)$, permitting scaling beyond $N\approx 10^4$.
 Our implementation uses the KeOps library \cite{charlier2020kernel} and a custom multi-GPU wrapper to implement these memory-efficient MVMs.
