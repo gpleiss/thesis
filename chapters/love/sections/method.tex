@@ -21,7 +21,7 @@ Our proposed method will make use of the Lanczos algorithm from \cref{sec:lanczo
 %This makes it possible to easily transfer this approximation to specialty GP models (e.g. scalable models, multitask models, etc.) and the computation will effectively utilize GPU acceleration.
 As we will demonstrate in \cref{sec:love_results}, the Lanczos low-rank approximation rapidly converges to the true inverse.
 
-Recall from \cref{sec:lanczos} that $J$ iterations of Lanczos tridiagonalization approximates matrix solves:
+Recall from \cref{sec:lanczos} that $J$ iterations of Lanczos tridiagonalization approximate matrix solves:
 \[
   {\color{blue} \trainK^{-1}} \bb \approx {\color{blue} \bQ \bT^{-1} \bQ^{\top}} \bb,
 \]
@@ -50,7 +50,7 @@ We refer to this fast covariance approximation algorithm as {\bf LanczOs Varianc
 It is summarized in \cref{alg:love} and \cref{tab:running_times}.
 
 $J$, the size of the low-rank approximation, depends on the conditioning of $\blue \trainK$ and not its size.
-Empirically, we find that $J\leq100$ is sufficient for most matrices with $N \leq 20,\!000$; therefore $J$ can be considered to be constant.
+Empirically, we find that $J=100$ is sufficient for most matrices with $N \leq 20,\!000$; therefore $J$ can be considered to be constant.
 
 
 
@@ -225,10 +225,10 @@ LOVE{} is applicable even when the KISS-GP approximation is used with an additiv
   \bw^{(1)\top}_{\bx} {\color{blue} \bK^{(1)}_{\bZ \bZ}} \bw^{(1)}_{\bx'} + \ldots + \bw^{(D)\top}_{\bx} {\color{blue} \bK^{(D)}_{\bZ \bZ}} \bw^{(D)}_{\bx'}.
   \notag
 \end{equation}
-Additive structure has recently been a focus in several Bayesian optimization settings, since the cumulative regret of additive models depends linearly on the number of dimensions
+Additive structure has been a focus in several Bayesian optimization settings, since the cumulative regret of additive models depends linearly on the number of dimensions
 \cite{kandasamy2015high,wang2017batched,gardner2017discovering,wang2017max}.
 Additionally, deep kernel learning GPs \citep{wilson2016deep,wilson2016stochastic} typically use sums of one-dimensional kernel functions.
-To apply LOVE{}, we note that additive composition can be re-written as
+To apply LOVE{}, we note that the KISS-GP additive composition can be re-written as
 %
 \begin{equation}
   \widetilde{k}(\bx, \bx') =

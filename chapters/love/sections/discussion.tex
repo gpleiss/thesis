@@ -15,7 +15,7 @@ Since SGPR makes a rank $M \ll N$ approximation to the kernel, setting $J\!=\!M$
 Given a matrix $\blue \trainK$, the Lanczos decomposition $\blue \bQ \bT \bQ^\top$ is designed to approximate the solve ${\color{blue} \trainK^{-1}} \bb$, where $\bb$ is the first column of $\blue \bQ$.
 As argued in \cref{sec:lanczos}, the $\blue \bQ$ and $\blue \bT$ matrices can usually be re-used to approximate the solves ${\color{blue} \widehat \bK_{\bX\bX}^{-1} (\bW_{\bX}^\top \bK_{\bZ\bZ})} \approx {\color{blue} \bQ \bT^{-1} \bQ^\top (\bW_{\bX}^\top \bK_{\bZ\bZ})}$.
 This property of the Lanczos algorithm is why LOVE{} can compute fast predictive variances.
-While this method usually produces accurate solves, the solves will not be accurate if some columns of $\blue (\bW^\top_{\bX} \bK_{\bZ\bZ})$ are (nearly) orthogonal to the columns of $\bQ$.
+While this method usually produces accurate solves, the solves will not be accurate if some columns of $\blue (\bW^\top_{\bX} \bK_{\bZ\bZ})$ are (nearly) orthogonal to the columns of $\blue \bQ$.
 Importantly, we can easily check the accuracy of the solves by measuring the residual norm:
 %
 \[
@@ -38,7 +38,7 @@ In practice, the cost of this correction is absorbed by the parallel performance
 LOVE in conjunction with KISS-GP makes it possible to efficiently draw samples from a GP posterior.
 This has potential in many applications like Bayesian optimization and model-based reinforcement learning \citep[e.g.,][]{deisenroth2011pilco,hernandez2014predictive,wang2017max}, which typically rely on parametric approximations or finite basis approaches for approximate sampling.
 However, it is worth noting that this sampling technique cannot be applied to exact GP models,
-as the derivation of this method requires an inducing point approximation to the prior test covariance $\bK_{\bXtest\bXtest}$ (see \cref{eqn:pred_covar_ski_interp_form12}).
+as the derivation of LOVE sampling requires an inducing point approximation to the prior test covariance $\bK_{\bXtest\bXtest}$ (see \cref{eqn:pred_covar_ski_interp_form12}).
 In the next chapter we will address this limitation and introduce a $\bigo{N^2}$ sampling algorithm for exact Gaussian process models.
 
 \paragraph{A complete MVM-based framework for Gaussian process regression.}
