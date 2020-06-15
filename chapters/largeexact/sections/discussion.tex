@@ -2,7 +2,6 @@
 \section{Discussion}
 
 Historically for Gaussian processes, ``a large dataset is one that contains over a few thousand data points'' \citep{hensman2013gaussian}.
-%Bigger datasets have traditionally necessitated scalable approximations.
 In this chapter, we have extended exact GPs far beyond what has previously been thought possible---applying GPs to datasets with over a million training examples.
 In our experiments, we find that exact GPs perform significantly better than approximate methods on large datasets, while requiring fewer design choices.
 
@@ -21,8 +20,7 @@ Our objective in this chapter is not to perform an exhaustive study of approxima
 
 Indeed, there are cases where approximate GP methods might still be preferable, especially when computational resources are limited.
 In certain regimes, such as low dimensional spaces, approximate methods like KISS-GP can achieve high degrees of accuracy in less time than exact GPs \cite{wilson2015kernel}.
-Additionally, GP inference with non-conjugate likelihoods necessitates approximate inference techniques (see \cref{chapter:ciq}).
+Additionally, GP inference with non-conjugate likelihoods necessitates approximate Bayesian inference techniques (see \cref{chapter:ciq}).
 
 Nevertheless, with efficient utilization of modern hardware, exact Gaussian processes are now an appealing option on substantially larger datasets than previously thought possible.
-%Exact GPs are powerful yet simple---achieving remarkable accuracy without requiring much expert design knowledge.
 We expect exact GPs to become even more scalable and accessible with continued advances in hardware design.

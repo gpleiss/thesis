@@ -61,7 +61,7 @@ We use the KeOps library \cite{charlier2020kernel} in conjunction with our GPyTo
 \paragraph{Accuracy.}
 \cref{tab:large_exact_gp_results} displays the test set RMSEs and negative log likelihoods (NLLs) of exact GPs and their approximate counterparts.
 We find that exact GPs achieve lower error than approximate methods on nearly every dataset.
-Notably, on certain datasets like 3droad, exact GPs achieve a half or even a quarter of the error of some approximate methods.
+Notably, on certain datasets like 3dRoad, exact GPs achieve a half or even a quarter of the error of approximate methods.
 
 Moreover, we also see approximate GP performance is dataset dependent.
 Neither SVGP nor SGPR consistently outperforms the other.
@@ -101,7 +101,7 @@ For example, though Protein and Kin40K are similar in size and have similar dime
 With the pre-training strategy, exact GPs on datasets with $N \leq 50,\!000$ can usually be trained in seconds.
 Datasets with $N \geq 50,\!000$ can be trained in minutes, while datasets with $N \geq 300,\!000$ require hours.
 The exact amount of training time is dataset dependent, which likely depends on the conditioning of the training kernel matrices.
-Remarkably, exact GP can often be trained in \emph{less time than their approximate counterparts}, despite having a larger asymptotic complexity.
+Remarkably, exact GPs can often be trained in \emph{less time than their approximate counterparts}, despite having a larger asymptotic complexity.
 Approximate GPs tend to require more optimization iterations to properly place inducing points.
 We also hypothesize that exact GPs benefit more from GPU acceleration, as dense kernel matrices afford more MVM parallelism than their low-rank approximations.
 
@@ -134,7 +134,7 @@ The speedup is more pronounced for the two large datasets (3dRoad and Song).
   \caption[
     Effect of pre-training-based initialization on GP accuracy and timing.
   ]{
-    Effect of pre-training-based initialization on GP accuracy and timing.
+    Effect of pre-training-based initialization on GP accuracy/timing.
   }
   \label{fig:initialization}
 \end{figure*}
