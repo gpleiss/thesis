@@ -27,10 +27,10 @@ The base case is for $1 \times 1$ matrices: $\text{Chol}(K) = \sqrt{K}$.
 \paragraph{Runtime and space.}
 The Cholesky algorithm is inherently sequential, requiring $N$ steps to decompose an $N \times N$ matrix.
 Each step $i \in [1, N]$ computes the Schur compliment of a $(N-i) \times (N-i)$ matrix, which takes $\bigo{i^2}$ time (see \citep[][Sec. 4.2]{golub2012matrix} for a complete derivation).
-Thus in total the factorization takes $\bigo{M^3}$ time.
+Thus in total the factorization takes $\bigo{N^3}$ time.
 Storing the Cholesky factor requires $\bigo{N^2}$ space.
 It is worth noting that in general these computation and storage requirements cannot be improved upon even when $\bK$ has exploitable structure (e.g. Toeplitz).
-Moreover, this sequential nature of the recursive algorithm prevents it from fully exploiting the full possibilities of GPU acceleration.
+Moreover, this sequential nature of the recursive algorithm prevents it from exploiting the full possibilities of GPU acceleration.
 
 
 
@@ -57,19 +57,19 @@ Therefore:
 Running this same procedure on $\bS_2$ gives us $\bS_2 = \widehat \bl_{2} \widehat \bl_{2}^{\top} + \left[0, \:\: 0; \:\:\:\: 0, \:\: \bS_3 \right]$:
 %
 \begin{align*}
-  \bK  = \bl_{1}\bl_{1}^{\top} + \begin{bmatrix} 0 \\ \widehat \bl_{2} \end{bmatrix} \begin{bmatrix} 0 & \widehat \bl_2^\top \end{bmatrix} +
+  \bK  = \widehat \bl_{1} \widehat \bl_{1}^{\top} + \begin{bmatrix} 0 \\ \widehat \bl_{2} \end{bmatrix} \begin{bmatrix} 0 & \widehat \bl_2^\top \end{bmatrix} +
   \begin{bmatrix} 0 & 0 \\ 0 & \bS_3 \end{bmatrix}
 \end{align*}
 %
 After $R$ recursive iterations, defining $\bl_{i} = \left[ \bzero; \:\: \widehat \bl_i \right]$ we obtain
 %
 \begin{align}
-  \bK  = \sum_{i=1}^{R} \widehat {\bl}_{i} \widehat {\bl}_{i}^{\top} + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix},
+  \bK  = \sum_{i=1}^{R} {\bl}_{i} {\bl}_{i}^{\top} + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix},
   \label{eqn:chol_low_rank}
 \end{align}
 %
 where each $\bl_i$ has exactly $i-1$ leading zero ($\bl_i = [0, \:\: \ldots, \:\: 0, \:\: \widehat \bl_i]$).
-The $\sum_{i=1}^R \bl_i \bl_i^\top$ outer product matrix gives us a low-rank approximation to $\bK$, with
+The $\sum_{i=1}^R \bl_i \bl_i^\top$ sum of outer product matrices gives us a low-rank approximation to $\bK$, with
 \begin{equation}
   \left\Vert \bK - \sum_{i=1}^{R}{\bl}_{i}{\bl}_{i}^{\top} \right\Vert_{2} = \left\Vert \begin{bmatrix} \bzero & \bzero \\ \bzero & \bS_{R+1} \end{bmatrix} \right\Vert_2.
 \end{equation}
@@ -100,7 +100,7 @@ In general, after $R$ steps, we obtain:
   \bK = \sum_{i=1}^{R} \left( \prod_{j=1}^i \bPi_j \right) {\bl}_{i} {\bl}_{i} \left( \prod_{j=1}^i \bPi_{i-j+1}^\top \right)
   + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bar \bS_{R+1} \end{bmatrix}.
 \end{align}
-Collecting the $\left( \prod_{j=1}^i \bPi_j \right) {\bl}_{i}$ vectors in to a matrix $\bar\bL_R$ gives us a rank-$R$ approximation of $\bK$:
+Collecting the $\left( \prod_{j=1}^i \bPi_j \right) {\bl}_{i}$ vectors into a matrix $\bar\bL_R$ gives us a rank-$R$ approximation of $\bK$:
 %
 \begin{equation}
   \bK = \bar\bL_{R} \bar\bL_{R}^{\top} + \begin{bmatrix} \bzero & \bzero \\ \bzero & \bar \bS_{R+1} \end{bmatrix} \approx \bar\bL_{R} \bar\bL_{R}^{\top}.
@@ -111,7 +111,7 @@ $\bar\bL_{R} \in \reals^{N \times R}$ is referred to as the {\bf partial pivoted
 
 
 \paragraph{Properties.}
-Unlike the standard Cholesky algorithm, it is more common to run $R \ll N$ iterations of the pivoted variant---producing a low-rank approximation of $\bK$ instead of a complete factorization \cite{harbrecht2012low}.
+%Unlike the standard Cholesky algorithm, it is more common to run $R \ll N$ iterations of the pivoted variant---producing a low-rank approximation of $\bK$ instead of a complete factorization \cite{harbrecht2012low}.
 For matrices with rapidly decaying spectra, the partial pivoted Cholesky factor is a remarkably effective approximation.
 \citet{harbrecht2012low} prove an \emph{exponential} convergence guarantee for matrices with exponentially-decaying eigenvalues:
 %

@@ -18,9 +18,12 @@
     \NextInput{\row{$i$} -- function for computing the $i^\text{th}$ of matrix $\bK$.}
     \Output{$\bar\bL_\text{R}$ -- the partial (rank-$R$) pivoted Cholesky factor.}
     \BlankLine
-    $\bpi$ $\gets$ $[1, \:\: 2, \:\: \ldots, \:\: R]$
-    \tcp{Vector representing permutation matrix $\bPi_i$}
+    $\bpi$ $\gets$ $[1, \:\: 2, \:\: \ldots, \:\: N]$
+    \tcp{Vector representing permutation matrix $\bPi_i$.}
 	  $\bc_0$ $\gets$ $\mathbf 0$
+    \\
+	  $\bar \bd_\bK$ $\gets$ $\bd_\bK$
+    \tcp{Permuted diagonal.}
     \BlankLine
     \For{$i \gets 1$ \KwTo $R$}{
       \tcp{Find index of largest entry in permutted $\bd_\bK$.}
