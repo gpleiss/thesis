@@ -1,7 +1,7 @@
 \section{Contour Integral Quadrature (CIQ) via Matrix-Vector Multiplication}
 \label{sec:ciq_method}
 
-In this section we develop an MVM method to compute $\bK^{-1/2} \bb$ and $\bK^{1/2} \bb$ for sampling and whitening.
+In this section we develop a MVM method to compute $\bK^{-1/2} \bb$ and $\bK^{1/2} \bb$ for sampling and whitening.
 %Our approach uses to a \emph{rational approximation} of $\bK^{-1/2}$ in conjunction with \emph{matrix-vector multiplication}-based solvers.
 Our approach scales better than existing methods (e.g.~Cholesky) by:
 \begin{enumerate*}
@@ -107,7 +107,7 @@ Pairing \cref{eqn:contour_integral_quad} with msMINRES is an efficient algorithm
 \begin{property}[Computation/Memory of msMINRES-CIQ]
   $J$ iterations of msMINRES requires exactly $J$ MVMs with the input matrix $\bK$,
   regardless of the number of quadrature points $Q$.
-  The resulting runtime of msMINRES-CIQ is $\bigo{ J \mvm{\bK}}$, where $\mvm{\bK}$ is the time to perform an MVM with $\bK$.
+  The resulting runtime of msMINRES-CIQ is $\bigo{ J \mvm{\bK}}$, where $\mvm{\bK}$ is the time to perform a MVM with $\bK$.
   The memory requirement is $\bigo{ QN }$ in addition to what is required to store $\bK$.
   \label{prop:msminres}
 \end{property}
@@ -180,7 +180,7 @@ Thus the backward pass takes only $\bigo{J \mvm{\bK}}$ (e.g.~$\bigo{J N^2}$) tim
 
 \paragraph{Programmability.}
 As with BBMM and LOVE, msMINRES-CIQ can take full advantage of GPyTorch's {\tt LazyTensor} construct.
-The algorithm for msMINRES-CIQ (\cref{alg:ciq}) accesses $\bK$ through Lanczos and msMINRES---each of which only requires black-box access to an MVM routine.
+The algorithm for msMINRES-CIQ (\cref{alg:ciq}) accesses $\bK$ through Lanczos and msMINRES---each of which only requires black-box access to a MVM routine.
 Therefore, msMINRES-CIQ can be implemented for specialty GP models using the efficient {\tt \_matmul} function of {\tt LazyTensor}s.
 Moreover, back-propagation via \cref{eqn:ciq_deriv} can be implemented using the {\tt \_deriv} function of LazyTensors.
 Recall that the {\tt \_deriv($ \bA, \bB $)} function computes $\partial \tr{ \bA^\top \bK \bB }/{\partial \br}$, where $\br$ is a representation of $\bK$.

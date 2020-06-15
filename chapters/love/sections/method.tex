@@ -84,7 +84,7 @@ Empirically, we find that $J\leq100$ is sufficient for most matrices with $N \le
 
 \subsection{Programmability}
 
-Because LOVE is an MVM-based algorithm, it affords the same modularity as BBMM.
+Because LOVE is a MVM-based algorithm, it affords the same modularity as BBMM.
 When LOVE is used in conjunction with scalable GP approximations/multitask models, we can take advantage of fast kernel MVMs for a $o(N^2)$ asymptotic complexity.
 In GPyTorch we use the {\tt LazyTensor} construct from \cref{sec:programmability} to adapt LOVE to specialty models.
 The same {\tt \_matmul} function we use for mBCG can also be used for fast (co)-variances with LOVE.

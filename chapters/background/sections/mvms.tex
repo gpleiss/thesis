@@ -1,27 +1,7 @@
-%\section{Computing $\trainK^{-1} \bb$ and $\log \vert \trainK \vert$ with Matrix Multiplication}
 \section{Matrix-Vector Multiplication (MVM) Algorithms for Computing Linear Solves and Other Matrix Functions}
 \label{sec:mvms}
 
-%Gaussian process training and inference requires expensive computations involving the kernel matrix $\trainK = \bK_{\bX\bX} + \sigma_\text{obs} \bI$.
-%For example, in \cref{eqn:log_lik} we must compute the linear solve $(\trainK^{-1}) \by$ and the log determinant $\log \vert \trainK \vert$.
-%Since $\trainK$ is positive definite, both of these operations can computed using the Cholesky factorization:
-%%
-%\[
-  %\bL \bL^\top = \trainK, \quad
-  %(\trainK^{-1}) \by = \bL^{-\top} \bL^{-1} \by, \quad
-  %\log \vert \trainK \vert = 2 \sum_{i=1}^N \log L^{(ii)}
-%\]
-%%
-%where $\bL$ is the lower-triangular Cholesky factor of $\trainK$.
-%Though this is a common way to compute these terms, it has drawbacks that were discussed in \cref{chapter:introduction}:
-%%
-%\begin{enumerate*}
-  %\item its $\bigo{N^3}$ asymptotic complexity,
-  %\item its $\bigo{N^2}$ storage requirement, and
-  %\item its minimal use of GPU acceleration.
-%\end{enumerate*}
-
-The primary focus of this thesis is methods for GP learning and inference that avoid the Cholesky decomposition.
+The primary focus of this thesis is avoiding the Cholesky decomposition for GP learning and inference.
 Recall that the Cholesky decomposition is primarily used to compute matrix solves and log determinants:
 \[
   \bL \bL^\top = \trainK, \quad
@@ -38,10 +18,10 @@ This approach, as we will demonstrate, has several advantages:
 \end{enumerate*}
 %
 We will rely on a family of iterative algorithms known as {\bf Krylov subspace methods} \citep[e.g.][]{saad2003iterative,van2003iterative}, which were originally developed for large sparse matrices.
-Importantly, these algorithms can compute non-linear terms \emph{without explicitly computing computing the matrix} $\trainK$.
+Importantly, these algorithms can compute non-linear terms \emph{without explicitly computing the matrix} $\trainK$.
 Instead, these methods only access $\trainK$ through MVMs.
 
-The next two chapters propose GP-specific Krylov subspace algorithms for training and inference.
+The next three chapters propose GP-specific Krylov subspace algorithms for training and inference.
 In this remainder of this section, we introduce three common Krylov methods that we use as building blocks: {\bf linear conjugate gradients} (CG), {\bf Lanczos tridiagonalization}, and {\bf MINRES}.
 
 \paragraph{Intuition.}
@@ -56,7 +36,7 @@ Since $\trainK^{-1}$ is positive definite, we note that any matrix solve is the 
 \end{equation}
 %
 The gradient of the objective function is $(\trainK) \: \bc - \by$.
-Thus, one could compute $\trainK^{-1} \by$ with gradient descent, and each gradient step only accesses $\trainK$ through an MVM with the current solution $\bc$.
+Thus, one could compute $\trainK^{-1} \by$ with gradient descent, and each gradient step only accesses $\trainK$ through a MVM with the current solution $\bc$.
 Rather than using vanilla gradient descent however, we will instead use a special decent method (conjugate gradients) that carefully chooses its updates for faster convergence.
 
 The connection between log determinants and MVMs is less straightforward.
@@ -152,7 +132,7 @@ where $\mathcal{K}_J (\bK, \bb)$---the domain that $\bc_J$ is optimal over---is 
 %
 (This is why CG is referred to as a ``Krylov Subspace Method''.)
 Note the connection between \cref{eqn:krylov} and MVMs:
-the vectors spanning $\mathcal{K}_J (\bK, \bb)$ can be formed by applying an MVM to the previous vector: $\bK^J \bb = \bK \left( \bK^{J-1} \bb \right)$.
+the vectors spanning $\mathcal{K}_J (\bK, \bb)$ can be formed by applying a MVM to the previous vector: $\bK^J \bb = \bK \left( \bK^{J-1} \bb \right)$.
 The CG search directions $\bd_1, \ldots, \bd_J$ lie in the Krylov subspace, and so the matrix-vector multiplication $\bK \bd_{J-1}$ in \cref{alg:cg} expands $\mathcal{K}_{J}(\bK, \bb)$ to the next subspace $\mathcal{K}_{J+1} (\bK, \bb)$.
 
 \cref{eqn:cg_optimality,eqn:krylov} explain why CG rapidly converges.
